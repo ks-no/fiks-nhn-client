@@ -18,6 +18,7 @@
 
     <modules>
         <module>nhn-client</module>
+        <module>nhn-rest-api</module>
     </modules>
 
     <properties>
@@ -38,6 +39,18 @@
 
         <kotest.version>5.9.1</kotest.version>
         <mockk.version>1.13.17</mockk.version>
+
+        <swagger.version>1.6.14</swagger.version>
+        <swagger-openapi.version>2.2.23</swagger-openapi.version>
+        <jakarta.jws-api.version>3.0.0</jakarta.jws-api.version>
+        <jakarta-javaws-api.version>4.0.2</jakarta-javaws-api.version>
+        <jakarta.jaxb-api.version>4.0.2</jakarta.jaxb-api.version>
+        <jakarta.xml.soap-api.version>3.0.2</jakarta.xml.soap-api.version>
+        <scribejava.version>8.3.3</scribejava.version>
+        <jackson.version>2.17.2</jackson.version>
+        <jackson-databind-nullable.version>0.2.6</jackson-databind-nullable.version>
+        <jsr305.version>3.0.2</jsr305.version>
+        <feign.version>13.4</feign.version>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -83,6 +96,65 @@
                 <artifactId>kotest-assertions-core-jvm</artifactId>
                 <version>${kotest.version}</version>
                 <scope>test</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>io.github.openfeign</groupId>
+                <artifactId>feign-bom</artifactId>
+                <version>${feign.version}</version>
+                <scope>import</scope>
+                <type>pom</type>
+            </dependency>
+            <dependency>
+                <groupId>io.github.openfeign.form</groupId>
+                <artifactId>feign-form</artifactId>
+                <version>${feign-form.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.swagger</groupId>
+                <artifactId>swagger-annotations</artifactId>
+                <version>${swagger.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.swagger.core.v3</groupId>
+                <artifactId>swagger-annotations</artifactId>
+                <version>${swagger-openapi.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.swagger.core.v3</groupId>
+                <artifactId>swagger-jaxrs2-jakarta</artifactId>
+                <version>${swagger-openapi.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>jakarta.jws</groupId>
+                <artifactId>jakarta.jws-api</artifactId>
+                <version>${jakarta.jws-api.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>jakarta.xml.ws</groupId>
+                <artifactId>jakarta.xml.ws-api</artifactId>
+                <version>${jakarta-javaws-api.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>jakarta.xml.bind</groupId>
+                <artifactId>jakarta.xml.bind-api</artifactId>
+                <version>${jakarta.jaxb-api.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>jakarta.xml.soap</groupId>
+                <artifactId>jakarta.xml.soap-api</artifactId>
+                <version>${jakarta.xml.soap-api.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.microsoft.sqlserver</groupId>
+                <artifactId>mssql-jdbc</artifactId>
+                <version>${mssql-jdbc.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.openapitools</groupId>
+                <artifactId>jackson-databind-nullable</artifactId>
+                <version>${jackson-databind-nullable.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
