@@ -1,0 +1,1315 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "MSH API v2",
+    "description": "Meldingstjener Rest API. Default API version.",
+    "version": "v2"
+  },
+  "paths": {
+    "/Messages/{id}/apprec": {
+      "get": {
+        "tags": [
+          "MessagesController"
+        ],
+        "summary": "Get ApprecInfo for the message's ApplicationReceipt. if any.",
+        "operationId": "GetApprecInfo",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Id of message, as received from GET Messages endpoint (must be a valid Guid)",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "2"
+          },
+          {
+            "name": "nhn-source-system",
+            "in": "header",
+            "description": "Name and version for the client system",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "MyApplication, v1.337"
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad request - The request was cancelled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                },
+                "example": {"error":"Request was cancelled","validationErrors":null,"stackTrace":"[StackTrace] (not set in Prod)","requestId":"a2d445f6-2a9c-4f3c-a2f3-bb0b1f5ea74f"}
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Authenticated client is not authorized to access message with given id",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                },
+                "example": {"error":"Not authorized for HerId(s): 1234","validationErrors":null,"stackTrace":"[StackTrace] (not set in Prod)","requestId":"9e0ab744-c038-46f3-801c-199ec5a64561"}
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error - Unexpected server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                },
+                "example": {"error":"An unknown error occurred","validationErrors":null,"stackTrace":"[StackTrace] (not set in Prod)","requestId":"fdd48355-0e0c-4cad-a3d7-241920c53489"}
+              }
+            }
+          },
+          "200": {
+            "description": "OK - A list with statuses for message with given id",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ApprecInfo"
+                  }
+                },
+                "example": [{"receiverHerId":42,"appRecStatus":"Rejected","appRecErrorList":[{"errorCode":"E10","details":"Ugyldig meldingsidentifikator"}]}]
+              }
+            }
+          },
+          "404": {
+            "description": "Not found - Message with given id could not be found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                },
+                "example": {"error":"Could not find database document","validationErrors":null,"stackTrace":"[StackTrace] (not set in Prod)","requestId":"e0867172-55f3-440c-b9c5-f50cb39355b1"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/Messages": {
+      "get": {
+        "tags": [
+          "MessagesController"
+        ],
+        "summary": "Get a list of unread messages",
+        "operationId": "GetMessages",
+        "parameters": [
+          {
+            "name": "ReceiverHerIds",
+            "in": "query",
+            "description": "Which messages sent to given HER-ids (one or more) to fetch.",
+            "required": true,
+            "schema": {
+              "uniqueItems": true,
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "example": [
+                42,
+                1337
+              ]
+            },
+            "example": [
+              42,
+              1337
+            ]
+          },
+          {
+            "name": "SenderHerId",
+            "in": "query",
+            "description": "HER-id of sender (default = null).",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "example": null
+            },
+            "example": null
+          },
+          {
+            "name": "BusinessDocumentId",
+            "in": "query",
+            "description": "MsgId in business document (default = null).",
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string",
+              "example": null
+            },
+            "example": null
+          },
+          {
+            "name": "IncludeMetadata",
+            "in": "query",
+            "description": "Whether to include metadata or only include Id and ReceiverHerId of Message in results (default = false).",
+            "schema": {
+              "type": "boolean",
+              "example": false
+            },
+            "example": false
+          },
+          {
+            "name": "MessagesToFetch",
+            "in": "query",
+            "description": "How many messages to fetch (default = 10) (If set, must be a number between 1 and 100).",
+            "schema": {
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer",
+              "format": "int32",
+              "example": 10
+            },
+            "example": 10
+          },
+          {
+            "name": "OrderBy",
+            "in": "query",
+            "description": "How to order results (based on GenDate in business document) (default = 1).\n\r\n- 1 = Ascending\n\r\n- 2 = Descending",
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/OrderBy"
+                }
+              ],
+              "example": "1"
+            },
+            "example": "1"
+          },
+          {
+            "name": "api-version",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "2"
+          },
+          {
+            "name": "nhn-source-system",
+            "in": "header",
+            "description": "Name and version for the client system",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "MyApplication, v1.337"
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad request - The request body contained invalid data or the request was cancelled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                },
+                "example": {"error":"Model validation error occurred","validationErrors":null,"stackTrace":"[StackTrace] (not set in Prod)","requestId":"b5c9460b-2af3-4d32-a2ac-210caf09de90"}
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Authenticated client is not authorized to access messages with given HerIds",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                },
+                "example": {"error":"Not authorized for HerId(s): 1234","validationErrors":null,"stackTrace":"[StackTrace] (not set in Prod)","requestId":"56d36ee9-5649-48c9-be7f-6d487a922df2"}
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error - Unexpected server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                },
+                "example": {"error":"An unknown error occurred","validationErrors":null,"stackTrace":"[StackTrace] (not set in Prod)","requestId":"b5b8a1b4-d1c4-494d-9b2f-840270d90a78"}
+              }
+            }
+          },
+          "200": {
+            "description": "OK - A list with unread messages matching query parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Message"
+                  }
+                },
+                "example": [{"id":"1b8b180e-b43c-4e86-890e-313f9c67b459","receiverHerId":42,"senderHerId":1111,"businessDocumentId":"26d5f11b-fc9c-4227-88db-ac390c0f5e42","businessDocumentGenDate":"2025-03-25T12:56:52.0064882+00:00","isAppRec":false},{"id":"916c5d6d-464d-40ae-af6f-2f619d6a4ec1","receiverHerId":1337,"senderHerId":2222,"businessDocumentId":"8338768c-a92e-4fb3-9773-081b6be7a228","businessDocumentGenDate":"2025-03-25T12:56:52.0064914+00:00","isAppRec":false}]
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "MessagesController"
+        ],
+        "summary": "Send a message with business document",
+        "description": "The request has a max limit of 35 MB",
+        "operationId": "PostMessage",
+        "parameters": [
+          {
+            "name": "api-version",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "2"
+          },
+          {
+            "name": "nhn-source-system",
+            "in": "header",
+            "description": "Name and version for the client system",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "MyApplication, v1.337"
+          }
+        ],
+        "requestBody": {
+          "description": "Object with business document and metadata",
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/PostMessageRequest"
+                  }
+                ],
+                "description": "Business document (payload) and metadata for POST on Messages"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/PostMessageRequest"
+                  }
+                ],
+                "description": "Business document (payload) and metadata for POST on Messages"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/PostMessageRequest"
+                  }
+                ],
+                "description": "Business document (payload) and metadata for POST on Messages"
+              }
+            }
+          }
+        },
+        "responses": {
+          "400": {
+            "description": "Bad request - The request contained invalid data or the request was cancelled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                },
+                "example": {"error":"Model validation error occurred","validationErrors":null,"stackTrace":"[StackTrace] (not set in Prod)","requestId":"ebe6e3ab-33a1-4d73-b3ea-e5fa4788bc78"}
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Authenticated client is not authorized to send message from given HerId",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                },
+                "example": {"error":"Not authorized for HerId(s): 1234","validationErrors":null,"stackTrace":"[StackTrace] (not set in Prod)","requestId":"c041d80a-b453-4fff-b37e-537b254051bf"}
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error - Unexpected server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                },
+                "example": {"error":"An unknown error occurred","validationErrors":null,"stackTrace":"[StackTrace] (not set in Prod)","requestId":"1c0021c8-1f45-4cf9-b545-757e00a5571e"}
+              }
+            }
+          },
+          "201": {
+            "description": "Created - Response body contains id of created message and Location-header contains url for fetching the created message",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "example": "65e1ce88-5344-4784-b7ca-42df1e67adb6"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/Messages/{id}": {
+      "get": {
+        "tags": [
+          "MessagesController"
+        ],
+        "summary": "Get message with given id",
+        "operationId": "GetMessage",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Id of message, as received from GET Messages endpoint (must be a valid Guid)",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "2"
+          },
+          {
+            "name": "nhn-source-system",
+            "in": "header",
+            "description": "Name and version for the client system",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "MyApplication, v1.337"
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad request - The request was cancelled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                },
+                "example": {"error":"Request was cancelled","validationErrors":null,"stackTrace":"[StackTrace] (not set in Prod)","requestId":"079f8b32-1276-4d68-9e44-c0187bb6b06d"}
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Authenticated client is not authorized to access messages with given id",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                },
+                "example": {"error":"Not authorized for HerId(s): 1234","validationErrors":null,"stackTrace":"[StackTrace] (not set in Prod)","requestId":"7d64382c-96f2-4bf9-a62f-b257d75ad3d4"}
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error - Unexpected server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                },
+                "example": {"error":"An unknown error occurred","validationErrors":null,"stackTrace":"[StackTrace] (not set in Prod)","requestId":"10711a33-cfc8-44e6-a2cd-bc8a033507a4"}
+              }
+            }
+          },
+          "200": {
+            "description": "OK - Message with given id",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                },
+                "example": {"id":"132342e9-dcfc-4242-818d-89083a320609","receiverHerId":42,"senderHerId":1111,"businessDocumentId":"31587014-5aac-44e3-9c4a-72a193cced6a","businessDocumentGenDate":"2025-03-25T12:56:52.0095574+00:00","isAppRec":false}
+              }
+            }
+          },
+          "404": {
+            "description": "Not found - Message with given id could not be found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                },
+                "example": {"error":"Could not find database document","validationErrors":null,"stackTrace":"[StackTrace] (not set in Prod)","requestId":"ed264092-ad28-4dd0-9c9b-8f40ad29acb6"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/Messages/{id}/business-document": {
+      "get": {
+        "tags": [
+          "MessagesController"
+        ],
+        "summary": "Get business document for message",
+        "operationId": "GetBusinessDocument",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Id of message, as received from GET Messages endpoint (must be a valid Guid)",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "2"
+          },
+          {
+            "name": "nhn-source-system",
+            "in": "header",
+            "description": "Name and version for the client system",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "MyApplication, v1.337"
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad request - The request was cancelled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                },
+                "example": {"error":"Request was cancelled","validationErrors":null,"stackTrace":"[StackTrace] (not set in Prod)","requestId":"a187f219-cb61-497f-a7eb-5eeffbb8db35"}
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Authenticated client is not authorized to access message with given id",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                },
+                "example": {"error":"Not authorized for HerId(s): 1234","validationErrors":null,"stackTrace":"[StackTrace] (not set in Prod)","requestId":"7921113c-4c20-4bc9-b6d6-9417bb01b160"}
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error - Unexpected server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                },
+                "example": {"error":"An unknown error occurred","validationErrors":null,"stackTrace":"[StackTrace] (not set in Prod)","requestId":"26ff0e82-c8ac-4c2e-9753-878226806bca"}
+              }
+            }
+          },
+          "200": {
+            "description": "OK - Business document for message with given id",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetBusinessDocumentResponse"
+                },
+                "example": {"businessDocument":"\"PD94bWw+[...]\"","contentType":"application/xml","contentTransferEncoding":"base64"}
+              }
+            }
+          },
+          "404": {
+            "description": "Not found - Message with given id could not be found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                },
+                "example": {"error":"Could not find database document","validationErrors":null,"stackTrace":"[StackTrace] (not set in Prod)","requestId":"dd0e6ce7-ac1e-43fb-9ee4-a6ff7acb66fa"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/Messages/{id}/status": {
+      "get": {
+        "tags": [
+          "MessagesController"
+        ],
+        "summary": "Get message status\r\nTODO Indicate correct use of this endpoint (e.g. \"Get message status of a sent message\")",
+        "description": "When id refers to an application receipt, only StatusInfo.Acknowledged is relevant",
+        "operationId": "GetStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Id of message, as received from GET Messages endpoint (must be a valid Guid)",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "2"
+          },
+          {
+            "name": "nhn-source-system",
+            "in": "header",
+            "description": "Name and version for the client system",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "MyApplication, v1.337"
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad request - The request was cancelled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                },
+                "example": {"error":"Request was cancelled","validationErrors":null,"stackTrace":"[StackTrace] (not set in Prod)","requestId":"9cf91963-dd8f-4108-a05b-686e945929b6"}
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Authenticated client is not authorized to access message with given id",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                },
+                "example": {"error":"Not authorized for HerId(s): 1234","validationErrors":null,"stackTrace":"[StackTrace] (not set in Prod)","requestId":"67bb77e7-4bb7-4ece-b38d-4e57d073aec1"}
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error - Unexpected server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                },
+                "example": {"error":"An unknown error occurred","validationErrors":null,"stackTrace":"[StackTrace] (not set in Prod)","requestId":"7c29c4b2-8241-4980-96a8-96dcac3bd992"}
+              }
+            }
+          },
+          "200": {
+            "description": "OK - A list with statuses for message with given id",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StatusInfo"
+                  }
+                },
+                "example": [{"receiverHerId":42,"transportDeliveryState":"Acknowledged","appRecStatus":"Ok"}]
+              }
+            }
+          },
+          "404": {
+            "description": "Not found - Message with given id could not be found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                },
+                "example": {"error":"Could not find database document","validationErrors":null,"stackTrace":"[StackTrace] (not set in Prod)","requestId":"a897d770-23e3-4869-9465-04086203d0f3"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/Messages/{id}/apprec/{appRecSenderHerId}": {
+      "post": {
+        "tags": [
+          "MessagesController"
+        ],
+        "summary": "Send an application receipt for a message",
+        "description": "AppRecStatus must be 1 ('OK'), 2 ('Avvist') or 3 ('Ok, feil i delmelding')\n\r\nAppRecErrorList must be populated if AppRecResult is 'Avvist'\n\r\nAppRecErrorList.Details is optional\n",
+        "operationId": "PostAppRec",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Id of the message for which to send application receipt, as received from GET Messages endpoint (must be a valid Guid)",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "appRecSenderHerId",
+            "in": "path",
+            "description": "The HER-id of the sender of the application receipt",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "2"
+          },
+          {
+            "name": "nhn-source-system",
+            "in": "header",
+            "description": "Name and version for the client system",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "MyApplication, v1.337"
+          }
+        ],
+        "requestBody": {
+          "description": "Application receipt result, potential errors and metadata",
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/PostAppRecRequest"
+                  }
+                ],
+                "description": "Information about the application receipt"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/PostAppRecRequest"
+                  }
+                ],
+                "description": "Information about the application receipt"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/PostAppRecRequest"
+                  }
+                ],
+                "description": "Information about the application receipt"
+              }
+            }
+          }
+        },
+        "responses": {
+          "400": {
+            "description": "Bad request - The request body contained invalid data or the request was cancelled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                },
+                "example": {"error":"Model validation error occurred","validationErrors":null,"stackTrace":"[StackTrace] (not set in Prod)","requestId":"f233b453-0efb-42f1-9929-b2af3ad5ad2c"}
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Authenticated client is not authorized to send application receipts for message with given Id",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                },
+                "example": {"error":"Not authorized for HerId(s): 1234","validationErrors":null,"stackTrace":"[StackTrace] (not set in Prod)","requestId":"000f3049-79dc-4c03-9f37-24a021f552a2"}
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error - Unexpected server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                },
+                "example": {"error":"An unknown error occurred","validationErrors":null,"stackTrace":"[StackTrace] (not set in Prod)","requestId":"207c8b07-1e53-4960-bd74-d30aa61ac8a0"}
+              }
+            }
+          },
+          "201": {
+            "description": "Created - Response body contains id of created message and Location-header contains url for fetching the created message",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "example": "1c7a0f4d-8ed2-4a22-8083-95e973d261f3"
+              }
+            }
+          },
+          "404": {
+            "description": "Not found - Message with given id could not be found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                },
+                "example": {"error":"Could not find database document","validationErrors":null,"stackTrace":"[StackTrace] (not set in Prod)","requestId":"cdbf917b-5f61-4856-a559-6d9b45b9ecf6"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/Messages/{id}/read/{herId}": {
+      "put": {
+        "tags": [
+          "MessagesController"
+        ],
+        "summary": "Mark message as read",
+        "operationId": "MarkMessageAsRead",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Id of message, as received from GET Messages endpoint (must be a valid Guid)",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "herId",
+            "in": "path",
+            "description": "HER-id of the receiver/copy receiver of the message",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "2"
+          },
+          {
+            "name": "nhn-source-system",
+            "in": "header",
+            "description": "Name and version for the client system",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "MyApplication, v1.337"
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad request - The request contained invalid data or the request was cancelled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                },
+                "example": {"error":"Model validation error occurred","validationErrors":null,"stackTrace":"[StackTrace] (not set in Prod)","requestId":"123644be-b9bb-471b-a047-13c34d3b7b1d"}
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Authenticated client is not authorized to access message with given id",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                },
+                "example": {"error":"Not authorized for HerId(s): 1234","validationErrors":null,"stackTrace":"[StackTrace] (not set in Prod)","requestId":"24701d20-294e-44e6-bc24-3eca503794b2"}
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error - Unexpected server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                },
+                "example": {"error":"An unknown error occurred","validationErrors":null,"stackTrace":"[StackTrace] (not set in Prod)","requestId":"54ec2cde-b6ce-4ea4-b85f-571ef0b61f45"}
+              }
+            }
+          },
+          "204": {
+            "description": "No content - Message with given id has been marked as read"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                },
+                "example": {"error":"Request was cancelled","validationErrors":null,"stackTrace":"[StackTrace] (not set in Prod)","requestId":"53d1488c-31fe-4669-b583-7cb767dcd405"}
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AppRecError": {
+        "required": [
+          "details",
+          "errorCode"
+        ],
+        "type": "object",
+        "properties": {
+          "errorCode": {
+            "type": "string",
+            "description": "Application receipt error code.",
+            "nullable": true,
+            "example": "E10"
+          },
+          "details": {
+            "type": "string",
+            "description": "Details about the error.",
+            "nullable": true,
+            "example": ""
+          }
+        },
+        "additionalProperties": false,
+        "description": "Information about an error in the application receipt."
+      },
+      "AppRecStatus": {
+        "enum": [
+          "Ok",
+          "Rejected",
+          "OkErrorInMessagePart"
+        ],
+        "type": "string",
+        "description": "Application receipt status\n\r\n- Ok = \"Ok\"\n\r\n- Rejected = \"Avvist\"\n\r\n- OkErrorInMessagePart = \"Ok, feil i delmelding\" NB! Not supported as of this writing.\n"
+      },
+      "ApprecInfo": {
+        "required": [
+          "receiverHerId"
+        ],
+        "type": "object",
+        "properties": {
+          "receiverHerId": {
+            "type": "integer",
+            "description": "The HER-id of the receiver/copy receiver of the business document",
+            "format": "int32"
+          },
+          "appRecStatus": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AppRecStatus"
+              }
+            ],
+            "description": "Application receipt status. Value 'null' if not received",
+            "nullable": true
+          },
+          "appRecErrorList": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AppRecError"
+            },
+            "description": "List with errors in the application receipt, if any",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DeliveryState": {
+        "enum": [
+          "Unconfirmed",
+          "Acknowledged",
+          "Rejected"
+        ],
+        "type": "string"
+      },
+      "EbXmlInfo": {
+        "type": "object",
+        "properties": {
+          "cpaId": {
+            "type": "string",
+            "description": "If not set, value according to HIS 1037:2011 will be generated.",
+            "nullable": true
+          },
+          "conversationId": {
+            "type": "string",
+            "description": "If not set, value according to HIS 1037:2011 will be generated.",
+            "nullable": true
+          },
+          "service": {
+            "type": "string",
+            "description": "If not set, value according to HIS 1209:2018 will be generated.",
+            "nullable": true
+          },
+          "serviceType": {
+            "type": "string",
+            "description": "If not set, value according to HIS 1209:2018 will be generated.",
+            "nullable": true
+          },
+          "action": {
+            "type": "string",
+            "description": "If not set, value will be resolved from BusinessDocument.",
+            "nullable": true
+          },
+          "senderRole": {
+            "type": "string",
+            "description": "If not set, value according to HIS 1209:2018 will be generated.",
+            "nullable": true
+          },
+          "receiverRole": {
+            "type": "string",
+            "description": "If not set, value according to HIS 1209:2018 will be generated.",
+            "nullable": true
+          },
+          "applicationName": {
+            "type": "string",
+            "description": "Name of application or EPJ. HIS 1210:2018",
+            "nullable": true,
+            "example": "\"EPJ Front\""
+          },
+          "applicationVersion": {
+            "type": "string",
+            "description": "Version of application or EPJ. HIS 1210:2018",
+            "nullable": true,
+            "example": "\"18.0.8\""
+          },
+          "middlewareName": {
+            "type": "string",
+            "description": "Some systems use a middleware between application and messagehandler. Name can be provided here. HIS 1210:2018",
+            "nullable": true
+          },
+          "middlewareVersion": {
+            "type": "string",
+            "description": "Some systems use a middleware between application and messagehandler. Version can be provided here. HIS 1210:2018",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Information to be used for the EBXML generation"
+      },
+      "ErrorMessage": {
+        "required": [
+          "requestId"
+        ],
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Description of error.",
+            "nullable": true
+          },
+          "validationErrors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Which validation errors that led to error, if any.",
+            "nullable": true
+          },
+          "stackTrace": {
+            "type": "string",
+            "description": "Only used in Development-environments, will be null in PROD.",
+            "nullable": true
+          },
+          "requestId": {
+            "type": "string",
+            "description": "Current Request id for log-tracking."
+          }
+        },
+        "additionalProperties": false,
+        "description": "Information about an error that has occured while processing a request."
+      },
+      "GetBusinessDocumentResponse": {
+        "required": [
+          "businessDocument",
+          "contentTransferEncoding",
+          "contentType"
+        ],
+        "type": "object",
+        "properties": {
+          "businessDocument": {
+            "minLength": 1,
+            "type": "string",
+            "description": "The business document - Payload.\n\r\nThe BusinessDocument is the raw bytes of the payload encoded with ContentTransferEncoding",
+            "example": "\"PD94bWw+[...]\""
+          },
+          "contentType": {
+            "minLength": 1,
+            "type": "string",
+            "description": "Content type for the business document.\n\r\nMost payloads should be xml",
+            "example": "\"application/xml\""
+          },
+          "contentTransferEncoding": {
+            "minLength": 1,
+            "type": "string",
+            "description": "Content transfer encoding for the business document.\n\r\nPayload is always base64-encoded.",
+            "example": "\"base64\""
+          }
+        },
+        "additionalProperties": false,
+        "description": "Business document (payload) and metadata returned from GET/business-document on Messages"
+      },
+      "Message": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Internal id of message. To be used when using messages/{id}/*-endpoints.\n\r\nWill always be a valid Guid",
+            "format": "uuid",
+            "nullable": true,
+            "example": "5f5e94d5-d908-476b-a172-a241c52eddb6"
+          },
+          "contentType": {
+            "type": "string",
+            "description": "Content type for the business document",
+            "nullable": true,
+            "example": "\"application/xml\""
+          },
+          "receiverHerId": {
+            "type": "integer",
+            "description": "HER-id of receiver.",
+            "format": "int32",
+            "nullable": true,
+            "example": 1337
+          },
+          "senderHerId": {
+            "type": "integer",
+            "description": "HER-id of sender (will not be present if includeMetadata = false).",
+            "format": "int32",
+            "nullable": true,
+            "example": 1111
+          },
+          "businessDocumentId": {
+            "type": "string",
+            "description": "MsgId in business document (will not be present if includeMetadata = false).",
+            "nullable": true,
+            "example": "9f1c892b-4341-4239-b627-83b7a1eb65ab"
+          },
+          "businessDocumentGenDate": {
+            "type": "string",
+            "description": "GenDate in business document (will not be present if includeMetadata = false).",
+            "format": "date-time",
+            "nullable": true,
+            "example": "2024-09-03T07:55:13.0000000"
+          },
+          "isAppRec": {
+            "type": "boolean",
+            "description": "Whether business document is an application receipt (will not be present if includeMetadata = false).",
+            "nullable": true,
+            "example": false
+          }
+        },
+        "additionalProperties": false
+      },
+      "OrderBy": {
+        "enum": [
+          "Ascending",
+          "Descending"
+        ],
+        "type": "string",
+        "description": "How to order results based on GenDate in business document."
+      },
+      "PostAppRecRequest": {
+        "required": [
+          "appRecStatus"
+        ],
+        "type": "object",
+        "properties": {
+          "appRecStatus": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AppRecStatus"
+              }
+            ],
+            "description": "The status of the application receipt sent for a received message\r\n\n1 = Ok, 2 = Avvist, 3 = Ok, feil i delmelding",
+            "example": "1"
+          },
+          "appRecErrorList": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AppRecError"
+            },
+            "description": "List of errors in application receipt",
+            "nullable": true
+          },
+          "ebXmlOverrides": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/EbXmlInfo"
+              }
+            ],
+            "description": "One or more EbXml-properties can be provided if business process has special requirements.\n\r\nFor most business processes the values can and will be resolved from the business document\r\nby the server, and therefore does not have to be applied twice.\r\nCurrent implementation is following 'HIS 1037:2011' and 'HIS 1209:2018'\n",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Information about the application receipt"
+      },
+      "PostMessageRequest": {
+        "required": [
+          "businessDocument",
+          "contentTransferEncoding",
+          "contentType"
+        ],
+        "type": "object",
+        "properties": {
+          "businessDocument": {
+            "minLength": 1,
+            "type": "string",
+            "description": "The business document - Payload.\n\r\nIt is required that the encoding in the XML-document is UTF-8, and that this is declared in the first line.\r\nExample: `<xml version=\"1.0\" encoding=\"UTF-8\" />`.\n\r\nThe payload must be of type and encoding as specified in ContentType and ContentTransferEncoding, meaning that the\r\npayload should always be an XML-document as a base64-encoded string.",
+            "example": "\"PD94bWw+[...]\""
+          },
+          "contentType": {
+            "minLength": 1,
+            "type": "string",
+            "description": "Content type for the business document.\n\r\nNB! Payload should always be an XML-document as a base64-encoded string.",
+            "example": "\"application/xml\""
+          },
+          "contentTransferEncoding": {
+            "minLength": 1,
+            "type": "string",
+            "description": "Content transfer encoding for the business document.\n\r\nNB! Payload should always be base64-encoded.",
+            "example": "\"base64\""
+          },
+          "ebXmlOverrides": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/EbXmlInfo"
+              }
+            ],
+            "description": "One or more EbXml-properties can be provided if business process has special requirements.\n\r\nFor most business processes the values can and will be resolved from the business document\r\nby the server, and therefore does not have to be applied twice.\r\nCurrent implementation is following 'HIS 1037:2011' and 'HIS 1209:2018'\n",
+            "nullable": true
+          },
+          "receiverHerIdsSubset": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "description": "The Business document might contain many receivers, but only the receivers listed here\r\nshould be handled by Meldingstjener",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Business document (payload) and metadata for POST on Messages"
+      },
+      "StatusInfo": {
+        "required": [
+          "receiverHerId",
+          "transportDeliveryState"
+        ],
+        "type": "object",
+        "properties": {
+          "receiverHerId": {
+            "type": "integer",
+            "description": "The HER-id of the receiver/copy receiver of the business document",
+            "format": "int32"
+          },
+          "transportDeliveryState": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DeliveryState"
+              }
+            ],
+            "description": "Transport delivery state for the message"
+          },
+          "appRecStatus": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AppRecStatus"
+              }
+            ],
+            "description": "Application receipt status. Value 'null' if not received.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Status information about the message exchange"
+      }
+    },
+    "securitySchemes": {
+      "Bearer": {
+        "type": "http",
+        "description": "Put **_ONLY_** your JWT Bearer token in text box below!",
+        "scheme": "Bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  },
+  "security": [
+    {
+      "Bearer": [ ]
+    }
+  ]
+}

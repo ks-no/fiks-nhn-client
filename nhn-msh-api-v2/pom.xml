@@ -9,15 +9,15 @@
         <version>1.0.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>nhn-rest-api</artifactId>
+    <artifactId>nhn-msh-api-v2</artifactId>
 
     <properties>
         <maven.install.skip>true</maven.install.skip>
         <maven.deploy.skip>true</maven.deploy.skip>
         <sonar.skip>true</sonar.skip>
         <skipTests>true</skipTests>
-        <basePackage>${project.groupId}.send.brev</basePackage>
-        <openapi-spec-file>nhn-rest-api.json</openapi-spec-file>
+        <basePackage>${project.groupId}.nhn-client</basePackage>
+        <openapi-spec-file>NHN-MSH-api-v2.json</openapi-spec-file>
     </properties>
 
     <build>
@@ -79,7 +79,7 @@
                 <artifactId>openapi-generator-maven-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>send-brevapi</id>
+                        <id>nhn-msh-api-v2</id>
                         <goals>
                             <goal>generate</goal>
                         </goals>

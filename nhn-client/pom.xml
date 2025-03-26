@@ -27,6 +27,10 @@
             <artifactId>kotest-assertions-core-jvm</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>no.ks.fiks</groupId>
+            <artifactId>nhn-msh-api-v2</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
