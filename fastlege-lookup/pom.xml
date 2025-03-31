@@ -97,7 +97,8 @@
                             <sourceRoot>${project.build.directory}/generated-sources/cxf</sourceRoot>
                             <wsdlOptions>
                                 <wsdlOption>
-                                    <wsdl>wsdl/nhn-orchestration-service.wsdl</wsdl>
+                                    <!--<wsdl>wsdl/nhn-orchestration-service.wsdl</wsdl>-->
+                                    <wsdl>wsdl/nhn-flr-service.wsdl</wsdl>
                                 </wsdlOption>
                             </wsdlOptions>
                         </configuration>

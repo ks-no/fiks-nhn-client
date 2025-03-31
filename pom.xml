@@ -17,8 +17,9 @@
     <name>${project.artifactId}</name>
 
     <modules>
-        <module>nhn-client</module>
+        <module>nhn-models</module>
         <module>fastlege-lookup</module>
+        <module>nhn-client</module>
     </modules>
 
     <properties>
@@ -42,6 +43,12 @@
     </properties>
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>no.ks.fiks</groupId>
+                <artifactId>nhn-models</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
             <dependency>
                 <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-stdlib-jdk8</artifactId>

@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>no.ks.fiks</groupId>
+        <artifactId>nhn-client-parent</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>nhn-models</artifactId>
+
+    <properties>
+        <jakarta.xml.bind-api.version>4.0.2</jakarta.xml.bind-api.version>
+        <jaxb-impl.version>4.0.5</jaxb-impl.version>
+
+        <basicjaxb-plugins.version>2.2.1</basicjaxb-plugins.version>
+        <higherjaxb-maven-plugin.version>2.2.1</higherjaxb-maven-plugin.version>
+        <hyperjaxb-annox-plugin.version>2.2.1</hyperjaxb-annox-plugin.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-stdlib-jdk8</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>jakarta.xml.bind</groupId>
+            <artifactId>jakarta.xml.bind-api</artifactId>
+            <version>${jakarta.xml.bind-api.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.xml.bind</groupId>
+            <artifactId>jaxb-impl</artifactId>
+            <version>${jaxb-impl.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.kotest</groupId>
+            <artifactId>kotest-runner-junit5-jvm</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.kotest</groupId>
+            <artifactId>kotest-assertions-core-jvm</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <sourceDirectory>src/main/kotlin</sourceDirectory>
+        <testSourceDirectory>src/test/kotlin</testSourceDirectory>
+        <plugins>
+            <plugin>
+                <groupId>org.jetbrains.kotlin</groupId>
+                <artifactId>kotlin-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.patrodyne.jvnet</groupId>
+                <artifactId>hisrc-higherjaxb30-maven-plugin</artifactId>
+                <version>${higherjaxb-maven-plugin.version}</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.fasterxml.jackson.core</groupId>
+                        <artifactId>jackson-annotations</artifactId>
+                        <version>${jackson.version}</version>
+                    </dependency>
+                </dependencies>
+                <executions>
+                    <execution>
+                        <id>xsd-generate</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <schemaDirectory>src/main/resources/xsd</schemaDirectory>
+                    <schemaIncludes>
+                        <include>*.xsd</include>
+                    </schemaIncludes>
+                    <generateDirectory>${project.build.directory}/generated-sources</generateDirectory>
+                    <strict>true</strict>
+                    <extension>true</extension>
+                    <verbose>true</verbose>
+                    <removeOldOutput>true</removeOldOutput>
+                    <args>
+                        <arg>-Xannotate</arg>
+                        <arg>-Xsetters</arg>
+                    </args>
+                    <plugins>
+                        <plugin>
+                            <groupId>org.patrodyne.jvnet</groupId>
+                            <artifactId>hisrc-basicjaxb-plugins</artifactId>
+                            <version>${basicjaxb-plugins.version}</version>
+                        </plugin>
+                        <plugin>
+                            <groupId>org.patrodyne.jvnet</groupId>
+                            <artifactId>hisrc-hyperjaxb-annox-plugin</artifactId>
+                            <version>${hyperjaxb-annox-plugin.version}</version>
+                        </plugin>
+                    </plugins>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
