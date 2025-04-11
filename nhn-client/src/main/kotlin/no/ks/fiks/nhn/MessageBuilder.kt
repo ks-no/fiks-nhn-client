@@ -5,6 +5,7 @@ import jakarta.xml.bind.util.JAXBSource
 import no.kith.xmlstds.base64container.Base64Container
 import no.kith.xmlstds.dialog._2006_10_11.Dialogmelding
 import no.kith.xmlstds.msghead._2006_05_24.*
+import java.io.InputStream
 import java.io.StringWriter
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -31,9 +32,9 @@ object MessageBuilder {
     fun buildNhnMessage(message: Message): String {
         val msgHead = buildMsgHead(message)
         val dialogmelding = DialogmeldingBuilder.buildDialogmelding()
-        val vedlegg = buildVedlegg()
+        val vedlegg = buildVedlegg(message.vedlegg)
 
-        msgHead.document = listOf(
+        msgHead.document = listOfNotNull(
             buildDialogmeldingDocument(dialogmelding),
             buildVedleggDocument(vedlegg),
         )
@@ -52,10 +53,6 @@ object MessageBuilder {
                 msgId = createMsgId()
                 sender = toSender(message.sender)
                 receiver = when (message.receiver) {
-                    is FastlegeForPersonReceiver -> NhnReceiver().apply {
-                        // TODO: Oppslag i fastlegeregisteret for å finne parent + child
-                    }
-
                     is HerIdReceiver -> NhnReceiver().apply {
                         organisation = NhnOrganisation().apply {
                             organisationName = message.receiver.parent.name
@@ -88,10 +85,6 @@ object MessageBuilder {
                     }
                 }
                 patient = when (message.receiver) {
-                    is FastlegeForPersonReceiver -> NhnPatient().apply {
-                        // TODO: Oppslag mot folkeregisteret?
-                    }
-
                     is HerIdReceiver -> NhnPatient().apply {
                         givenName = message.receiver.patient.firstName
                         middleName = message.receiver.patient.middleName
@@ -151,9 +144,9 @@ object MessageBuilder {
         s = type.kodeverk
     }
 
-    private fun buildVedlegg() = Document().apply {
+    private fun buildVedlegg(inputStream: InputStream?) = inputStream?.let {
         Base64Container().apply {
-            value = nextBytes(100)
+            value = it.readAllBytes()
         }
     }
 
@@ -172,7 +165,7 @@ object MessageBuilder {
             }
         }
 
-    private fun buildVedleggDocument(vedlegg: Document) =
+    private fun buildVedleggDocument(vedlegg: Any?) = vedlegg?.let { vedleggNotNull ->
         Document().apply {
             refDoc = RefDoc().apply {
                 issueDate = TS().apply {
@@ -186,11 +179,12 @@ object MessageBuilder {
                 description = "Blablabla" // TODO: Tittel på forsendelsen?
                 content = RefDoc.Content().apply {
                     any = listOf(
-                        vedlegg
+                        vedleggNotNull
                     )
                 }
             }
         }
+    }
 
     private fun createMarshaller() = context.createMarshaller()
 

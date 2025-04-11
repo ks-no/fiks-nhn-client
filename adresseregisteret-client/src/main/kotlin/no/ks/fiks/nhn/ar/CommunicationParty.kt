@@ -2,7 +2,9 @@ package no.ks.fiks.nhn.ar
 
 data class CommunicationParty(
     val herId: Int,
-    val name: String,
+    val firstName: String,
+    val middleName: String?,
+    val lastName: String,
     val parent: CommunicationPartyParent,
     val physicalAddresses: List<PhysicalAddress>,
 )

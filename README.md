@@ -9,3 +9,5 @@ Dialogmelding 1.1: https://sarepta.helsedir.no/standard/Dialogmelding/1.1
 Vedlegg til meldinger: https://sarepta.helsedir.no/standard/Vedlegg%20til%20meldinger  
 
 Kodeverk: https://finnkode.helsedirektoratet.no/adm/collections
+
+HIS 1174:2016: https://www.helsedirektoratet.no/standarder/bruk-av-kontaktopplysninger-i-basismeldinger-dialogmelding-og-pleie-og-omsorgsmeldinger
