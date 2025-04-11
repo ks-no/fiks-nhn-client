@@ -15,6 +15,10 @@
     <properties>
         <jakarta.xml.bind-api.version>4.0.2</jakarta.xml.bind-api.version>
         <jaxb-impl.version>4.0.5</jaxb-impl.version>
+
+        <basicjaxb-plugins.version>2.2.1</basicjaxb-plugins.version>
+        <higherjaxb-maven-plugin.version>2.2.1</higherjaxb-maven-plugin.version>
+        <hyperjaxb-annox-plugin.version>2.2.1</hyperjaxb-annox-plugin.version>
     </properties>
 
     <dependencies>
@@ -56,6 +60,54 @@
             </plugin>
             <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.patrodyne.jvnet</groupId>
+                <artifactId>hisrc-higherjaxb30-maven-plugin</artifactId>
+                <version>${higherjaxb-maven-plugin.version}</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.fasterxml.jackson.core</groupId>
+                        <artifactId>jackson-annotations</artifactId>
+                        <version>${jackson.version}</version>
+                    </dependency>
+                </dependencies>
+                <executions>
+                    <execution>
+                        <id>xsd-generate</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <schemaDirectory>src/main/resources/xsd</schemaDirectory>
+                    <schemaIncludes>
+                        <include>*.xsd</include>
+                    </schemaIncludes>
+                    <generateDirectory>${project.build.directory}/generated-sources</generateDirectory>
+                    <strict>true</strict>
+                    <extension>true</extension>
+                    <verbose>true</verbose>
+                    <removeOldOutput>true</removeOldOutput>
+                    <args>
+                        <arg>-Xannotate</arg>
+                        <arg>-Xsetters</arg>
+                    </args>
+                    <plugins>
+                        <plugin>
+                            <groupId>org.patrodyne.jvnet</groupId>
+                            <artifactId>hisrc-basicjaxb-plugins</artifactId>
+                            <version>${basicjaxb-plugins.version}</version>
+                        </plugin>
+                        <plugin>
+                            <groupId>org.patrodyne.jvnet</groupId>
+                            <artifactId>hisrc-hyperjaxb-annox-plugin</artifactId>
+                            <version>${hyperjaxb-annox-plugin.version}</version>
+                        </plugin>
+                    </plugins>
+                </configuration>
             </plugin>
         </plugins>
     </build>
