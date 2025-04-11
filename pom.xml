@@ -17,8 +17,9 @@
     <name>${project.artifactId}</name>
 
     <modules>
+        <module>fastlegeregisteret-client</module>
+        <module>adresseregisteret-client</module>
         <module>nhn-client</module>
-        <module>fastlege-lookup</module>
     </modules>
 
     <properties>

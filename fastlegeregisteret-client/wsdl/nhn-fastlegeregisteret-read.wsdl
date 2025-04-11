@@ -1,0 +1,1502 @@
+<wsdl:definitions xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:wsp="http://www.w3.org/ns/ws-policy" xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" xmlns:wsa="http://schemas.xmlsoap.org/ws/2004/08/addressing" xmlns:wsap="http://schemas.xmlsoap.org/ws/2004/08/addressing/policy" xmlns:wsa10="http://www.w3.org/2005/08/addressing" xmlns:wsaw="http://www.w3.org/2006/05/addressing/wsdl" xmlns:wsam="http://www.w3.org/2007/05/addressing/metadata" xmlns:wsx="http://schemas.xmlsoap.org/ws/2004/09/mex" xmlns:msc="http://schemas.microsoft.com/ws/2005/12/wsdl/contract" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:tns="http://schemas.nhn.no/reg/flr" xmlns:i0="urn:notused" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" name="FlrReadOperationsService" targetNamespace="http://schemas.nhn.no/reg/flr">
+    <wsp:Policy wsu:Id="BasicHttpBinding_IFlrReadOperations_policy">
+        <wsp:ExactlyOne>
+            <wsp:All>
+                <http:BasicAuthentication xmlns:http="http://schemas.microsoft.com/ws/06/2004/policy/http"/>
+                <sp:TransportBinding xmlns:sp="http://schemas.xmlsoap.org/ws/2005/07/securitypolicy">
+                    <wsp:Policy>
+                        <sp:TransportToken>
+                            <wsp:Policy>
+                                <sp:HttpsToken RequireClientCertificate="false"/>
+                            </wsp:Policy>
+                        </sp:TransportToken>
+                        <sp:AlgorithmSuite>
+                            <wsp:Policy>
+                                <sp:Basic256/>
+                            </wsp:Policy>
+                        </sp:AlgorithmSuite>
+                        <sp:Layout>
+                            <wsp:Policy>
+                                <sp:Strict/>
+                            </wsp:Policy>
+                        </sp:Layout>
+                    </wsp:Policy>
+                </sp:TransportBinding>
+            </wsp:All>
+        </wsp:ExactlyOne>
+    </wsp:Policy>
+    <wsp:Policy wsu:Id="WSHttpBinding_IFlrReadOperations_policy">
+        <wsp:ExactlyOne>
+            <wsp:All>
+                <http:BasicAuthentication xmlns:http="http://schemas.microsoft.com/ws/06/2004/policy/http"/>
+                <sp:TransportBinding xmlns:sp="http://schemas.xmlsoap.org/ws/2005/07/securitypolicy">
+                    <wsp:Policy>
+                        <sp:TransportToken>
+                            <wsp:Policy>
+                                <sp:HttpsToken RequireClientCertificate="false"/>
+                            </wsp:Policy>
+                        </sp:TransportToken>
+                        <sp:AlgorithmSuite>
+                            <wsp:Policy>
+                                <sp:Basic256/>
+                            </wsp:Policy>
+                        </sp:AlgorithmSuite>
+                        <sp:Layout>
+                            <wsp:Policy>
+                                <sp:Strict/>
+                            </wsp:Policy>
+                        </sp:Layout>
+                    </wsp:Policy>
+                </sp:TransportBinding>
+                <wsam:Addressing>
+                    <wsp:Policy>
+                        <wsam:AnonymousResponses/>
+                    </wsp:Policy>
+                </wsam:Addressing>
+            </wsp:All>
+        </wsp:ExactlyOne>
+    </wsp:Policy>
+    <wsdl:types>
+        <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" targetNamespace="http://schemas.nhn.no/reg/flr">
+            <xs:import namespace="http://register.nhn.no/Common"/>
+            <xs:import namespace="http://schemas.nhn.no/reg/Common/en"/>
+            <xs:import namespace="http://schemas.datacontract.org/2004/07/System"/>
+            <xs:import namespace="http://register.nhn.no/Corporate"/>
+            <xs:import namespace="http://schemas.microsoft.com/2003/10/Serialization/Arrays"/>
+            <xs:import namespace="http://schemas.microsoft.com/Message"/>
+            <xs:import namespace="http://schemas.datacontract.org/2004/07/NHN.DtoContracts.Flr.Data"/>
+            <xs:element name="GetPatientGPDetails">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="patientNin" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="GetPatientGPDetailsResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="GetPatientGPDetailsResult" nillable="true" type="tns:PatientToGPContractAssociation"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:complexType name="PatientToGPContractAssociation">
+                <xs:sequence>
+                    <xs:element xmlns:q1="http://register.nhn.no/Common" minOccurs="0" name="BeginCode" nillable="true" type="q1:Code"/>
+                    <xs:element minOccurs="0" name="DoctorCycles" nillable="true" type="tns:ArrayOfGPOnContractAssociation"/>
+                    <xs:element xmlns:q2="http://register.nhn.no/Common" minOccurs="0" name="EndCode" nillable="true" type="q2:Code"/>
+                    <xs:element minOccurs="0" name="GPContract" nillable="true" type="tns:GPContract"/>
+                    <xs:element minOccurs="0" name="GPContractId" type="xs:long"/>
+                    <xs:element minOccurs="0" name="GPHerId" nillable="true" type="xs:int"/>
+                    <xs:element minOccurs="0" name="Id" type="xs:long"/>
+                    <xs:element minOccurs="0" name="Patient" nillable="true" type="tns:Person"/>
+                    <xs:element minOccurs="0" name="PatientNIN" nillable="true" type="xs:string"/>
+                    <xs:element xmlns:q3="http://schemas.nhn.no/reg/Common/en" minOccurs="0" name="Period" nillable="true" type="q3:Period"/>
+                    <xs:element minOccurs="0" name="UpdatedOn" type="xs:dateTime"/>
+                </xs:sequence>
+            </xs:complexType>
+            <xs:element name="PatientToGPContractAssociation" nillable="true" type="tns:PatientToGPContractAssociation"/>
+            <xs:complexType name="ArrayOfGPOnContractAssociation">
+                <xs:sequence>
+                    <xs:element minOccurs="0" maxOccurs="unbounded" name="GPOnContractAssociation" nillable="true" type="tns:GPOnContractAssociation"/>
+                </xs:sequence>
+            </xs:complexType>
+            <xs:element name="ArrayOfGPOnContractAssociation" nillable="true" type="tns:ArrayOfGPOnContractAssociation"/>
+            <xs:complexType name="GPOnContractAssociation">
+                <xs:sequence>
+                    <xs:element minOccurs="0" name="GP" nillable="true" type="tns:Person"/>
+                    <xs:element minOccurs="0" name="GPContract" nillable="true" type="tns:GPContract"/>
+                    <xs:element minOccurs="0" name="GPContractId" type="xs:long"/>
+                    <xs:element minOccurs="0" name="HprNumber" type="xs:int"/>
+                    <xs:element minOccurs="0" name="Id" type="xs:long"/>
+                    <xs:element xmlns:q4="http://register.nhn.no/Common" minOccurs="0" name="Relationship" nillable="true" type="q4:Code"/>
+                    <xs:element minOccurs="0" name="SubstituteForHprNumber" nillable="true" type="xs:int"/>
+                    <xs:element minOccurs="0" name="UpdatedOn" type="xs:dateTime"/>
+                    <xs:element xmlns:q5="http://schemas.nhn.no/reg/Common/en" minOccurs="0" name="Valid" nillable="true" type="q5:Period"/>
+                    <xs:element xmlns:q6="http://schemas.datacontract.org/2004/07/System" minOccurs="0" name="WorkingOnDays" nillable="true" type="q6:ArrayOfDayOfWeek"/>
+                    <xs:element minOccurs="0" name="WorkingPercentage" nillable="true" type="xs:int"/>
+                </xs:sequence>
+            </xs:complexType>
+            <xs:element name="GPOnContractAssociation" nillable="true" type="tns:GPOnContractAssociation"/>
+            <xs:complexType name="Person">
+                <xs:sequence>
+                    <xs:element minOccurs="0" name="DateOfBirth" nillable="true" type="xs:dateTime"/>
+                    <xs:element minOccurs="0" name="DateOfDeath" nillable="true" type="xs:dateTime"/>
+                    <xs:element minOccurs="0" name="FirstName" nillable="true" type="xs:string"/>
+                    <xs:element minOccurs="0" name="LastName" nillable="true" type="xs:string"/>
+                    <xs:element minOccurs="0" name="MiddleName" nillable="true" type="xs:string"/>
+                    <xs:element minOccurs="0" name="NIN" nillable="true" type="xs:string"/>
+                    <xs:element xmlns:q7="http://register.nhn.no/Common" minOccurs="0" name="PhysicalAddresses" nillable="true" type="q7:ArrayOfPhysicalAddress"/>
+                    <xs:element xmlns:q8="http://register.nhn.no/Common" minOccurs="0" name="Sex" nillable="true" type="q8:Code"/>
+                    <xs:element xmlns:q9="http://register.nhn.no/Common" minOccurs="0" name="Status" nillable="true" type="q9:ArrayOfStatus"/>
+                </xs:sequence>
+            </xs:complexType>
+            <xs:element name="Person" nillable="true" type="tns:Person"/>
+            <xs:complexType name="GPContract">
+                <xs:sequence>
+                    <xs:element minOccurs="0" name="AgreementDate" type="xs:dateTime"/>
+                    <xs:element xmlns:q10="http://register.nhn.no/Common" minOccurs="0" name="CoopMunicipalities" nillable="true" type="q10:ArrayOfCode"/>
+                    <xs:element minOccurs="0" name="DoctorCycles" nillable="true" type="tns:ArrayOfGPOnContractAssociation"/>
+                    <xs:element xmlns:q11="http://register.nhn.no/Common" minOccurs="0" name="EndReason" nillable="true" type="q11:Code"/>
+                    <xs:element minOccurs="0" name="GPOffice" nillable="true" type="tns:GPOffice"/>
+                    <xs:element minOccurs="0" name="GPOfficeOrganizationNumber" type="xs:int"/>
+                    <xs:element minOccurs="0" name="Id" type="xs:long"/>
+                    <xs:element minOccurs="0" name="IsFixedSalary" type="xs:boolean"/>
+                    <xs:element minOccurs="0" name="MaxPatients" type="xs:int"/>
+                    <xs:element xmlns:q12="http://register.nhn.no/Common" minOccurs="0" name="Municipality" nillable="true" type="q12:Code"/>
+                    <xs:element minOccurs="0" name="Name" nillable="true" type="xs:string"/>
+                    <xs:element minOccurs="0" name="OutOfOfficeOffices" nillable="true" type="tns:ArrayOfOutOfOfficeLocation"/>
+                    <xs:element minOccurs="0" name="ParticipatesOnCommonList" type="xs:boolean"/>
+                    <xs:element minOccurs="0" name="PatientList" nillable="true" type="tns:ArrayOfPatientToGPContractAssociation"/>
+                    <xs:element minOccurs="0" name="PatientsOnWaitingList" type="xs:int"/>
+                    <xs:element minOccurs="0" name="PlacesAvailable" nillable="true" type="xs:int"/>
+                    <xs:element minOccurs="0" name="PrimaryHealthCareTeamId" nillable="true" type="xs:long"/>
+                    <xs:element xmlns:q13="http://register.nhn.no/Common" minOccurs="0" name="RequiresMembership" nillable="true" type="q13:Code"/>
+                    <xs:element xmlns:q14="http://register.nhn.no/Common" minOccurs="0" name="Status" nillable="true" type="q14:Code"/>
+                    <xs:element minOccurs="0" name="UpdatedOn" type="xs:dateTime"/>
+                    <xs:element xmlns:q15="http://schemas.nhn.no/reg/Common/en" minOccurs="0" name="Valid" nillable="true" type="q15:Period"/>
+                </xs:sequence>
+            </xs:complexType>
+            <xs:element name="GPContract" nillable="true" type="tns:GPContract"/>
+            <xs:complexType name="GPOffice">
+                <xs:complexContent mixed="false">
+                    <xs:extension xmlns:q16="http://register.nhn.no/Corporate" base="q16:Business">
+                        <xs:sequence>
+                            <xs:element xmlns:q17="http://register.nhn.no/Common" minOccurs="0" name="District" nillable="true" type="q17:Code"/>
+                            <xs:element minOccurs="0" name="IsGroupOffice" type="xs:boolean"/>
+                            <xs:element minOccurs="0" name="PrimaryHealthCareTeamId" nillable="true" type="xs:long"/>
+                        </xs:sequence>
+                    </xs:extension>
+                </xs:complexContent>
+            </xs:complexType>
+            <xs:element name="GPOffice" nillable="true" type="tns:GPOffice"/>
+            <xs:complexType name="ArrayOfOutOfOfficeLocation">
+                <xs:sequence>
+                    <xs:element minOccurs="0" maxOccurs="unbounded" name="OutOfOfficeLocation" nillable="true" type="tns:OutOfOfficeLocation"/>
+                </xs:sequence>
+            </xs:complexType>
+            <xs:element name="ArrayOfOutOfOfficeLocation" nillable="true" type="tns:ArrayOfOutOfOfficeLocation"/>
+            <xs:complexType name="OutOfOfficeLocation">
+                <xs:sequence>
+                    <xs:element minOccurs="0" name="Description" nillable="true" type="xs:string"/>
+                    <xs:element xmlns:q18="http://register.nhn.no/Common" minOccurs="0" name="ElectronicAddresses" nillable="true" type="q18:ArrayOfElectronicAddress"/>
+                    <xs:element minOccurs="0" name="GPContractId" type="xs:long"/>
+                    <xs:element minOccurs="0" name="Id" type="xs:long"/>
+                    <xs:element xmlns:q19="http://register.nhn.no/Common" minOccurs="0" name="PhysicalAddresses" nillable="true" type="q19:ArrayOfPhysicalAddress"/>
+                    <xs:element minOccurs="0" name="UpdatedOn" type="xs:dateTime"/>
+                    <xs:element xmlns:q20="http://schemas.nhn.no/reg/Common/en" minOccurs="0" name="Valid" nillable="true" type="q20:Period"/>
+                </xs:sequence>
+            </xs:complexType>
+            <xs:element name="OutOfOfficeLocation" nillable="true" type="tns:OutOfOfficeLocation"/>
+            <xs:complexType name="ArrayOfPatientToGPContractAssociation">
+                <xs:sequence>
+                    <xs:element minOccurs="0" maxOccurs="unbounded" name="PatientToGPContractAssociation" nillable="true" type="tns:PatientToGPContractAssociation"/>
+                </xs:sequence>
+            </xs:complexType>
+            <xs:element name="ArrayOfPatientToGPContractAssociation" nillable="true" type="tns:ArrayOfPatientToGPContractAssociation"/>
+            <xs:element name="GetPatientsGPDetails">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element xmlns:q21="http://schemas.microsoft.com/2003/10/Serialization/Arrays" minOccurs="0" name="patientNins" nillable="true" type="q21:ArrayOfstring"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="GetPatientsGPDetailsResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="GetPatientsGPDetailsResult" nillable="true" type="tns:ArrayOfPatientToGPContractAssociation"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="GetPatientsGPDetailsAtTime">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="patientNins" nillable="true" type="tns:ArrayOfNinWithTimestamp"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:complexType name="ArrayOfNinWithTimestamp">
+                <xs:sequence>
+                    <xs:element minOccurs="0" maxOccurs="unbounded" name="NinWithTimestamp" nillable="true" type="tns:NinWithTimestamp"/>
+                </xs:sequence>
+            </xs:complexType>
+            <xs:element name="ArrayOfNinWithTimestamp" nillable="true" type="tns:ArrayOfNinWithTimestamp"/>
+            <xs:complexType name="NinWithTimestamp">
+                <xs:sequence>
+                    <xs:element minOccurs="0" name="AtTime" type="xs:dateTime"/>
+                    <xs:element minOccurs="0" name="NIN" nillable="true" type="xs:string"/>
+                </xs:sequence>
+            </xs:complexType>
+            <xs:element name="NinWithTimestamp" nillable="true" type="tns:NinWithTimestamp"/>
+            <xs:element name="GetPatientsGPDetailsAtTimeResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="GetPatientsGPDetailsAtTimeResult" nillable="true" type="tns:ArrayOfPatientToGPContractAssociation"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="GetPatientGPHistory">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="patientNin" nillable="true" type="xs:string"/>
+                        <xs:element minOccurs="0" name="includePatientData" type="xs:boolean"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="GetPatientGPHistoryResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="GetPatientGPHistoryResult" nillable="true" type="tns:ArrayOfPatientToGPContractAssociation"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="GetGPContract">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="gpContractId" type="xs:long"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="GetGPContractResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="GetGPContractResult" nillable="true" type="tns:GPContract"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="GetGPContractsOnOffice">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="organizationNumber" type="xs:int"/>
+                        <xs:element minOccurs="0" name="atTime" nillable="true" type="xs:dateTime"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="GetGPContractsOnOfficeResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="GetGPContractsOnOfficeResult" nillable="true" type="tns:ArrayOfGPContract"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:complexType name="ArrayOfGPContract">
+                <xs:sequence>
+                    <xs:element minOccurs="0" maxOccurs="unbounded" name="GPContract" nillable="true" type="tns:GPContract"/>
+                </xs:sequence>
+            </xs:complexType>
+            <xs:element name="ArrayOfGPContract" nillable="true" type="tns:ArrayOfGPContract"/>
+            <xs:element name="GetGPPatientList">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="gpContractId" type="xs:long"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="GetGPPatientListResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="GetGPPatientListResult" nillable="true" type="tns:ArrayOfPatientToGPContractAssociation"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="GetGPWithAssociatedGPContracts">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="hprNumber" type="xs:int"/>
+                        <xs:element minOccurs="0" name="atTime" nillable="true" type="xs:dateTime"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="GetGPWithAssociatedGPContractsResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="GetGPWithAssociatedGPContractsResult" nillable="true" type="tns:GPDetails"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:complexType name="GPDetails">
+                <xs:sequence>
+                    <xs:element minOccurs="0" name="Contracts" nillable="true" type="tns:ArrayOfGPOnContractAssociation"/>
+                    <xs:element minOccurs="0" name="GP" nillable="true" type="tns:Person"/>
+                    <xs:element minOccurs="0" name="HprNumber" type="xs:int"/>
+                    <xs:element xmlns:q22="http://register.nhn.no/Common" minOccurs="0" name="Languages" nillable="true" type="q22:ArrayOfCode"/>
+                </xs:sequence>
+            </xs:complexType>
+            <xs:element name="GPDetails" nillable="true" type="tns:GPDetails"/>
+            <xs:element name="ConfirmGP">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="patientNin" nillable="true" type="xs:string"/>
+                        <xs:element minOccurs="0" name="hprNumber" type="xs:int"/>
+                        <xs:element minOccurs="0" name="atTime" nillable="true" type="xs:dateTime"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="ConfirmGPResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="ConfirmGPResult" type="xs:boolean"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="GetGPContractForNav">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="doctorNin" nillable="true" type="xs:string"/>
+                        <xs:element minOccurs="0" name="municipalityNr" nillable="true" type="xs:string"/>
+                        <xs:element minOccurs="0" name="doSubstituteSearch" type="xs:boolean"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="GetGPContractForNavResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="GetGPContractForNavResult" nillable="true" type="tns:GPContract"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="NavGetEncryptedPatientList">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="param" nillable="true" type="tns:NavEncryptedPatientListParameters"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:complexType name="NavEncryptedPatientListParameters">
+                <xs:sequence>
+                    <xs:element minOccurs="0" name="DoSubstituteSearch" type="xs:boolean"/>
+                    <xs:element minOccurs="0" name="DoctorNIN" nillable="true" type="xs:string"/>
+                    <xs:element minOccurs="0" name="EncryptWithX509Certificate" nillable="true" type="xs:base64Binary"/>
+                    <xs:element minOccurs="0" name="ListType" nillable="true" type="xs:string"/>
+                    <xs:element minOccurs="0" name="Month" type="xs:dateTime"/>
+                    <xs:element minOccurs="0" name="MunicipalityId" nillable="true" type="xs:string"/>
+                    <xs:element minOccurs="0" name="ReceiverXml" nillable="true" type="xs:string"/>
+                    <xs:element minOccurs="0" name="SenderXml" nillable="true" type="xs:string"/>
+                </xs:sequence>
+            </xs:complexType>
+            <xs:element name="NavEncryptedPatientListParameters" nillable="true" type="tns:NavEncryptedPatientListParameters"/>
+            <xs:element name="NavGetEncryptedPatientListResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element xmlns:q23="http://schemas.microsoft.com/Message" name="NavGetEncryptedPatientListResult" type="q23:StreamBody"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="NavGetEncryptedPatientListAlternate">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="doctorNIN" nillable="true" type="xs:string"/>
+                        <xs:element minOccurs="0" name="municipalityId" nillable="true" type="xs:string"/>
+                        <xs:element minOccurs="0" name="encryptWithX509Certificate" nillable="true" type="xs:base64Binary"/>
+                        <xs:element minOccurs="0" name="month" type="xs:dateTime"/>
+                        <xs:element minOccurs="0" name="doSubstituteSearch" type="xs:boolean"/>
+                        <xs:element minOccurs="0" name="senderXml" nillable="true" type="xs:string"/>
+                        <xs:element minOccurs="0" name="receiverXml" nillable="true" type="xs:string"/>
+                        <xs:element minOccurs="0" name="listType" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="NavGetEncryptedPatientListAlternateResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element xmlns:q24="http://schemas.microsoft.com/Message" name="NavGetEncryptedPatientListAlternateResult" type="q24:StreamBody"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="GetGPContractIdsOperatingInPostalCode">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="postNr" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="GetGPContractIdsOperatingInPostalCodeResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element xmlns:q25="http://schemas.microsoft.com/2003/10/Serialization/Arrays" minOccurs="0" name="GetGPContractIdsOperatingInPostalCodeResult" nillable="true" type="q25:ArrayOflong"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="SearchForGP">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="searchParameters" nillable="true" type="tns:GPSearchParameters"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:complexType name="GPSearchParameters">
+                <xs:sequence>
+                    <xs:element minOccurs="0" name="FullText" nillable="true" type="xs:string"/>
+                    <xs:element xmlns:q26="http://register.nhn.no/Common" minOccurs="0" name="HasGPOfficeInMunicipality" nillable="true" type="q26:Code"/>
+                    <xs:element minOccurs="0" name="Page" type="xs:int"/>
+                    <xs:element minOccurs="0" name="PageSize" type="xs:int"/>
+                    <xs:element xmlns:q27="http://register.nhn.no/Common" minOccurs="0" name="SortResultsByDistanceTo" type="q27:LatitudeLongitude"/>
+                </xs:sequence>
+            </xs:complexType>
+            <xs:element name="GPSearchParameters" nillable="true" type="tns:GPSearchParameters"/>
+            <xs:element name="SearchForGPResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="SearchForGPResult" nillable="true" type="tns:PagedResultOfGPDetailsRE_Pj1Nec"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:complexType name="PagedResultOfGPDetailsRE_Pj1Nec">
+                <xs:annotation>
+                    <xs:appinfo>
+                        <GenericType xmlns="http://schemas.microsoft.com/2003/10/Serialization/" Name="PagedResultOf{0}{#}" Namespace="http://schemas.nhn.no/reg/flr">
+                            <GenericParameter Name="GPDetails" Namespace="http://schemas.nhn.no/reg/flr"/>
+                        </GenericType>
+                    </xs:appinfo>
+                </xs:annotation>
+                <xs:sequence>
+                    <xs:element minOccurs="0" name="Results" nillable="true" type="tns:ArrayOfGPDetails"/>
+                    <xs:element minOccurs="0" name="Total" type="xs:int"/>
+                </xs:sequence>
+            </xs:complexType>
+            <xs:element name="PagedResultOfGPDetailsRE_Pj1Nec" nillable="true" type="tns:PagedResultOfGPDetailsRE_Pj1Nec"/>
+            <xs:complexType name="ArrayOfGPDetails">
+                <xs:sequence>
+                    <xs:element minOccurs="0" maxOccurs="unbounded" name="GPDetails" nillable="true" type="tns:GPDetails"/>
+                </xs:sequence>
+            </xs:complexType>
+            <xs:element name="ArrayOfGPDetails" nillable="true" type="tns:ArrayOfGPDetails"/>
+            <xs:element name="QueryGPContracts">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="queryParameters" nillable="true" type="tns:GPContractQueryParameters"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:complexType name="GPContractQueryParameters">
+                <xs:sequence>
+                    <xs:element minOccurs="0" name="FullText" nillable="true" type="xs:string"/>
+                    <xs:element minOccurs="0" name="HasPrimaryHealthCareTeam" nillable="true" type="xs:boolean"/>
+                    <xs:element xmlns:q28="http://register.nhn.no/Common" minOccurs="0" name="Municipality" nillable="true" type="q28:Code"/>
+                    <xs:element minOccurs="0" name="Page" type="xs:int"/>
+                    <xs:element minOccurs="0" name="PageSize" type="xs:int"/>
+                    <xs:element xmlns:q29="http://register.nhn.no/Common" minOccurs="0" name="SortResultsByDistanceTo" type="q29:LatitudeLongitude"/>
+                </xs:sequence>
+            </xs:complexType>
+            <xs:element name="GPContractQueryParameters" nillable="true" type="tns:GPContractQueryParameters"/>
+            <xs:element name="QueryGPContractsResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="QueryGPContractsResult" nillable="true" type="tns:PagedResultOfGPContractRE_Pj1Nec"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:complexType name="PagedResultOfGPContractRE_Pj1Nec">
+                <xs:annotation>
+                    <xs:appinfo>
+                        <GenericType xmlns="http://schemas.microsoft.com/2003/10/Serialization/" Name="PagedResultOf{0}{#}" Namespace="http://schemas.nhn.no/reg/flr">
+                            <GenericParameter Name="GPContract" Namespace="http://schemas.nhn.no/reg/flr"/>
+                        </GenericType>
+                    </xs:appinfo>
+                </xs:annotation>
+                <xs:sequence>
+                    <xs:element minOccurs="0" name="Results" nillable="true" type="tns:ArrayOfGPContract"/>
+                    <xs:element minOccurs="0" name="Total" type="xs:int"/>
+                </xs:sequence>
+            </xs:complexType>
+            <xs:element name="PagedResultOfGPContractRE_Pj1Nec" nillable="true" type="tns:PagedResultOfGPContractRE_Pj1Nec"/>
+            <xs:element name="GetNavPatientLists">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element xmlns:q30="http://schemas.datacontract.org/2004/07/NHN.DtoContracts.Flr.Data" minOccurs="0" name="parameters" nillable="true" type="q30:GetNavPatientListsParameters"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="GetNavPatientListsResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element xmlns:q31="http://schemas.microsoft.com/Message" name="GetNavPatientListsResult" type="q31:StreamBody"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="GetPrimaryHealthCareTeam">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="id" type="xs:long"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="GetPrimaryHealthCareTeamResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="GetPrimaryHealthCareTeamResult" nillable="true" type="tns:PrimaryHealthCareTeam"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:complexType name="PrimaryHealthCareTeam">
+                <xs:sequence>
+                    <xs:element minOccurs="0" name="Id" type="xs:long"/>
+                    <xs:element minOccurs="0" name="OrganizationNumber" type="xs:int"/>
+                    <xs:element minOccurs="0" name="PrimaryHealthCareContracts" nillable="true" type="tns:ArrayOfPrimaryHealthCareContract"/>
+                    <xs:element minOccurs="0" name="PrimaryHealthCareLeaderHprNumber" type="xs:int"/>
+                    <xs:element minOccurs="0" name="PrimaryHealthCarePeople" nillable="true" type="tns:ArrayOfPrimaryHealthCarePerson"/>
+                </xs:sequence>
+            </xs:complexType>
+            <xs:element name="PrimaryHealthCareTeam" nillable="true" type="tns:PrimaryHealthCareTeam"/>
+            <xs:complexType name="ArrayOfPrimaryHealthCareContract">
+                <xs:sequence>
+                    <xs:element minOccurs="0" maxOccurs="unbounded" name="PrimaryHealthCareContract" nillable="true" type="tns:PrimaryHealthCareContract"/>
+                </xs:sequence>
+            </xs:complexType>
+            <xs:element name="ArrayOfPrimaryHealthCareContract" nillable="true" type="tns:ArrayOfPrimaryHealthCareContract"/>
+            <xs:complexType name="PrimaryHealthCareContract">
+                <xs:sequence>
+                    <xs:element minOccurs="0" name="FlrId" type="xs:long"/>
+                    <xs:element minOccurs="0" name="Id" type="xs:long"/>
+                    <xs:element xmlns:q32="http://schemas.nhn.no/reg/Common/en" minOccurs="0" name="MembershipPeriod" nillable="true" type="q32:Period"/>
+                </xs:sequence>
+            </xs:complexType>
+            <xs:element name="PrimaryHealthCareContract" nillable="true" type="tns:PrimaryHealthCareContract"/>
+            <xs:complexType name="ArrayOfPrimaryHealthCarePerson">
+                <xs:sequence>
+                    <xs:element minOccurs="0" maxOccurs="unbounded" name="PrimaryHealthCarePerson" nillable="true" type="tns:PrimaryHealthCarePerson"/>
+                </xs:sequence>
+            </xs:complexType>
+            <xs:element name="ArrayOfPrimaryHealthCarePerson" nillable="true" type="tns:ArrayOfPrimaryHealthCarePerson"/>
+            <xs:complexType name="PrimaryHealthCarePerson">
+                <xs:sequence>
+                    <xs:element minOccurs="0" name="HprNumber" type="xs:int"/>
+                    <xs:element minOccurs="0" name="Id" type="xs:long"/>
+                    <xs:element minOccurs="0" name="IsSubstitute" type="xs:boolean"/>
+                    <xs:element xmlns:q33="http://schemas.nhn.no/reg/Common/en" minOccurs="0" name="MembershipPeriod" nillable="true" type="q33:Period"/>
+                    <xs:element xmlns:q34="http://register.nhn.no/Common" minOccurs="0" name="Role" nillable="true" type="q34:Code"/>
+                    <xs:element minOccurs="0" name="WorkingPercentage" nillable="true" type="xs:int"/>
+                </xs:sequence>
+            </xs:complexType>
+            <xs:element name="PrimaryHealthCarePerson" nillable="true" type="tns:PrimaryHealthCarePerson"/>
+        </xs:schema>
+        <xs:schema xmlns:tns="http://schemas.microsoft.com/2003/10/Serialization/" xmlns:xs="http://www.w3.org/2001/XMLSchema" attributeFormDefault="qualified" elementFormDefault="qualified" targetNamespace="http://schemas.microsoft.com/2003/10/Serialization/">
+            <xs:element name="anyType" nillable="true" type="xs:anyType"/>
+            <xs:element name="anyURI" nillable="true" type="xs:anyURI"/>
+            <xs:element name="base64Binary" nillable="true" type="xs:base64Binary"/>
+            <xs:element name="boolean" nillable="true" type="xs:boolean"/>
+            <xs:element name="byte" nillable="true" type="xs:byte"/>
+            <xs:element name="dateTime" nillable="true" type="xs:dateTime"/>
+            <xs:element name="decimal" nillable="true" type="xs:decimal"/>
+            <xs:element name="double" nillable="true" type="xs:double"/>
+            <xs:element name="float" nillable="true" type="xs:float"/>
+            <xs:element name="int" nillable="true" type="xs:int"/>
+            <xs:element name="long" nillable="true" type="xs:long"/>
+            <xs:element name="QName" nillable="true" type="xs:QName"/>
+            <xs:element name="short" nillable="true" type="xs:short"/>
+            <xs:element name="string" nillable="true" type="xs:string"/>
+            <xs:element name="unsignedByte" nillable="true" type="xs:unsignedByte"/>
+            <xs:element name="unsignedInt" nillable="true" type="xs:unsignedInt"/>
+            <xs:element name="unsignedLong" nillable="true" type="xs:unsignedLong"/>
+            <xs:element name="unsignedShort" nillable="true" type="xs:unsignedShort"/>
+            <xs:element name="char" nillable="true" type="tns:char"/>
+            <xs:simpleType name="char">
+                <xs:restriction base="xs:int"/>
+            </xs:simpleType>
+            <xs:element name="duration" nillable="true" type="tns:duration"/>
+            <xs:simpleType name="duration">
+                <xs:restriction base="xs:duration">
+                    <xs:pattern value="\-?P(\d*D)?(T(\d*H)?(\d*M)?(\d*(\.\d*)?S)?)?"/>
+                    <xs:minInclusive value="-P10675199DT2H48M5.4775808S"/>
+                    <xs:maxInclusive value="P10675199DT2H48M5.4775807S"/>
+                </xs:restriction>
+            </xs:simpleType>
+            <xs:element name="guid" nillable="true" type="tns:guid"/>
+            <xs:simpleType name="guid">
+                <xs:restriction base="xs:string">
+                    <xs:pattern value="[\da-fA-F]{8}-[\da-fA-F]{4}-[\da-fA-F]{4}-[\da-fA-F]{4}-[\da-fA-F]{12}"/>
+                </xs:restriction>
+            </xs:simpleType>
+            <xs:attribute name="FactoryType" type="xs:QName"/>
+            <xs:attribute name="Id" type="xs:ID"/>
+            <xs:attribute name="Ref" type="xs:IDREF"/>
+        </xs:schema>
+        <xs:schema xmlns:tns="http://register.nhn.no/Common" xmlns:ser="http://schemas.microsoft.com/2003/10/Serialization/" xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" targetNamespace="http://register.nhn.no/Common">
+            <xs:import namespace="http://schemas.nhn.no/reg/Common/en"/>
+            <xs:import namespace="http://schemas.microsoft.com/2003/10/Serialization/"/>
+            <xs:complexType name="Code">
+                <xs:sequence>
+                    <xs:element minOccurs="0" name="Active" type="xs:boolean"/>
+                    <xs:element minOccurs="0" name="CodeText" nillable="true" type="xs:string"/>
+                    <xs:element minOccurs="0" name="CodeValue" nillable="true" type="xs:string"/>
+                    <xs:element minOccurs="0" name="OID" type="xs:int"/>
+                    <xs:element minOccurs="0" name="SimpleType" nillable="true" type="xs:string"/>
+                </xs:sequence>
+            </xs:complexType>
+            <xs:element name="Code" nillable="true" type="tns:Code"/>
+            <xs:complexType name="ArrayOfPhysicalAddress">
+                <xs:sequence>
+                    <xs:element minOccurs="0" maxOccurs="unbounded" name="PhysicalAddress" nillable="true" type="tns:PhysicalAddress"/>
+                </xs:sequence>
+            </xs:complexType>
+            <xs:element name="ArrayOfPhysicalAddress" nillable="true" type="tns:ArrayOfPhysicalAddress"/>
+            <xs:complexType name="PhysicalAddress">
+                <xs:sequence>
+                    <xs:element minOccurs="0" name="City" nillable="true" type="xs:string"/>
+                    <xs:element minOccurs="0" name="Country" nillable="true" type="tns:Code"/>
+                    <xs:element minOccurs="0" name="Description" nillable="true" type="xs:string"/>
+                    <xs:element minOccurs="0" name="Inherited" type="xs:boolean"/>
+                    <xs:element minOccurs="0" name="LastChanged" type="xs:dateTime"/>
+                    <xs:element minOccurs="0" name="Municipality" nillable="true" type="tns:Code"/>
+                    <xs:element minOccurs="0" name="PostalCode" type="xs:int"/>
+                    <xs:element minOccurs="0" name="Postbox" nillable="true" type="xs:string"/>
+                    <xs:element minOccurs="0" name="StreetAddress" nillable="true" type="xs:string"/>
+                    <xs:element minOccurs="0" name="Type" nillable="true" type="tns:Code"/>
+                </xs:sequence>
+            </xs:complexType>
+            <xs:element name="PhysicalAddress" nillable="true" type="tns:PhysicalAddress"/>
+            <xs:complexType name="ArrayOfStatus">
+                <xs:sequence>
+                    <xs:element minOccurs="0" maxOccurs="unbounded" name="Status" nillable="true" type="tns:Status"/>
+                </xs:sequence>
+            </xs:complexType>
+            <xs:element name="ArrayOfStatus" nillable="true" type="tns:ArrayOfStatus"/>
+            <xs:complexType name="Status">
+                <xs:sequence>
+                    <xs:element minOccurs="0" name="Changed" type="xs:dateTime"/>
+                    <xs:element minOccurs="0" name="Code" nillable="true" type="tns:Code"/>
+                    <xs:element minOccurs="0" name="Created" type="xs:dateTime"/>
+                    <xs:element minOccurs="0" name="Id" type="xs:int"/>
+                    <xs:element xmlns:q1="http://schemas.nhn.no/reg/Common/en" minOccurs="0" name="Period" nillable="true" type="q1:Period"/>
+                </xs:sequence>
+            </xs:complexType>
+            <xs:element name="Status" nillable="true" type="tns:Status"/>
+            <xs:complexType name="ArrayOfCode">
+                <xs:sequence>
+                    <xs:element minOccurs="0" maxOccurs="unbounded" name="Code" nillable="true" type="tns:Code"/>
+                </xs:sequence>
+            </xs:complexType>
+            <xs:element name="ArrayOfCode" nillable="true" type="tns:ArrayOfCode"/>
+            <xs:complexType name="ArrayOfElectronicAddress">
+                <xs:sequence>
+                    <xs:element minOccurs="0" maxOccurs="unbounded" name="ElectronicAddress" nillable="true" type="tns:ElectronicAddress"/>
+                </xs:sequence>
+            </xs:complexType>
+            <xs:element name="ArrayOfElectronicAddress" nillable="true" type="tns:ArrayOfElectronicAddress"/>
+            <xs:complexType name="ElectronicAddress">
+                <xs:sequence>
+                    <xs:element minOccurs="0" name="Address" nillable="true" type="xs:string"/>
+                    <xs:element minOccurs="0" name="Inherited" type="xs:boolean"/>
+                    <xs:element minOccurs="0" name="LastChanged" type="xs:dateTime"/>
+                    <xs:element minOccurs="0" name="Type" nillable="true" type="tns:Code"/>
+                    <xs:element minOccurs="0" name="TypeCodeValue" nillable="true" type="xs:string"/>
+                </xs:sequence>
+            </xs:complexType>
+            <xs:element name="ElectronicAddress" nillable="true" type="tns:ElectronicAddress"/>
+            <xs:complexType name="LatitudeLongitude">
+                <xs:annotation>
+                    <xs:appinfo>
+                        <IsValueType xmlns="http://schemas.microsoft.com/2003/10/Serialization/">true</IsValueType>
+                    </xs:appinfo>
+                </xs:annotation>
+                <xs:sequence>
+                    <xs:element minOccurs="0" name="Latitude" type="xs:double"/>
+                    <xs:element minOccurs="0" name="Longitude" type="xs:double"/>
+                </xs:sequence>
+            </xs:complexType>
+            <xs:element name="LatitudeLongitude" nillable="true" type="tns:LatitudeLongitude"/>
+            <xs:complexType name="OpeningHours">
+                <xs:sequence>
+                    <xs:element minOccurs="0" name="FreeText" nillable="true" type="xs:string"/>
+                    <xs:element minOccurs="0" name="OpenAt" nillable="true" type="tns:ArrayOfTimePeriod"/>
+                </xs:sequence>
+            </xs:complexType>
+            <xs:element name="OpeningHours" nillable="true" type="tns:OpeningHours"/>
+            <xs:complexType name="ArrayOfTimePeriod">
+                <xs:sequence>
+                    <xs:element minOccurs="0" maxOccurs="unbounded" name="TimePeriod" type="tns:TimePeriod"/>
+                </xs:sequence>
+            </xs:complexType>
+            <xs:element name="ArrayOfTimePeriod" nillable="true" type="tns:ArrayOfTimePeriod"/>
+            <xs:complexType name="TimePeriod">
+                <xs:annotation>
+                    <xs:appinfo>
+                        <IsValueType xmlns="http://schemas.microsoft.com/2003/10/Serialization/">true</IsValueType>
+                    </xs:appinfo>
+                </xs:annotation>
+                <xs:sequence>
+                    <xs:element minOccurs="0" name="From" type="ser:duration"/>
+                    <xs:element minOccurs="0" name="To" type="ser:duration"/>
+                </xs:sequence>
+            </xs:complexType>
+            <xs:element name="TimePeriod" nillable="true" type="tns:TimePeriod"/>
+            <xs:complexType name="GenericFault">
+                <xs:sequence>
+                    <xs:element minOccurs="0" name="ErrorCode" nillable="true" type="xs:string"/>
+                    <xs:element minOccurs="0" name="Message" nillable="true" type="xs:string"/>
+                </xs:sequence>
+            </xs:complexType>
+            <xs:element name="GenericFault" nillable="true" type="tns:GenericFault"/>
+        </xs:schema>
+        <xs:schema xmlns:tns="http://schemas.nhn.no/reg/Common/en" xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" targetNamespace="http://schemas.nhn.no/reg/Common/en">
+            <xs:complexType name="Period">
+                <xs:sequence>
+                    <xs:element minOccurs="0" name="From" type="xs:dateTime"/>
+                    <xs:element minOccurs="0" name="To" nillable="true" type="xs:dateTime"/>
+                </xs:sequence>
+            </xs:complexType>
+            <xs:element name="Period" nillable="true" type="tns:Period"/>
+        </xs:schema>
+        <xs:schema xmlns:tns="http://register.nhn.no/Corporate" xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" targetNamespace="http://register.nhn.no/Corporate">
+            <xs:import namespace="http://register.nhn.no/Common"/>
+            <xs:import namespace="http://schemas.nhn.no/reg/Common/en"/>
+            <xs:complexType name="Business">
+                <xs:sequence>
+                    <xs:element minOccurs="0" name="Children" nillable="true" type="tns:ArrayOfBusiness"/>
+                    <xs:element minOccurs="0" name="DisplayName" nillable="true" type="xs:string"/>
+                    <xs:element xmlns:q1="http://register.nhn.no/Common" minOccurs="0" name="ElectronicAddresses" nillable="true" type="q1:ArrayOfElectronicAddress"/>
+                    <xs:element xmlns:q2="http://register.nhn.no/Common" minOccurs="0" name="GeographicalCoordinates" nillable="true" type="q2:LatitudeLongitude"/>
+                    <xs:element xmlns:q3="http://register.nhn.no/Common" minOccurs="0" name="IndustryCodes" nillable="true" type="q3:ArrayOfCode"/>
+                    <xs:element minOccurs="0" name="IsGovernmentCompany" nillable="true" type="xs:boolean"/>
+                    <xs:element minOccurs="0" name="LastChanged" type="xs:dateTime"/>
+                    <xs:element xmlns:q4="http://register.nhn.no/Common" minOccurs="0" name="Municipality" nillable="true" type="q4:Code"/>
+                    <xs:element minOccurs="0" name="Name" nillable="true" type="xs:string"/>
+                    <xs:element xmlns:q5="http://register.nhn.no/Common" minOccurs="0" name="OpeningHours" nillable="true" type="q5:OpeningHours"/>
+                    <xs:element minOccurs="0" name="OrganizationNumber" type="xs:int"/>
+                    <xs:element minOccurs="0" name="ParentOrganizationName" nillable="true" type="xs:string"/>
+                    <xs:element minOccurs="0" name="ParentOrganizationNumber" nillable="true" type="xs:int"/>
+                    <xs:element xmlns:q6="http://register.nhn.no/Common" minOccurs="0" name="PhysicalAddresses" nillable="true" type="q6:ArrayOfPhysicalAddress"/>
+                    <xs:element xmlns:q7="http://register.nhn.no/Common" minOccurs="0" name="Properties" nillable="true" type="q7:ArrayOfCode"/>
+                    <xs:element minOccurs="0" name="ResponsiblePerson" nillable="true" type="xs:string"/>
+                    <xs:element xmlns:q8="http://register.nhn.no/Common" minOccurs="0" name="SectorCode" nillable="true" type="q8:Code"/>
+                    <xs:element minOccurs="0" name="UpdatedOn" type="xs:dateTime"/>
+                    <xs:element xmlns:q9="http://schemas.nhn.no/reg/Common/en" minOccurs="0" name="Valid" nillable="true" type="q9:Period"/>
+                </xs:sequence>
+            </xs:complexType>
+            <xs:element name="Business" nillable="true" type="tns:Business"/>
+            <xs:complexType name="ArrayOfBusiness">
+                <xs:sequence>
+                    <xs:element minOccurs="0" maxOccurs="unbounded" name="Business" nillable="true" type="tns:Business"/>
+                </xs:sequence>
+            </xs:complexType>
+            <xs:element name="ArrayOfBusiness" nillable="true" type="tns:ArrayOfBusiness"/>
+        </xs:schema>
+        <xs:schema xmlns:tns="http://schemas.datacontract.org/2004/07/System" xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" targetNamespace="http://schemas.datacontract.org/2004/07/System">
+            <xs:complexType name="ArrayOfDayOfWeek">
+                <xs:sequence>
+                    <xs:element minOccurs="0" maxOccurs="unbounded" name="DayOfWeek" type="tns:DayOfWeek"/>
+                </xs:sequence>
+            </xs:complexType>
+            <xs:element name="ArrayOfDayOfWeek" nillable="true" type="tns:ArrayOfDayOfWeek"/>
+            <xs:simpleType name="DayOfWeek">
+                <xs:restriction base="xs:string">
+                    <xs:enumeration value="Sunday"/>
+                    <xs:enumeration value="Monday"/>
+                    <xs:enumeration value="Tuesday"/>
+                    <xs:enumeration value="Wednesday"/>
+                    <xs:enumeration value="Thursday"/>
+                    <xs:enumeration value="Friday"/>
+                    <xs:enumeration value="Saturday"/>
+                </xs:restriction>
+            </xs:simpleType>
+            <xs:element name="DayOfWeek" nillable="true" type="tns:DayOfWeek"/>
+        </xs:schema>
+        <xs:schema xmlns:tns="http://schemas.microsoft.com/2003/10/Serialization/Arrays" xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" targetNamespace="http://schemas.microsoft.com/2003/10/Serialization/Arrays">
+            <xs:complexType name="ArrayOfstring">
+                <xs:sequence>
+                    <xs:element minOccurs="0" maxOccurs="unbounded" name="string" nillable="true" type="xs:string"/>
+                </xs:sequence>
+            </xs:complexType>
+            <xs:element name="ArrayOfstring" nillable="true" type="tns:ArrayOfstring"/>
+            <xs:complexType name="ArrayOflong">
+                <xs:sequence>
+                    <xs:element minOccurs="0" maxOccurs="unbounded" name="long" type="xs:long"/>
+                </xs:sequence>
+            </xs:complexType>
+            <xs:element name="ArrayOflong" nillable="true" type="tns:ArrayOflong"/>
+        </xs:schema>
+        <xs:schema xmlns:tns="http://schemas.microsoft.com/Message" xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" targetNamespace="http://schemas.microsoft.com/Message">
+            <xs:simpleType name="StreamBody">
+                <xs:restriction base="xs:base64Binary"/>
+            </xs:simpleType>
+        </xs:schema>
+        <xs:schema xmlns:tns="http://schemas.datacontract.org/2004/07/NHN.DtoContracts.Flr.Data" xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" targetNamespace="http://schemas.datacontract.org/2004/07/NHN.DtoContracts.Flr.Data">
+            <xs:complexType name="GetNavPatientListsParameters">
+                <xs:sequence>
+                    <xs:element minOccurs="0" name="Contracts" nillable="true" type="tns:ArrayOfContractWithMonth"/>
+                    <xs:element minOccurs="0" name="FormatType" nillable="true" type="xs:string"/>
+                </xs:sequence>
+            </xs:complexType>
+            <xs:element name="GetNavPatientListsParameters" nillable="true" type="tns:GetNavPatientListsParameters"/>
+            <xs:complexType name="ArrayOfContractWithMonth">
+                <xs:sequence>
+                    <xs:element minOccurs="0" maxOccurs="unbounded" name="ContractWithMonth" nillable="true" type="tns:ContractWithMonth"/>
+                </xs:sequence>
+            </xs:complexType>
+            <xs:element name="ArrayOfContractWithMonth" nillable="true" type="tns:ArrayOfContractWithMonth"/>
+            <xs:complexType name="ContractWithMonth">
+                <xs:sequence>
+                    <xs:element minOccurs="0" name="ContractId" type="xs:long"/>
+                    <xs:element minOccurs="0" name="Month" type="xs:dateTime"/>
+                </xs:sequence>
+            </xs:complexType>
+            <xs:element name="ContractWithMonth" nillable="true" type="tns:ContractWithMonth"/>
+        </xs:schema>
+    </wsdl:types>
+    <wsdl:message name="IFlrReadOperations_GetPatientGPDetails_InputMessage">
+        <wsdl:part name="parameters" element="tns:GetPatientGPDetails"/>
+    </wsdl:message>
+    <wsdl:message name="IFlrReadOperations_GetPatientGPDetails_OutputMessage">
+        <wsdl:part name="parameters" element="tns:GetPatientGPDetailsResponse"/>
+    </wsdl:message>
+    <wsdl:message name="IFlrReadOperations_GetPatientGPDetails_GenericFaultFault_FaultMessage">
+        <wsdl:part xmlns:q1="http://register.nhn.no/Common" name="detail" element="q1:GenericFault"/>
+    </wsdl:message>
+    <wsdl:message name="IFlrReadOperations_GetPatientsGPDetails_InputMessage">
+        <wsdl:part name="parameters" element="tns:GetPatientsGPDetails"/>
+    </wsdl:message>
+    <wsdl:message name="IFlrReadOperations_GetPatientsGPDetails_OutputMessage">
+        <wsdl:part name="parameters" element="tns:GetPatientsGPDetailsResponse"/>
+    </wsdl:message>
+    <wsdl:message name="IFlrReadOperations_GetPatientsGPDetails_GenericFaultFault_FaultMessage">
+        <wsdl:part xmlns:q2="http://register.nhn.no/Common" name="detail" element="q2:GenericFault"/>
+    </wsdl:message>
+    <wsdl:message name="IFlrReadOperations_GetPatientsGPDetailsAtTime_InputMessage">
+        <wsdl:part name="parameters" element="tns:GetPatientsGPDetailsAtTime"/>
+    </wsdl:message>
+    <wsdl:message name="IFlrReadOperations_GetPatientsGPDetailsAtTime_OutputMessage">
+        <wsdl:part name="parameters" element="tns:GetPatientsGPDetailsAtTimeResponse"/>
+    </wsdl:message>
+    <wsdl:message name="IFlrReadOperations_GetPatientsGPDetailsAtTime_GenericFaultFault_FaultMessage">
+        <wsdl:part xmlns:q3="http://register.nhn.no/Common" name="detail" element="q3:GenericFault"/>
+    </wsdl:message>
+    <wsdl:message name="IFlrReadOperations_GetPatientGPHistory_InputMessage">
+        <wsdl:part name="parameters" element="tns:GetPatientGPHistory"/>
+    </wsdl:message>
+    <wsdl:message name="IFlrReadOperations_GetPatientGPHistory_OutputMessage">
+        <wsdl:part name="parameters" element="tns:GetPatientGPHistoryResponse"/>
+    </wsdl:message>
+    <wsdl:message name="IFlrReadOperations_GetPatientGPHistory_GenericFaultFault_FaultMessage">
+        <wsdl:part xmlns:q4="http://register.nhn.no/Common" name="detail" element="q4:GenericFault"/>
+    </wsdl:message>
+    <wsdl:message name="IFlrReadOperations_GetGPContract_InputMessage">
+        <wsdl:part name="parameters" element="tns:GetGPContract"/>
+    </wsdl:message>
+    <wsdl:message name="IFlrReadOperations_GetGPContract_OutputMessage">
+        <wsdl:part name="parameters" element="tns:GetGPContractResponse"/>
+    </wsdl:message>
+    <wsdl:message name="IFlrReadOperations_GetGPContract_GenericFaultFault_FaultMessage">
+        <wsdl:part xmlns:q5="http://register.nhn.no/Common" name="detail" element="q5:GenericFault"/>
+    </wsdl:message>
+    <wsdl:message name="IFlrReadOperations_GetGPContractsOnOffice_InputMessage">
+        <wsdl:part name="parameters" element="tns:GetGPContractsOnOffice"/>
+    </wsdl:message>
+    <wsdl:message name="IFlrReadOperations_GetGPContractsOnOffice_OutputMessage">
+        <wsdl:part name="parameters" element="tns:GetGPContractsOnOfficeResponse"/>
+    </wsdl:message>
+    <wsdl:message name="IFlrReadOperations_GetGPContractsOnOffice_GenericFaultFault_FaultMessage">
+        <wsdl:part xmlns:q6="http://register.nhn.no/Common" name="detail" element="q6:GenericFault"/>
+    </wsdl:message>
+    <wsdl:message name="IFlrReadOperations_GetGPPatientList_InputMessage">
+        <wsdl:part name="parameters" element="tns:GetGPPatientList"/>
+    </wsdl:message>
+    <wsdl:message name="IFlrReadOperations_GetGPPatientList_OutputMessage">
+        <wsdl:part name="parameters" element="tns:GetGPPatientListResponse"/>
+    </wsdl:message>
+    <wsdl:message name="IFlrReadOperations_GetGPPatientList_GenericFaultFault_FaultMessage">
+        <wsdl:part xmlns:q7="http://register.nhn.no/Common" name="detail" element="q7:GenericFault"/>
+    </wsdl:message>
+    <wsdl:message name="IFlrReadOperations_GetGPWithAssociatedGPContracts_InputMessage">
+        <wsdl:part name="parameters" element="tns:GetGPWithAssociatedGPContracts"/>
+    </wsdl:message>
+    <wsdl:message name="IFlrReadOperations_GetGPWithAssociatedGPContracts_OutputMessage">
+        <wsdl:part name="parameters" element="tns:GetGPWithAssociatedGPContractsResponse"/>
+    </wsdl:message>
+    <wsdl:message name="IFlrReadOperations_GetGPWithAssociatedGPContracts_GenericFaultFault_FaultMessage">
+        <wsdl:part xmlns:q8="http://register.nhn.no/Common" name="detail" element="q8:GenericFault"/>
+    </wsdl:message>
+    <wsdl:message name="IFlrReadOperations_ConfirmGP_InputMessage">
+        <wsdl:part name="parameters" element="tns:ConfirmGP"/>
+    </wsdl:message>
+    <wsdl:message name="IFlrReadOperations_ConfirmGP_OutputMessage">
+        <wsdl:part name="parameters" element="tns:ConfirmGPResponse"/>
+    </wsdl:message>
+    <wsdl:message name="IFlrReadOperations_ConfirmGP_GenericFaultFault_FaultMessage">
+        <wsdl:part xmlns:q9="http://register.nhn.no/Common" name="detail" element="q9:GenericFault"/>
+    </wsdl:message>
+    <wsdl:message name="IFlrReadOperations_GetGPContractForNav_InputMessage">
+        <wsdl:part name="parameters" element="tns:GetGPContractForNav"/>
+    </wsdl:message>
+    <wsdl:message name="IFlrReadOperations_GetGPContractForNav_OutputMessage">
+        <wsdl:part name="parameters" element="tns:GetGPContractForNavResponse"/>
+    </wsdl:message>
+    <wsdl:message name="IFlrReadOperations_GetGPContractForNav_GenericFaultFault_FaultMessage">
+        <wsdl:part xmlns:q10="http://register.nhn.no/Common" name="detail" element="q10:GenericFault"/>
+    </wsdl:message>
+    <wsdl:message name="IFlrReadOperations_NavGetEncryptedPatientList_InputMessage">
+        <wsdl:part name="parameters" element="tns:NavGetEncryptedPatientList"/>
+    </wsdl:message>
+    <wsdl:message name="IFlrReadOperations_NavGetEncryptedPatientList_OutputMessage">
+        <wsdl:part name="parameters" element="tns:NavGetEncryptedPatientListResponse"/>
+    </wsdl:message>
+    <wsdl:message name="IFlrReadOperations_NavGetEncryptedPatientList_GenericFaultFault_FaultMessage">
+        <wsdl:part xmlns:q11="http://register.nhn.no/Common" name="detail" element="q11:GenericFault"/>
+    </wsdl:message>
+    <wsdl:message name="IFlrReadOperations_NavGetEncryptedPatientListAlternate_InputMessage">
+        <wsdl:part name="parameters" element="tns:NavGetEncryptedPatientListAlternate"/>
+    </wsdl:message>
+    <wsdl:message name="IFlrReadOperations_NavGetEncryptedPatientListAlternate_OutputMessage">
+        <wsdl:part name="parameters" element="tns:NavGetEncryptedPatientListAlternateResponse"/>
+    </wsdl:message>
+    <wsdl:message name="IFlrReadOperations_NavGetEncryptedPatientListAlternate_GenericFaultFault_FaultMessage">
+        <wsdl:part xmlns:q12="http://register.nhn.no/Common" name="detail" element="q12:GenericFault"/>
+    </wsdl:message>
+    <wsdl:message name="IFlrReadOperations_GetGPContractIdsOperatingInPostalCode_InputMessage">
+        <wsdl:part name="parameters" element="tns:GetGPContractIdsOperatingInPostalCode"/>
+    </wsdl:message>
+    <wsdl:message name="IFlrReadOperations_GetGPContractIdsOperatingInPostalCode_OutputMessage">
+        <wsdl:part name="parameters" element="tns:GetGPContractIdsOperatingInPostalCodeResponse"/>
+    </wsdl:message>
+    <wsdl:message name="IFlrReadOperations_GetGPContractIdsOperatingInPostalCode_GenericFaultFault_FaultMessage">
+        <wsdl:part xmlns:q13="http://register.nhn.no/Common" name="detail" element="q13:GenericFault"/>
+    </wsdl:message>
+    <wsdl:message name="IFlrReadOperations_SearchForGP_InputMessage">
+        <wsdl:part name="parameters" element="tns:SearchForGP"/>
+    </wsdl:message>
+    <wsdl:message name="IFlrReadOperations_SearchForGP_OutputMessage">
+        <wsdl:part name="parameters" element="tns:SearchForGPResponse"/>
+    </wsdl:message>
+    <wsdl:message name="IFlrReadOperations_SearchForGP_GenericFaultFault_FaultMessage">
+        <wsdl:part xmlns:q14="http://register.nhn.no/Common" name="detail" element="q14:GenericFault"/>
+    </wsdl:message>
+    <wsdl:message name="IFlrReadOperations_QueryGPContracts_InputMessage">
+        <wsdl:part name="parameters" element="tns:QueryGPContracts"/>
+    </wsdl:message>
+    <wsdl:message name="IFlrReadOperations_QueryGPContracts_OutputMessage">
+        <wsdl:part name="parameters" element="tns:QueryGPContractsResponse"/>
+    </wsdl:message>
+    <wsdl:message name="IFlrReadOperations_QueryGPContracts_GenericFaultFault_FaultMessage">
+        <wsdl:part xmlns:q15="http://register.nhn.no/Common" name="detail" element="q15:GenericFault"/>
+    </wsdl:message>
+    <wsdl:message name="IFlrReadOperations_GetNavPatientLists_InputMessage">
+        <wsdl:part name="parameters" element="tns:GetNavPatientLists"/>
+    </wsdl:message>
+    <wsdl:message name="IFlrReadOperations_GetNavPatientLists_OutputMessage">
+        <wsdl:part name="parameters" element="tns:GetNavPatientListsResponse"/>
+    </wsdl:message>
+    <wsdl:message name="IFlrReadOperations_GetNavPatientLists_GenericFaultFault_FaultMessage">
+        <wsdl:part xmlns:q16="http://register.nhn.no/Common" name="detail" element="q16:GenericFault"/>
+    </wsdl:message>
+    <wsdl:message name="IFlrReadOperations_GetPrimaryHealthCareTeam_InputMessage">
+        <wsdl:part name="parameters" element="tns:GetPrimaryHealthCareTeam"/>
+    </wsdl:message>
+    <wsdl:message name="IFlrReadOperations_GetPrimaryHealthCareTeam_OutputMessage">
+        <wsdl:part name="parameters" element="tns:GetPrimaryHealthCareTeamResponse"/>
+    </wsdl:message>
+    <wsdl:message name="IFlrReadOperations_GetPrimaryHealthCareTeam_GenericFaultFault_FaultMessage">
+        <wsdl:part xmlns:q17="http://register.nhn.no/Common" name="detail" element="q17:GenericFault"/>
+    </wsdl:message>
+    <wsdl:portType name="IFlrReadOperations">
+        <wsdl:operation name="GetPatientGPDetails">
+            <wsdl:input wsam:Action="http://schemas.nhn.no/reg/flr/IFlrReadOperations/GetPatientGPDetails" message="tns:IFlrReadOperations_GetPatientGPDetails_InputMessage"/>
+            <wsdl:output wsam:Action="http://schemas.nhn.no/reg/flr/IFlrReadOperations/GetPatientGPDetailsResponse" message="tns:IFlrReadOperations_GetPatientGPDetails_OutputMessage"/>
+            <wsdl:fault wsam:Action="http://schemas.nhn.no/reg/flr/IFlrReadOperations/GetPatientGPDetailsGenericFaultFault" name="GenericFaultFault" message="tns:IFlrReadOperations_GetPatientGPDetails_GenericFaultFault_FaultMessage"/>
+        </wsdl:operation>
+        <wsdl:operation name="GetPatientsGPDetails">
+            <wsdl:input wsam:Action="http://schemas.nhn.no/reg/flr/IFlrReadOperations/GetPatientsGPDetails" message="tns:IFlrReadOperations_GetPatientsGPDetails_InputMessage"/>
+            <wsdl:output wsam:Action="http://schemas.nhn.no/reg/flr/IFlrReadOperations/GetPatientsGPDetailsResponse" message="tns:IFlrReadOperations_GetPatientsGPDetails_OutputMessage"/>
+            <wsdl:fault wsam:Action="http://schemas.nhn.no/reg/flr/IFlrReadOperations/GetPatientsGPDetailsGenericFaultFault" name="GenericFaultFault" message="tns:IFlrReadOperations_GetPatientsGPDetails_GenericFaultFault_FaultMessage"/>
+        </wsdl:operation>
+        <wsdl:operation name="GetPatientsGPDetailsAtTime">
+            <wsdl:input wsam:Action="http://schemas.nhn.no/reg/flr/IFlrReadOperations/GetPatientsGPDetailsAtTime" message="tns:IFlrReadOperations_GetPatientsGPDetailsAtTime_InputMessage"/>
+            <wsdl:output wsam:Action="http://schemas.nhn.no/reg/flr/IFlrReadOperations/GetPatientsGPDetailsAtTimeResponse" message="tns:IFlrReadOperations_GetPatientsGPDetailsAtTime_OutputMessage"/>
+            <wsdl:fault wsam:Action="http://schemas.nhn.no/reg/flr/IFlrReadOperations/GetPatientsGPDetailsAtTimeGenericFaultFault" name="GenericFaultFault" message="tns:IFlrReadOperations_GetPatientsGPDetailsAtTime_GenericFaultFault_FaultMessage"/>
+        </wsdl:operation>
+        <wsdl:operation name="GetPatientGPHistory">
+            <wsdl:input wsam:Action="http://schemas.nhn.no/reg/flr/IFlrReadOperations/GetPatientGPHistory" message="tns:IFlrReadOperations_GetPatientGPHistory_InputMessage"/>
+            <wsdl:output wsam:Action="http://schemas.nhn.no/reg/flr/IFlrReadOperations/GetPatientGPHistoryResponse" message="tns:IFlrReadOperations_GetPatientGPHistory_OutputMessage"/>
+            <wsdl:fault wsam:Action="http://schemas.nhn.no/reg/flr/IFlrReadOperations/GetPatientGPHistoryGenericFaultFault" name="GenericFaultFault" message="tns:IFlrReadOperations_GetPatientGPHistory_GenericFaultFault_FaultMessage"/>
+        </wsdl:operation>
+        <wsdl:operation name="GetGPContract">
+            <wsdl:input wsam:Action="http://schemas.nhn.no/reg/flr/IFlrReadOperations/GetGPContract" message="tns:IFlrReadOperations_GetGPContract_InputMessage"/>
+            <wsdl:output wsam:Action="http://schemas.nhn.no/reg/flr/IFlrReadOperations/GetGPContractResponse" message="tns:IFlrReadOperations_GetGPContract_OutputMessage"/>
+            <wsdl:fault wsam:Action="http://schemas.nhn.no/reg/flr/IFlrReadOperations/GetGPContractGenericFaultFault" name="GenericFaultFault" message="tns:IFlrReadOperations_GetGPContract_GenericFaultFault_FaultMessage"/>
+        </wsdl:operation>
+        <wsdl:operation name="GetGPContractsOnOffice">
+            <wsdl:input wsam:Action="http://schemas.nhn.no/reg/flr/IFlrReadOperations/GetGPContractsOnOffice" message="tns:IFlrReadOperations_GetGPContractsOnOffice_InputMessage"/>
+            <wsdl:output wsam:Action="http://schemas.nhn.no/reg/flr/IFlrReadOperations/GetGPContractsOnOfficeResponse" message="tns:IFlrReadOperations_GetGPContractsOnOffice_OutputMessage"/>
+            <wsdl:fault wsam:Action="http://schemas.nhn.no/reg/flr/IFlrReadOperations/GetGPContractsOnOfficeGenericFaultFault" name="GenericFaultFault" message="tns:IFlrReadOperations_GetGPContractsOnOffice_GenericFaultFault_FaultMessage"/>
+        </wsdl:operation>
+        <wsdl:operation name="GetGPPatientList">
+            <wsdl:input wsam:Action="http://schemas.nhn.no/reg/flr/IFlrReadOperations/GetGPPatientList" message="tns:IFlrReadOperations_GetGPPatientList_InputMessage"/>
+            <wsdl:output wsam:Action="http://schemas.nhn.no/reg/flr/IFlrReadOperations/GetGPPatientListResponse" message="tns:IFlrReadOperations_GetGPPatientList_OutputMessage"/>
+            <wsdl:fault wsam:Action="http://schemas.nhn.no/reg/flr/IFlrReadOperations/GetGPPatientListGenericFaultFault" name="GenericFaultFault" message="tns:IFlrReadOperations_GetGPPatientList_GenericFaultFault_FaultMessage"/>
+        </wsdl:operation>
+        <wsdl:operation name="GetGPWithAssociatedGPContracts">
+            <wsdl:input wsam:Action="http://schemas.nhn.no/reg/flr/IFlrReadOperations/GetGPWithAssociatedGPContracts" message="tns:IFlrReadOperations_GetGPWithAssociatedGPContracts_InputMessage"/>
+            <wsdl:output wsam:Action="http://schemas.nhn.no/reg/flr/IFlrReadOperations/GetGPWithAssociatedGPContractsResponse" message="tns:IFlrReadOperations_GetGPWithAssociatedGPContracts_OutputMessage"/>
+            <wsdl:fault wsam:Action="http://schemas.nhn.no/reg/flr/IFlrReadOperations/GetGPWithAssociatedGPContractsGenericFaultFault" name="GenericFaultFault" message="tns:IFlrReadOperations_GetGPWithAssociatedGPContracts_GenericFaultFault_FaultMessage"/>
+        </wsdl:operation>
+        <wsdl:operation name="ConfirmGP">
+            <wsdl:input wsam:Action="http://schemas.nhn.no/reg/flr/IFlrReadOperations/ConfirmGP" message="tns:IFlrReadOperations_ConfirmGP_InputMessage"/>
+            <wsdl:output wsam:Action="http://schemas.nhn.no/reg/flr/IFlrReadOperations/ConfirmGPResponse" message="tns:IFlrReadOperations_ConfirmGP_OutputMessage"/>
+            <wsdl:fault wsam:Action="http://schemas.nhn.no/reg/flr/IFlrReadOperations/ConfirmGPGenericFaultFault" name="GenericFaultFault" message="tns:IFlrReadOperations_ConfirmGP_GenericFaultFault_FaultMessage"/>
+        </wsdl:operation>
+        <wsdl:operation name="GetGPContractForNav">
+            <wsdl:input wsam:Action="http://schemas.nhn.no/reg/flr/IFlrReadOperations/GetGPContractForNav" message="tns:IFlrReadOperations_GetGPContractForNav_InputMessage"/>
+            <wsdl:output wsam:Action="http://schemas.nhn.no/reg/flr/IFlrReadOperations/GetGPContractForNavResponse" message="tns:IFlrReadOperations_GetGPContractForNav_OutputMessage"/>
+            <wsdl:fault wsam:Action="http://schemas.nhn.no/reg/flr/IFlrReadOperations/GetGPContractForNavGenericFaultFault" name="GenericFaultFault" message="tns:IFlrReadOperations_GetGPContractForNav_GenericFaultFault_FaultMessage"/>
+        </wsdl:operation>
+        <wsdl:operation name="NavGetEncryptedPatientList">
+            <wsdl:input wsam:Action="http://schemas.nhn.no/reg/flr/IFlrReadOperations/NavGetEncryptedPatientList" message="tns:IFlrReadOperations_NavGetEncryptedPatientList_InputMessage"/>
+            <wsdl:output wsam:Action="http://schemas.nhn.no/reg/flr/IFlrReadOperations/NavGetEncryptedPatientListResponse" message="tns:IFlrReadOperations_NavGetEncryptedPatientList_OutputMessage"/>
+            <wsdl:fault wsam:Action="http://schemas.nhn.no/reg/flr/IFlrReadOperations/NavGetEncryptedPatientListGenericFaultFault" name="GenericFaultFault" message="tns:IFlrReadOperations_NavGetEncryptedPatientList_GenericFaultFault_FaultMessage"/>
+        </wsdl:operation>
+        <wsdl:operation name="NavGetEncryptedPatientListAlternate">
+            <wsdl:input wsam:Action="http://schemas.nhn.no/reg/flr/IFlrReadOperations/NavGetEncryptedPatientListAlternate" message="tns:IFlrReadOperations_NavGetEncryptedPatientListAlternate_InputMessage"/>
+            <wsdl:output wsam:Action="http://schemas.nhn.no/reg/flr/IFlrReadOperations/NavGetEncryptedPatientListAlternateResponse" message="tns:IFlrReadOperations_NavGetEncryptedPatientListAlternate_OutputMessage"/>
+            <wsdl:fault wsam:Action="http://schemas.nhn.no/reg/flr/IFlrReadOperations/NavGetEncryptedPatientListAlternateGenericFaultFault" name="GenericFaultFault" message="tns:IFlrReadOperations_NavGetEncryptedPatientListAlternate_GenericFaultFault_FaultMessage"/>
+        </wsdl:operation>
+        <wsdl:operation name="GetGPContractIdsOperatingInPostalCode">
+            <wsdl:input wsam:Action="http://schemas.nhn.no/reg/flr/IFlrReadOperations/GetGPContractIdsOperatingInPostalCode" message="tns:IFlrReadOperations_GetGPContractIdsOperatingInPostalCode_InputMessage"/>
+            <wsdl:output wsam:Action="http://schemas.nhn.no/reg/flr/IFlrReadOperations/GetGPContractIdsOperatingInPostalCodeResponse" message="tns:IFlrReadOperations_GetGPContractIdsOperatingInPostalCode_OutputMessage"/>
+            <wsdl:fault wsam:Action="http://schemas.nhn.no/reg/flr/IFlrReadOperations/GetGPContractIdsOperatingInPostalCodeGenericFaultFault" name="GenericFaultFault" message="tns:IFlrReadOperations_GetGPContractIdsOperatingInPostalCode_GenericFaultFault_FaultMessage"/>
+        </wsdl:operation>
+        <wsdl:operation name="SearchForGP">
+            <wsdl:input wsam:Action="http://schemas.nhn.no/reg/flr/IFlrReadOperations/SearchForGP" message="tns:IFlrReadOperations_SearchForGP_InputMessage"/>
+            <wsdl:output wsam:Action="http://schemas.nhn.no/reg/flr/IFlrReadOperations/SearchForGPResponse" message="tns:IFlrReadOperations_SearchForGP_OutputMessage"/>
+            <wsdl:fault wsam:Action="http://schemas.nhn.no/reg/flr/IFlrReadOperations/SearchForGPGenericFaultFault" name="GenericFaultFault" message="tns:IFlrReadOperations_SearchForGP_GenericFaultFault_FaultMessage"/>
+        </wsdl:operation>
+        <wsdl:operation name="QueryGPContracts">
+            <wsdl:input wsam:Action="http://schemas.nhn.no/reg/flr/IFlrReadOperations/QueryGPContracts" message="tns:IFlrReadOperations_QueryGPContracts_InputMessage"/>
+            <wsdl:output wsam:Action="http://schemas.nhn.no/reg/flr/IFlrReadOperations/QueryGPContractsResponse" message="tns:IFlrReadOperations_QueryGPContracts_OutputMessage"/>
+            <wsdl:fault wsam:Action="http://schemas.nhn.no/reg/flr/IFlrReadOperations/QueryGPContractsGenericFaultFault" name="GenericFaultFault" message="tns:IFlrReadOperations_QueryGPContracts_GenericFaultFault_FaultMessage"/>
+        </wsdl:operation>
+        <wsdl:operation name="GetNavPatientLists">
+            <wsdl:input wsam:Action="http://schemas.nhn.no/reg/flr/IFlrReadOperations/GetNavPatientLists" message="tns:IFlrReadOperations_GetNavPatientLists_InputMessage"/>
+            <wsdl:output wsam:Action="http://schemas.nhn.no/reg/flr/IFlrReadOperations/GetNavPatientListsResponse" message="tns:IFlrReadOperations_GetNavPatientLists_OutputMessage"/>
+            <wsdl:fault wsam:Action="http://schemas.nhn.no/reg/flr/IFlrReadOperations/GetNavPatientListsGenericFaultFault" name="GenericFaultFault" message="tns:IFlrReadOperations_GetNavPatientLists_GenericFaultFault_FaultMessage"/>
+        </wsdl:operation>
+        <wsdl:operation name="GetPrimaryHealthCareTeam">
+            <wsdl:input wsam:Action="http://schemas.nhn.no/reg/flr/IFlrReadOperations/GetPrimaryHealthCareTeam" message="tns:IFlrReadOperations_GetPrimaryHealthCareTeam_InputMessage"/>
+            <wsdl:output wsam:Action="http://schemas.nhn.no/reg/flr/IFlrReadOperations/GetPrimaryHealthCareTeamResponse" message="tns:IFlrReadOperations_GetPrimaryHealthCareTeam_OutputMessage"/>
+            <wsdl:fault wsam:Action="http://schemas.nhn.no/reg/flr/IFlrReadOperations/GetPrimaryHealthCareTeamGenericFaultFault" name="GenericFaultFault" message="tns:IFlrReadOperations_GetPrimaryHealthCareTeam_GenericFaultFault_FaultMessage"/>
+        </wsdl:operation>
+    </wsdl:portType>
+    <wsdl:binding name="BasicHttpBinding_IFlrReadOperations" type="tns:IFlrReadOperations">
+        <wsp:PolicyReference URI="#BasicHttpBinding_IFlrReadOperations_policy"/>
+        <soap:binding transport="http://schemas.xmlsoap.org/soap/http"/>
+        <wsdl:operation name="GetPatientGPDetails">
+            <soap:operation soapAction="http://schemas.nhn.no/reg/flr/IFlrReadOperations/GetPatientGPDetails" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+            <wsdl:fault name="GenericFaultFault">
+                <soap:fault use="literal" name="GenericFaultFault" namespace=""/>
+            </wsdl:fault>
+        </wsdl:operation>
+        <wsdl:operation name="GetPatientsGPDetails">
+            <soap:operation soapAction="http://schemas.nhn.no/reg/flr/IFlrReadOperations/GetPatientsGPDetails" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+            <wsdl:fault name="GenericFaultFault">
+                <soap:fault use="literal" name="GenericFaultFault" namespace=""/>
+            </wsdl:fault>
+        </wsdl:operation>
+        <wsdl:operation name="GetPatientsGPDetailsAtTime">
+            <soap:operation soapAction="http://schemas.nhn.no/reg/flr/IFlrReadOperations/GetPatientsGPDetailsAtTime" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+            <wsdl:fault name="GenericFaultFault">
+                <soap:fault use="literal" name="GenericFaultFault" namespace=""/>
+            </wsdl:fault>
+        </wsdl:operation>
+        <wsdl:operation name="GetPatientGPHistory">
+            <soap:operation soapAction="http://schemas.nhn.no/reg/flr/IFlrReadOperations/GetPatientGPHistory" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+            <wsdl:fault name="GenericFaultFault">
+                <soap:fault use="literal" name="GenericFaultFault" namespace=""/>
+            </wsdl:fault>
+        </wsdl:operation>
+        <wsdl:operation name="GetGPContract">
+            <soap:operation soapAction="http://schemas.nhn.no/reg/flr/IFlrReadOperations/GetGPContract" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+            <wsdl:fault name="GenericFaultFault">
+                <soap:fault use="literal" name="GenericFaultFault" namespace=""/>
+            </wsdl:fault>
+        </wsdl:operation>
+        <wsdl:operation name="GetGPContractsOnOffice">
+            <soap:operation soapAction="http://schemas.nhn.no/reg/flr/IFlrReadOperations/GetGPContractsOnOffice" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+            <wsdl:fault name="GenericFaultFault">
+                <soap:fault use="literal" name="GenericFaultFault" namespace=""/>
+            </wsdl:fault>
+        </wsdl:operation>
+        <wsdl:operation name="GetGPPatientList">
+            <soap:operation soapAction="http://schemas.nhn.no/reg/flr/IFlrReadOperations/GetGPPatientList" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+            <wsdl:fault name="GenericFaultFault">
+                <soap:fault use="literal" name="GenericFaultFault" namespace=""/>
+            </wsdl:fault>
+        </wsdl:operation>
+        <wsdl:operation name="GetGPWithAssociatedGPContracts">
+            <soap:operation soapAction="http://schemas.nhn.no/reg/flr/IFlrReadOperations/GetGPWithAssociatedGPContracts" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+            <wsdl:fault name="GenericFaultFault">
+                <soap:fault use="literal" name="GenericFaultFault" namespace=""/>
+            </wsdl:fault>
+        </wsdl:operation>
+        <wsdl:operation name="ConfirmGP">
+            <soap:operation soapAction="http://schemas.nhn.no/reg/flr/IFlrReadOperations/ConfirmGP" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+            <wsdl:fault name="GenericFaultFault">
+                <soap:fault use="literal" name="GenericFaultFault" namespace=""/>
+            </wsdl:fault>
+        </wsdl:operation>
+        <wsdl:operation name="GetGPContractForNav">
+            <soap:operation soapAction="http://schemas.nhn.no/reg/flr/IFlrReadOperations/GetGPContractForNav" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+            <wsdl:fault name="GenericFaultFault">
+                <soap:fault use="literal" name="GenericFaultFault" namespace=""/>
+            </wsdl:fault>
+        </wsdl:operation>
+        <wsdl:operation name="NavGetEncryptedPatientList">
+            <soap:operation soapAction="http://schemas.nhn.no/reg/flr/IFlrReadOperations/NavGetEncryptedPatientList" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+            <wsdl:fault name="GenericFaultFault">
+                <soap:fault use="literal" name="GenericFaultFault" namespace=""/>
+            </wsdl:fault>
+        </wsdl:operation>
+        <wsdl:operation name="NavGetEncryptedPatientListAlternate">
+            <soap:operation soapAction="http://schemas.nhn.no/reg/flr/IFlrReadOperations/NavGetEncryptedPatientListAlternate" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+            <wsdl:fault name="GenericFaultFault">
+                <soap:fault use="literal" name="GenericFaultFault" namespace=""/>
+            </wsdl:fault>
+        </wsdl:operation>
+        <wsdl:operation name="GetGPContractIdsOperatingInPostalCode">
+            <soap:operation soapAction="http://schemas.nhn.no/reg/flr/IFlrReadOperations/GetGPContractIdsOperatingInPostalCode" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+            <wsdl:fault name="GenericFaultFault">
+                <soap:fault use="literal" name="GenericFaultFault" namespace=""/>
+            </wsdl:fault>
+        </wsdl:operation>
+        <wsdl:operation name="SearchForGP">
+            <soap:operation soapAction="http://schemas.nhn.no/reg/flr/IFlrReadOperations/SearchForGP" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+            <wsdl:fault name="GenericFaultFault">
+                <soap:fault use="literal" name="GenericFaultFault" namespace=""/>
+            </wsdl:fault>
+        </wsdl:operation>
+        <wsdl:operation name="QueryGPContracts">
+            <soap:operation soapAction="http://schemas.nhn.no/reg/flr/IFlrReadOperations/QueryGPContracts" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+            <wsdl:fault name="GenericFaultFault">
+                <soap:fault use="literal" name="GenericFaultFault" namespace=""/>
+            </wsdl:fault>
+        </wsdl:operation>
+        <wsdl:operation name="GetNavPatientLists">
+            <soap:operation soapAction="http://schemas.nhn.no/reg/flr/IFlrReadOperations/GetNavPatientLists" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+            <wsdl:fault name="GenericFaultFault">
+                <soap:fault use="literal" name="GenericFaultFault" namespace=""/>
+            </wsdl:fault>
+        </wsdl:operation>
+        <wsdl:operation name="GetPrimaryHealthCareTeam">
+            <soap:operation soapAction="http://schemas.nhn.no/reg/flr/IFlrReadOperations/GetPrimaryHealthCareTeam" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+            <wsdl:fault name="GenericFaultFault">
+                <soap:fault use="literal" name="GenericFaultFault" namespace=""/>
+            </wsdl:fault>
+        </wsdl:operation>
+    </wsdl:binding>
+    <wsdl:binding name="WSHttpBinding_IFlrReadOperations" type="tns:IFlrReadOperations">
+        <wsp:PolicyReference URI="#WSHttpBinding_IFlrReadOperations_policy"/>
+        <soap12:binding transport="http://schemas.xmlsoap.org/soap/http"/>
+        <wsdl:operation name="GetPatientGPDetails">
+            <soap12:operation soapAction="http://schemas.nhn.no/reg/flr/IFlrReadOperations/GetPatientGPDetails" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"/>
+            </wsdl:output>
+            <wsdl:fault name="GenericFaultFault">
+                <soap12:fault use="literal" name="GenericFaultFault" namespace=""/>
+            </wsdl:fault>
+        </wsdl:operation>
+        <wsdl:operation name="GetPatientsGPDetails">
+            <soap12:operation soapAction="http://schemas.nhn.no/reg/flr/IFlrReadOperations/GetPatientsGPDetails" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"/>
+            </wsdl:output>
+            <wsdl:fault name="GenericFaultFault">
+                <soap12:fault use="literal" name="GenericFaultFault" namespace=""/>
+            </wsdl:fault>
+        </wsdl:operation>
+        <wsdl:operation name="GetPatientsGPDetailsAtTime">
+            <soap12:operation soapAction="http://schemas.nhn.no/reg/flr/IFlrReadOperations/GetPatientsGPDetailsAtTime" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"/>
+            </wsdl:output>
+            <wsdl:fault name="GenericFaultFault">
+                <soap12:fault use="literal" name="GenericFaultFault" namespace=""/>
+            </wsdl:fault>
+        </wsdl:operation>
+        <wsdl:operation name="GetPatientGPHistory">
+            <soap12:operation soapAction="http://schemas.nhn.no/reg/flr/IFlrReadOperations/GetPatientGPHistory" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"/>
+            </wsdl:output>
+            <wsdl:fault name="GenericFaultFault">
+                <soap12:fault use="literal" name="GenericFaultFault" namespace=""/>
+            </wsdl:fault>
+        </wsdl:operation>
+        <wsdl:operation name="GetGPContract">
+            <soap12:operation soapAction="http://schemas.nhn.no/reg/flr/IFlrReadOperations/GetGPContract" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"/>
+            </wsdl:output>
+            <wsdl:fault name="GenericFaultFault">
+                <soap12:fault use="literal" name="GenericFaultFault" namespace=""/>
+            </wsdl:fault>
+        </wsdl:operation>
+        <wsdl:operation name="GetGPContractsOnOffice">
+            <soap12:operation soapAction="http://schemas.nhn.no/reg/flr/IFlrReadOperations/GetGPContractsOnOffice" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"/>
+            </wsdl:output>
+            <wsdl:fault name="GenericFaultFault">
+                <soap12:fault use="literal" name="GenericFaultFault" namespace=""/>
+            </wsdl:fault>
+        </wsdl:operation>
+        <wsdl:operation name="GetGPPatientList">
+            <soap12:operation soapAction="http://schemas.nhn.no/reg/flr/IFlrReadOperations/GetGPPatientList" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"/>
+            </wsdl:output>
+            <wsdl:fault name="GenericFaultFault">
+                <soap12:fault use="literal" name="GenericFaultFault" namespace=""/>
+            </wsdl:fault>
+        </wsdl:operation>
+        <wsdl:operation name="GetGPWithAssociatedGPContracts">
+            <soap12:operation soapAction="http://schemas.nhn.no/reg/flr/IFlrReadOperations/GetGPWithAssociatedGPContracts" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"/>
+            </wsdl:output>
+            <wsdl:fault name="GenericFaultFault">
+                <soap12:fault use="literal" name="GenericFaultFault" namespace=""/>
+            </wsdl:fault>
+        </wsdl:operation>
+        <wsdl:operation name="ConfirmGP">
+            <soap12:operation soapAction="http://schemas.nhn.no/reg/flr/IFlrReadOperations/ConfirmGP" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"/>
+            </wsdl:output>
+            <wsdl:fault name="GenericFaultFault">
+                <soap12:fault use="literal" name="GenericFaultFault" namespace=""/>
+            </wsdl:fault>
+        </wsdl:operation>
+        <wsdl:operation name="GetGPContractForNav">
+            <soap12:operation soapAction="http://schemas.nhn.no/reg/flr/IFlrReadOperations/GetGPContractForNav" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"/>
+            </wsdl:output>
+            <wsdl:fault name="GenericFaultFault">
+                <soap12:fault use="literal" name="GenericFaultFault" namespace=""/>
+            </wsdl:fault>
+        </wsdl:operation>
+        <wsdl:operation name="NavGetEncryptedPatientList">
+            <soap12:operation soapAction="http://schemas.nhn.no/reg/flr/IFlrReadOperations/NavGetEncryptedPatientList" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"/>
+            </wsdl:output>
+            <wsdl:fault name="GenericFaultFault">
+                <soap12:fault use="literal" name="GenericFaultFault" namespace=""/>
+            </wsdl:fault>
+        </wsdl:operation>
+        <wsdl:operation name="NavGetEncryptedPatientListAlternate">
+            <soap12:operation soapAction="http://schemas.nhn.no/reg/flr/IFlrReadOperations/NavGetEncryptedPatientListAlternate" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"/>
+            </wsdl:output>
+            <wsdl:fault name="GenericFaultFault">
+                <soap12:fault use="literal" name="GenericFaultFault" namespace=""/>
+            </wsdl:fault>
+        </wsdl:operation>
+        <wsdl:operation name="GetGPContractIdsOperatingInPostalCode">
+            <soap12:operation soapAction="http://schemas.nhn.no/reg/flr/IFlrReadOperations/GetGPContractIdsOperatingInPostalCode" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"/>
+            </wsdl:output>
+            <wsdl:fault name="GenericFaultFault">
+                <soap12:fault use="literal" name="GenericFaultFault" namespace=""/>
+            </wsdl:fault>
+        </wsdl:operation>
+        <wsdl:operation name="SearchForGP">
+            <soap12:operation soapAction="http://schemas.nhn.no/reg/flr/IFlrReadOperations/SearchForGP" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"/>
+            </wsdl:output>
+            <wsdl:fault name="GenericFaultFault">
+                <soap12:fault use="literal" name="GenericFaultFault" namespace=""/>
+            </wsdl:fault>
+        </wsdl:operation>
+        <wsdl:operation name="QueryGPContracts">
+            <soap12:operation soapAction="http://schemas.nhn.no/reg/flr/IFlrReadOperations/QueryGPContracts" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"/>
+            </wsdl:output>
+            <wsdl:fault name="GenericFaultFault">
+                <soap12:fault use="literal" name="GenericFaultFault" namespace=""/>
+            </wsdl:fault>
+        </wsdl:operation>
+        <wsdl:operation name="GetNavPatientLists">
+            <soap12:operation soapAction="http://schemas.nhn.no/reg/flr/IFlrReadOperations/GetNavPatientLists" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"/>
+            </wsdl:output>
+            <wsdl:fault name="GenericFaultFault">
+                <soap12:fault use="literal" name="GenericFaultFault" namespace=""/>
+            </wsdl:fault>
+        </wsdl:operation>
+        <wsdl:operation name="GetPrimaryHealthCareTeam">
+            <soap12:operation soapAction="http://schemas.nhn.no/reg/flr/IFlrReadOperations/GetPrimaryHealthCareTeam" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"/>
+            </wsdl:output>
+            <wsdl:fault name="GenericFaultFault">
+                <soap12:fault use="literal" name="GenericFaultFault" namespace=""/>
+            </wsdl:fault>
+        </wsdl:operation>
+    </wsdl:binding>
+    <wsdl:service name="FlrReadOperationsService">
+        <wsdl:port name="BasicHttpBinding_IFlrReadOperations" binding="tns:BasicHttpBinding_IFlrReadOperations">
+            <soap:address location="https://ws-web.test.nhn.no/v2/flr/Basic"/>
+        </wsdl:port>
+        <wsdl:port name="WSHttpBinding_IFlrReadOperations" binding="tns:WSHttpBinding_IFlrReadOperations">
+            <soap12:address location="https://ws-web.test.nhn.no/v2/flr"/>
+            <wsa10:EndpointReference>
+                <wsa10:Address>https://ws-web.test.nhn.no/v2/flr</wsa10:Address>
+            </wsa10:EndpointReference>
+        </wsdl:port>
+    </wsdl:service>
+</wsdl:definitions>

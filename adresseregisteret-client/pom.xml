@@ -9,7 +9,7 @@
         <version>1.0.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>fastlege-lookup</artifactId>
+    <artifactId>adresseregisteret-client</artifactId>
 
     <properties>
         <cxf.version>4.1.0</cxf.version>
@@ -95,9 +95,14 @@
                         <phase>generate-sources</phase>
                         <configuration>
                             <sourceRoot>${project.build.directory}/generated-sources/cxf</sourceRoot>
+                            <defaultOptions>
+                            </defaultOptions>
                             <wsdlOptions>
                                 <wsdlOption>
-                                    <wsdl>wsdl/nhn-orchestration-service.wsdl</wsdl>
+                                    <wsdl>wsdl/nhn-adresseregisteret-sok.wsdl</wsdl>
+                                    <packagenames>
+                                        <packagename>http://register.nhn.no/Common=no.nhn.common.ar</packagename>
+                                    </packagenames>
                                 </wsdlOption>
                             </wsdlOptions>
                         </configuration>
