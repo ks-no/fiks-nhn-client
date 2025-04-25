@@ -1,5 +1,7 @@
-package no.ks.fiks.nhn
+package no.ks.fiks.nhn.msh
 
+import no.ks.fiks.hdir.OrganisasjonIdType
+import no.ks.fiks.hdir.PersonIdType
 import no.ks.fiks.nhn.ar.AdresseregisteretClient
 import no.ks.fiks.nhn.ar.CommunicationParty
 import no.ks.fiks.nhn.flr.FastlegeregisteretClient

@@ -35,6 +35,15 @@
             <groupId>no.ks.fiks</groupId>
             <artifactId>adresseregisteret-client</artifactId>
         </dependency>
+        <dependency>
+            <groupId>no.ks.fiks</groupId>
+            <artifactId>msh-api-v2</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>no.ks.fiks</groupId>
+            <artifactId>helseid-client</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
 
 
         <dependency>

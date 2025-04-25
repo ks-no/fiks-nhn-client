@@ -20,6 +20,7 @@
         <module>fastlegeregisteret-client</module>
         <module>adresseregisteret-client</module>
         <module>nhn-client</module>
+        <module>msh-api-v2</module>
     </modules>
 
     <properties>
@@ -51,6 +52,11 @@
             <dependency>
                 <groupId>no.ks.fiks</groupId>
                 <artifactId>adresseregisteret-client</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>no.ks.fiks</groupId>
+                <artifactId>msh-api-v2</artifactId>
                 <version>${project.version}</version>
             </dependency>
 

@@ -1,4 +1,4 @@
-package no.ks.fiks.nhn
+package no.ks.fiks.nhn.msh
 
 import jakarta.xml.bind.JAXBContext
 import jakarta.xml.bind.util.JAXBSource
@@ -8,6 +8,7 @@ import no.kith.xmlstds.base64container.Base64Container
 import no.kith.xmlstds.dialog._2006_10_11.*
 import no.kith.xmlstds.felleskomponent1.TeleCom
 import no.kith.xmlstds.msghead._2006_05_24.MsgHead
+import no.ks.fiks.hdir.HelsepersonellsFunksjoner
 import javax.xml.XMLConstants
 import javax.xml.validation.SchemaFactory
 

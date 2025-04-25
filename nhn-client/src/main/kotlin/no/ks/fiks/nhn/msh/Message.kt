@@ -1,9 +1,11 @@
-package no.ks.fiks.nhn
+package no.ks.fiks.nhn.msh
 
+import no.ks.fiks.hdir.IdType
+import no.ks.fiks.hdir.MeldingensFunksjon
 import java.io.InputStream
 
 data class Message(
-    val type: MessageType,
+    val type: MeldingensFunksjon,
     val sender: Organisation,
     val receiver: Receiver,
     val vedlegg: InputStream?,

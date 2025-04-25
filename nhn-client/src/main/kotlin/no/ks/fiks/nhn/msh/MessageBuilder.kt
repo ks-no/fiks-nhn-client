@@ -1,10 +1,13 @@
-package no.ks.fiks.nhn
+package no.ks.fiks.nhn.msh
 
 import jakarta.xml.bind.JAXBContext
 import jakarta.xml.bind.util.JAXBSource
 import no.kith.xmlstds.base64container.Base64Container
 import no.kith.xmlstds.dialog._2006_10_11.Dialogmelding
 import no.kith.xmlstds.msghead._2006_05_24.*
+import no.ks.fiks.hdir.IdType
+import no.ks.fiks.hdir.MeldingensFunksjon
+import no.ks.fiks.hdir.PersonIdType
 import java.io.InputStream
 import java.io.StringWriter
 import java.time.ZonedDateTime
@@ -14,7 +17,6 @@ import java.util.*
 import javax.xml.XMLConstants
 import javax.xml.datatype.DatatypeFactory
 import javax.xml.validation.SchemaFactory
-import kotlin.random.Random.Default.nextBytes
 import no.kith.xmlstds.msghead._2006_05_24.Organisation as NhnOrganisation
 import no.kith.xmlstds.msghead._2006_05_24.Patient as NhnPatient
 import no.kith.xmlstds.msghead._2006_05_24.Receiver as NhnReceiver
@@ -108,7 +110,7 @@ object MessageBuilder {
         }
         .also { headSchema.newValidator().validate(JAXBSource(context, it)) }
 
-    private fun buildMsgInfoType(type: MessageType) = CS().apply {
+    private fun buildMsgInfoType(type: MeldingensFunksjon) = CS().apply {
         v = type.verdi
         dn = type.navn
     }
