@@ -10,7 +10,7 @@ class Environment(
         )
 
         val PROD = Environment(
-            url = "",
+            url = "", // TODO: Trenger verdi
         )
     }
 }

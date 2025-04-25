@@ -5,11 +5,11 @@ class Environment(
 ) {
     companion object {
         val TEST = Environment(
-            url = "https://ws-web.test.nhn.no/v1/AR",
+            url = "https://ws-web.test.nhn.no/v1/Ar",
         )
 
         val PROD = Environment(
-            url = "",
+            url = "https://ws.nhn.no/v1/Ar",
         )
     }
 }

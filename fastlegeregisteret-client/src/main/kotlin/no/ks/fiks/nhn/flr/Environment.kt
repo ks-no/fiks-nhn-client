@@ -9,7 +9,7 @@ class Environment(
         )
 
         val PROD = Environment(
-            url = "",
+            url = "https://ws.nhn.no/v2/flr",
         )
     }
 }
