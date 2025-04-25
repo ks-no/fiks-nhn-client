@@ -8,6 +8,7 @@ import no.kith.xmlstds.msghead._2006_05_24.*
 import no.ks.fiks.hdir.IdType
 import no.ks.fiks.hdir.MeldingensFunksjon
 import no.ks.fiks.hdir.PersonIdType
+import no.ks.fiks.hdir.TypeDokumentreferanse
 import java.io.InputStream
 import java.io.StringWriter
 import java.time.ZonedDateTime
@@ -22,6 +23,8 @@ import no.kith.xmlstds.msghead._2006_05_24.Patient as NhnPatient
 import no.kith.xmlstds.msghead._2006_05_24.Receiver as NhnReceiver
 
 private const val MI_G_VERSION = "v1.2 2006-05-24" // Eneste gyldige verdi (?)
+
+private const val MIME_TYPE_PDF = "application/pdf"
 
 // Til alle dataelement av type CS er det angitt hvilket kodeverk som skal benyttes
 // For de fleste dataelement av typen CV er det angitt et standard kodeverk, eller det er angitt eksempler på kodeverk som kan benyttes
@@ -155,10 +158,7 @@ object MessageBuilder {
     private fun buildDialogmeldingDocument(dialogmelding: Dialogmelding) =
         Document().apply {
             refDoc = RefDoc().apply {
-                msgType = CS().apply { // Kodeverk: 8114 Type dokumentreferanse
-                    v = "XML"
-                    dn = "XML-instans"
-                }
+                msgType = TypeDokumentreferanse.XML.toCS()
                 content = RefDoc.Content().apply {
                     any = listOf(
                         dialogmelding,
@@ -173,11 +173,8 @@ object MessageBuilder {
                 issueDate = TS().apply {
                     v = DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(ZonedDateTime.now().truncatedTo(ChronoUnit.SECONDS)) // TODO: Dato for opprettelsen av vedlegget?
                 }
-                msgType = CS().apply { // Kodeverk: 8114 Type dokumentreferanse
-                    v = "A"
-                    dn = "Vedlegg"
-                }
-                mimeType = "application/pdf"
+                msgType = TypeDokumentreferanse.VEDLEGG.toCS()
+                mimeType = MIME_TYPE_PDF
                 description = "Blablabla" // TODO: Tittel på forsendelsen?
                 content = RefDoc.Content().apply {
                     any = listOf(
