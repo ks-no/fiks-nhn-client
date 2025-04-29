@@ -2,6 +2,7 @@ package no.ks.fiks.nhn.ar
 
 import jakarta.xml.ws.soap.SOAPBinding
 import no.nhn.register.communicationparty.ICommunicationPartyService
+import no.nhn.register.communicationparty.OrganizationPerson
 import org.apache.cxf.jaxws.JaxWsProxyFactoryBean
 import org.apache.cxf.ws.addressing.WSAddressingFeature
 import no.nhn.register.communicationparty.CommunicationParty as NhnCommunicationParty
@@ -23,11 +24,15 @@ class AdresseregisteretClient(
 
     fun lookupHerId(herId: Int): CommunicationParty? =
         service.getCommunicationPartyDetails(herId)
+            ?.also { if (it !is OrganizationPerson) throw RuntimeException("Communication party is not of type OrganizationPerson") }
+            ?.let { it as OrganizationPerson }
             ?.convert()
 
-    private fun NhnCommunicationParty.convert() = CommunicationParty(
+    private fun OrganizationPerson.convert() = CommunicationParty(
         herId = herId,
-        name = name.value,
+        firstName = person.value.firstName.value,
+        middleName = person.value?.middleName?.value,
+        lastName = person.value.lastName.value,
         parent = CommunicationPartyParent(
             herId = parentHerId,
             name = parentName.value,
