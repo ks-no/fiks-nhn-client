@@ -111,7 +111,7 @@ object MessageDeserializer {
                     dialogmelding.foresporsel?.singleOrNull()?.let { foresporsel ->
                         Dialogmelding(
                             type = TypeOpplysningPasientsamhandling.entries.firstOrNull { it.verdi == foresporsel.typeForesp.v && it.navn == foresporsel.typeForesp.dn }
-                                ?: throw IllegalArgumentException("Unknown type for typeForesp: ${foresporsel.typeForesp}"),
+                                ?: throw IllegalArgumentException("Unknown type for typeForesp: ${foresporsel.typeForesp.v}, ${foresporsel.typeForesp.dn}, ${foresporsel.typeForesp.s}, ${foresporsel.typeForesp.ot}"),
                             sporsmal = foresporsel.sporsmal,
                         )
                     }

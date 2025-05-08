@@ -8,6 +8,7 @@ import no.kith.xmlstds.dialog._2006_10_11.HealthcareProfessional
 import no.kith.xmlstds.dialog._2006_10_11.RollerRelatertNotat
 import no.kith.xmlstds.felleskomponent1.TeleCom
 import no.ks.fiks.hdir.HelsepersonellsFunksjoner
+import no.ks.fiks.hdir.TypeOpplysningPasientsamhandling
 
 object DialogmeldingBuilder {
 
@@ -15,10 +16,12 @@ object DialogmeldingBuilder {
         .apply {
             foresporsel = listOf(
                 Foresporsel().apply {
-                    typeForesp = CV().apply {
-                        v = "HE"  // TODO: Fant bare noe tilfeldig, vet ikke hva vi skal bruke her
-                        dn = "Henvendelse"
-                        s = "2.16.578.1.12.4.1.1.7601"
+                    typeForesp = TypeOpplysningPasientsamhandling.ANNEN_HENVENDELSE.let { // TODO: Fant bare noe tilfeldig, vet ikke hva vi skal bruke her
+                        CV().apply {
+                            v = it.verdi
+                            dn = it.navn
+                            s = it.kodeverk
+                        }
                     }
                     sporsmal = "Se vedlegg?" // TODO: Hva skal stå her?
                     rollerRelatertNotat = listOf(
