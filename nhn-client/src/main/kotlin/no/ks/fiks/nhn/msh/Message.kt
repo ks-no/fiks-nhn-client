@@ -2,12 +2,22 @@ package no.ks.fiks.nhn.msh
 
 import no.ks.fiks.hdir.IdType
 import no.ks.fiks.hdir.MeldingensFunksjon
+import no.ks.fiks.hdir.TypeOpplysningPasientsamhandling
 import java.io.InputStream
 
-data class Message(
+data class OutgoingMessage(
     val type: MeldingensFunksjon,
     val sender: Organisation,
     val receiver: Receiver,
+    val vedlegg: InputStream?,
+)
+
+data class IncomingMessage(
+    val id: String,
+    val type: MeldingensFunksjon,
+    val sender: Organisation,
+    val receiver: Receiver,
+    val dialogmelding: Dialogmelding?,
     val vedlegg: InputStream?,
 )
 
@@ -51,5 +61,10 @@ data class Patient(
     val firstName: String,
     val middleName: String?,
     val lastName: String,
+)
+
+data class Dialogmelding(
+    val type: TypeOpplysningPasientsamhandling,
+    val sporsmal: String,
 )
 

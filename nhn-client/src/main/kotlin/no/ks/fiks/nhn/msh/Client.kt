@@ -1,5 +1,11 @@
 package no.ks.fiks.nhn.msh
 
+import com.fasterxml.jackson.core.JsonParser
+import com.fasterxml.jackson.databind.DeserializationContext
+import com.fasterxml.jackson.databind.JsonDeserializer
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.module.SimpleModule
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import feign.Feign
 import feign.jackson.JacksonDecoder
 import feign.jackson.JacksonEncoder
@@ -9,21 +15,39 @@ import no.ks.fiks.helseid.http.HttpRequestHelper
 import no.ks.fiks.nhn.ar.AdresseregisteretClient
 import no.ks.fiks.nhn.flr.FastlegeregisteretClient
 import no.nhn.msh.v2.api.MessagesControllerApi
+import no.nhn.msh.v2.model.AppRecStatus
+import no.nhn.msh.v2.model.PostAppRecRequest
 import no.nhn.msh.v2.model.PostMessageRequest
+import java.time.LocalDateTime
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import java.util.*
 import no.ks.fiks.helseid.Configuration as HelseIdConfiguration
+import no.nhn.msh.v2.model.Message as NhnMessage
 
 private const val API_VERSION = "2"
 
 private const val CONTENT_TYPE = "application/xml"
 private const val CONTENT_TRANSFER_ENCODING = "base64"
 
-private val messagesEndpoint = Endpoint(HttpMethod.POST, "https://api.tjener.test.melding.nhn.no/Messages")
-
 // Meldingstjener, MSH (Message Service Handler)
 class Client(
     configuration: Configuration,
 ) {
+
+    private val baseUrl = configuration.environments.mshEnvironment.url
+
+    private val mapper = ObjectMapper()
+        .registerModule(JavaTimeModule())
+        .registerModule(SimpleModule().apply {
+            addDeserializer(OffsetDateTime::class.java, object : JsonDeserializer<OffsetDateTime>() { // API returns ISO 8601 dates without offset that can't be parsed by the default deserializer
+                override fun deserialize(parser: JsonParser, context: DeserializationContext): OffsetDateTime {
+                    val local = LocalDateTime.parse(parser.text)
+                    return OffsetDateTime.of(local, ZoneOffset.UTC) // TODO: Hvilken tidssone har returnere datoer?
+                }
+
+            })
+        })
 
     private val flrClient = FastlegeregisteretClient(
         environment = configuration.environments.fastlegeregisteretEnvironment,
@@ -48,7 +72,7 @@ class Client(
 
     fun sendMessageToFastlegeForPerson(message: FastlegeForPersonMessage) {
         sendMessage(
-            Message(
+            OutgoingMessage(
                 type = message.type,
                 sender = message.sender,
                 receiver = receiverBuilder.buildFastlegeForPersonReceiver(message.personFnr),
@@ -57,23 +81,102 @@ class Client(
         )
     }
 
-    fun sendMessage(message: Message) {
-        buildClient(messagesEndpoint)
+    fun sendMessage(message: OutgoingMessage) {
+        buildClient(buildPostMessagesEndpoint())
             .postMessage(
                 API_VERSION, sourceSystem, PostMessageRequest()
-                .contentType(CONTENT_TYPE)
-                .contentTransferEncoding(CONTENT_TRANSFER_ENCODING)
-                .businessDocument(Base64.getEncoder().encodeToString(MessageBuilder.buildNhnMessage(message).toByteArray())))
+                    .contentType(CONTENT_TYPE)
+                    .contentTransferEncoding(CONTENT_TRANSFER_ENCODING)
+                    .businessDocument(Base64.getEncoder().encodeToString(MessageSerializer.serializeNhnMessage(message).toByteArray()))
+            )
+    }
+
+    fun getMessages(receiverHerId: Int): List<MessageInfo> {
+        return buildClient(buildGetMessagesEndpoint())
+            .getMessages(
+                API_VERSION, sourceSystem, MessagesControllerApi.GetMessagesQueryParams()
+                    .receiverHerIds(setOf(receiverHerId))
+            )
+            .map { it.toMessageInfo() }
+
+    }
+
+    fun getMessagesWithMetadata(receiverHerId: Int): List<MessageInfoWithMetadata> {
+        return buildClient(buildGetMessagesEndpoint())
+            .getMessages(
+                API_VERSION, sourceSystem, MessagesControllerApi.GetMessagesQueryParams()
+                    .receiverHerIds(setOf(receiverHerId))
+                    .includeMetadata(true)
+            )
+            .map { it.toMessageInfoWithMetadata() }
+
+    }
+
+    fun getMessage(id: UUID): MessageInfoWithMetadata {
+        return buildClient(buildGetMessageByIdEndpoint(id))
+            .getMessage(id, API_VERSION, sourceSystem)
+            .toMessageInfoWithMetadata()
+    }
+
+    fun markMessageRead(id: UUID, receiverHerId: Int) {
+        buildClient(buildPutMessageReadEndpoint(id, receiverHerId))
+            .markMessageAsRead(id, receiverHerId, API_VERSION, sourceSystem)
+    }
+
+    private fun NhnMessage.toMessageInfo() = MessageInfo(
+        id = id,
+        receiverHerId = receiverHerId,
+    )
+
+    private fun NhnMessage.toMessageInfoWithMetadata() = MessageInfoWithMetadata(
+        id = id,
+        contentType = contentType,
+        receiverHerId = receiverHerId,
+        senderHerId = senderHerId,
+        businessDocumentId = businessDocumentId,
+        businessDocumentDate = businessDocumentGenDate,
+        isAppRec = isAppRec,
+    )
+
+    fun getAppRec(id: UUID): ApplicationReceipt {
+        return buildClient(buildGetBusinessDocumentEndpoint(id))
+            .getBusinessDocument(id, API_VERSION, sourceSystem)
+            .let {
+                MessageDeserializer.deserializeAppRec(String(Base64.getDecoder().decode(it.businessDocument)))
+            }
+    }
+
+    fun getBusinessDocument(id: UUID): IncomingMessage {
+        return buildClient(buildGetBusinessDocumentEndpoint(id))
+            .getBusinessDocument(id, API_VERSION, sourceSystem)
+            .let {
+                MessageDeserializer.deserializeMsgHead(String(Base64.getDecoder().decode(it.businessDocument)))
+            }
+    }
+
+    fun sendApplicationReceipt(id: UUID, senderHerId: Int) {
+        buildClient(buildPostAppRecEndpoint(id, senderHerId))
+            .postAppRec(
+                id, senderHerId, API_VERSION, sourceSystem, PostAppRecRequest()
+                    .appRecStatus(AppRecStatus.OK)
+            )
     }
 
     private fun buildClient(endpoint: Endpoint) = Feign.builder()
-        .encoder(JacksonEncoder())
-        .decoder(JacksonDecoder())
+        .encoder(JacksonEncoder(mapper))
+        .decoder(JacksonDecoder(mapper))
         .requestInterceptor {
             httpHelper.addDpopAuthorizationHeader(endpoint) { name, value ->
                 it.header(name, value)
             }
         }
         .target(MessagesControllerApi::class.java, meldingstjenerEnvironment.url)
+
+    private fun buildGetMessagesEndpoint() = Endpoint(HttpMethod.GET, "$baseUrl/Messages")
+    private fun buildPostMessagesEndpoint() = Endpoint(HttpMethod.POST, "$baseUrl/Messages")
+    private fun buildGetMessageByIdEndpoint(id: UUID) = Endpoint(HttpMethod.GET, "$baseUrl/Messages/$id")
+    private fun buildGetBusinessDocumentEndpoint(id: UUID) = Endpoint(HttpMethod.GET, "$baseUrl/Messages/$id/business-document")
+    private fun buildPostAppRecEndpoint(id: UUID, senderHerId: Int) = Endpoint(HttpMethod.POST, "$baseUrl/Messages/$id/apprec/$senderHerId")
+    private fun buildPutMessageReadEndpoint(id: UUID, receiverHerId: Int) = Endpoint(HttpMethod.PUT, "$baseUrl/Messages/$id/read/$receiverHerId")
 
 }

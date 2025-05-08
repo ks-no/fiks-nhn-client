@@ -1,7 +1,5 @@
 package no.ks.fiks.nhn.msh
 
-import jakarta.xml.bind.JAXBContext
-import jakarta.xml.bind.util.JAXBSource
 import no.kith.xmlstds.base64container.Base64Container
 import no.kith.xmlstds.dialog._2006_10_11.Dialogmelding
 import no.kith.xmlstds.msghead._2006_05_24.*
@@ -15,9 +13,7 @@ import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.util.*
-import javax.xml.XMLConstants
 import javax.xml.datatype.DatatypeFactory
-import javax.xml.validation.SchemaFactory
 import no.kith.xmlstds.msghead._2006_05_24.Organisation as NhnOrganisation
 import no.kith.xmlstds.msghead._2006_05_24.Patient as NhnPatient
 import no.kith.xmlstds.msghead._2006_05_24.Receiver as NhnReceiver
@@ -28,13 +24,9 @@ private const val MIME_TYPE_PDF = "application/pdf"
 
 // Til alle dataelement av type CS er det angitt hvilket kodeverk som skal benyttes
 // For de fleste dataelement av typen CV er det angitt et standard kodeverk, eller det er angitt eksempler på kodeverk som kan benyttes
-object MessageBuilder {
+object MessageSerializer {
 
-    private val context = JAXBContext.newInstance(MsgHead::class.java, Dialogmelding::class.java, Base64Container::class.java)
-    private val headSchema = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI)
-        .newSchema(ClassLoader.getSystemResource("xsd/MsgHead-v1_2.xsd"))
-
-    fun buildNhnMessage(message: Message): String {
+    fun serializeNhnMessage(message: OutgoingMessage): String {
         val msgHead = buildMsgHead(message)
         val dialogmelding = DialogmeldingBuilder.buildDialogmelding()
         val vedlegg = buildVedlegg(message.vedlegg)
@@ -45,11 +37,11 @@ object MessageBuilder {
         )
 
         return StringWriter()
-            .also { createMarshaller().marshal(msgHead, it) }
+            .also { XmlContext.createMarshaller().marshal(msgHead, it) }
             .toString()
     }
 
-    private fun buildMsgHead(message: Message) = MsgHead()
+    private fun buildMsgHead(message: OutgoingMessage) = MsgHead()
         .apply {
             msgInfo = MsgInfo().apply {
                 type = buildMsgInfoType(message.type)
@@ -111,7 +103,7 @@ object MessageBuilder {
                 )
             }
         }
-        .also { headSchema.newValidator().validate(JAXBSource(context, it)) }
+        .also { XmlContext.validate(it) }
 
     private fun buildMsgInfoType(type: MeldingensFunksjon) = CS().apply {
         v = type.verdi
@@ -184,7 +176,5 @@ object MessageBuilder {
             }
         }
     }
-
-    private fun createMarshaller() = context.createMarshaller()
 
 }
