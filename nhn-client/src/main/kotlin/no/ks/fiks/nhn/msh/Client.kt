@@ -43,9 +43,8 @@ class Client(
             addDeserializer(OffsetDateTime::class.java, object : JsonDeserializer<OffsetDateTime>() { // API returns ISO 8601 dates without offset that can't be parsed by the default deserializer
                 override fun deserialize(parser: JsonParser, context: DeserializationContext): OffsetDateTime {
                     val local = LocalDateTime.parse(parser.text)
-                    return OffsetDateTime.of(local, ZoneOffset.UTC) // TODO: Hvilken tidssone har returnere datoer?
+                    return OffsetDateTime.of(local, ZoneOffset.UTC)
                 }
-
             })
         })
 
