@@ -64,7 +64,6 @@ class Client(
             environment = configuration.environments.helseIdEnvironment,
             clientId = configuration.clientId,
             jwk = configuration.jwk,
-            jwtRequestExpirationTime = configuration.jwtRequestExpirationTime,
         )
     )
     private val meldingstjenerEnvironment = configuration.environments.mshEnvironment

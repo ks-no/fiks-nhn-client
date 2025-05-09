@@ -1,6 +1,5 @@
 package no.ks.fiks.nhn.msh
 
-import java.time.Duration
 import no.ks.fiks.helseid.Environment as HelseIdEnvironment
 import no.ks.fiks.nhn.ar.Credentials as ArCredentials
 import no.ks.fiks.nhn.ar.Environment as ArEnvironment
@@ -14,7 +13,6 @@ data class Configuration(
 
     val clientId: String,
     val jwk: String,
-    val jwtRequestExpirationTime: Duration = Duration.ofSeconds(60),
 
     val sourceSystem: String,
 ) {
