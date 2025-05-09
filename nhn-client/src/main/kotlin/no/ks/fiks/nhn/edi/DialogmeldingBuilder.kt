@@ -1,4 +1,4 @@
-package no.ks.fiks.nhn.msh
+package no.ks.fiks.nhn.edi
 
 import no.kith.xmlstds.CV
 import no.kith.xmlstds.URL

@@ -1,4 +1,4 @@
-package no.ks.fiks.nhn.msh
+package no.ks.fiks.nhn.edi
 
 import no.kith.xmlstds.base64container.Base64Container
 import no.kith.xmlstds.dialog._2006_10_11.Dialogmelding
@@ -7,12 +7,12 @@ import no.ks.fiks.hdir.IdType
 import no.ks.fiks.hdir.MeldingensFunksjon
 import no.ks.fiks.hdir.PersonIdType
 import no.ks.fiks.hdir.TypeDokumentreferanse
+import no.ks.fiks.nhn.msh.*
 import java.io.InputStream
 import java.io.StringWriter
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
-import java.util.*
 import javax.xml.datatype.DatatypeFactory
 import no.kith.xmlstds.msghead._2006_05_24.Organisation as NhnOrganisation
 import no.kith.xmlstds.msghead._2006_05_24.Patient as NhnPatient
@@ -26,7 +26,7 @@ private const val MIME_TYPE_PDF = "application/pdf"
 // For de fleste dataelement av typen CV er det angitt et standard kodeverk, eller det er angitt eksempler på kodeverk som kan benyttes
 object MessageSerializer {
 
-    fun serializeNhnMessage(message: OutgoingMessage): String {
+    fun serializeNhnMessage(message: OutgoingBusinessDocument): String {
         val msgHead = buildMsgHead(message)
         val dialogmelding = DialogmeldingBuilder.buildDialogmelding()
         val vedlegg = buildVedlegg(message.vedlegg)
@@ -41,13 +41,13 @@ object MessageSerializer {
             .toString()
     }
 
-    private fun buildMsgHead(message: OutgoingMessage) = MsgHead()
+    private fun buildMsgHead(message: OutgoingBusinessDocument) = MsgHead()
         .apply {
             msgInfo = MsgInfo().apply {
                 type = buildMsgInfoType(message.type)
                 miGversion = MI_G_VERSION
                 genDate = currentDateTime()
-                msgId = createMsgId()
+                msgId = message.id.toString()
                 sender = toSender(message.sender)
                 receiver = when (message.receiver) {
                     is HerIdReceiver -> NhnReceiver().apply {
@@ -115,8 +115,6 @@ object MessageSerializer {
             DateTimeFormatter.ISO_OFFSET_DATE_TIME
                 .format(ZonedDateTime.now().truncatedTo(ChronoUnit.SECONDS))
         )
-
-    private fun createMsgId() = UUID.randomUUID().toString()
 
     private fun toSender(input: Organisation) = Sender().apply {
         organisation = toOrganisation(input)

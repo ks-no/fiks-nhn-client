@@ -13,6 +13,7 @@ import no.ks.fiks.helseid.dpop.Endpoint
 import no.ks.fiks.helseid.dpop.HttpMethod
 import no.ks.fiks.helseid.http.HttpRequestHelper
 import no.ks.fiks.nhn.ar.AdresseregisteretClient
+import no.ks.fiks.nhn.edi.*
 import no.ks.fiks.nhn.flr.FastlegeregisteretClient
 import no.nhn.msh.v2.api.MessagesControllerApi
 import no.nhn.msh.v2.model.AppRecStatus
@@ -69,28 +70,29 @@ class Client(
     private val meldingstjenerEnvironment = configuration.environments.mshEnvironment
     private val sourceSystem = configuration.sourceSystem
 
-    fun sendMessageToFastlegeForPerson(message: FastlegeForPersonMessage) {
+    fun sendMessageToFastlegeForPerson(businessDocument: FastlegeForPersonOutgoingBusinessDocument) {
         sendMessage(
-            OutgoingMessage(
-                type = message.type,
-                sender = message.sender,
-                receiver = receiverBuilder.buildFastlegeForPersonReceiver(message.personFnr),
-                vedlegg = message.vedlegg,
+            OutgoingBusinessDocument(
+                id = businessDocument.id,
+                type = businessDocument.type,
+                sender = businessDocument.sender,
+                receiver = receiverBuilder.buildFastlegeForPersonReceiver(businessDocument.personFnr),
+                vedlegg = businessDocument.vedlegg,
             )
         )
     }
 
-    fun sendMessage(message: OutgoingMessage) {
+    fun sendMessage(businessDocument: OutgoingBusinessDocument) {
         buildClient(buildPostMessagesEndpoint())
             .postMessage(
                 API_VERSION, sourceSystem, PostMessageRequest()
                     .contentType(CONTENT_TYPE)
                     .contentTransferEncoding(CONTENT_TRANSFER_ENCODING)
-                    .businessDocument(Base64.getEncoder().encodeToString(MessageSerializer.serializeNhnMessage(message).toByteArray()))
+                    .businessDocument(Base64.getEncoder().encodeToString(MessageSerializer.serializeNhnMessage(businessDocument).toByteArray()))
             )
     }
 
-    fun getMessages(receiverHerId: Int): List<MessageInfo> {
+    fun getMessages(receiverHerId: Int): List<Message> {
         return buildClient(buildGetMessagesEndpoint())
             .getMessages(
                 API_VERSION, sourceSystem, MessagesControllerApi.GetMessagesQueryParams()
@@ -100,7 +102,7 @@ class Client(
 
     }
 
-    fun getMessagesWithMetadata(receiverHerId: Int): List<MessageInfoWithMetadata> {
+    fun getMessagesWithMetadata(receiverHerId: Int): List<MessageWithMetadata> {
         return buildClient(buildGetMessagesEndpoint())
             .getMessages(
                 API_VERSION, sourceSystem, MessagesControllerApi.GetMessagesQueryParams()
@@ -111,45 +113,25 @@ class Client(
 
     }
 
-    fun getMessage(id: UUID): MessageInfoWithMetadata {
+    fun getMessage(id: UUID): MessageWithMetadata {
         return buildClient(buildGetMessageByIdEndpoint(id))
             .getMessage(id, API_VERSION, sourceSystem)
             .toMessageInfoWithMetadata()
     }
 
-    fun markMessageRead(id: UUID, receiverHerId: Int) {
-        buildClient(buildPutMessageReadEndpoint(id, receiverHerId))
-            .markMessageAsRead(id, receiverHerId, API_VERSION, sourceSystem)
-    }
-
-    private fun NhnMessage.toMessageInfo() = MessageInfo(
-        id = id,
-        receiverHerId = receiverHerId,
-    )
-
-    private fun NhnMessage.toMessageInfoWithMetadata() = MessageInfoWithMetadata(
-        id = id,
-        contentType = contentType,
-        receiverHerId = receiverHerId,
-        senderHerId = senderHerId,
-        businessDocumentId = businessDocumentId,
-        businessDocumentDate = businessDocumentGenDate,
-        isAppRec = isAppRec,
-    )
-
-    fun getAppRec(id: UUID): ApplicationReceipt {
+    fun getBusinessDocument(id: UUID): IncomingBusinessDocument {
         return buildClient(buildGetBusinessDocumentEndpoint(id))
             .getBusinessDocument(id, API_VERSION, sourceSystem)
             .let {
-                MessageDeserializer.deserializeAppRec(String(Base64.getDecoder().decode(it.businessDocument)))
+                BusinessDocumentDeserializer.deserializeMsgHead(String(Base64.getDecoder().decode(it.businessDocument)))
             }
     }
 
-    fun getBusinessDocument(id: UUID): IncomingMessage {
+    fun getApplicationReceipt(id: UUID): ApplicationReceipt {
         return buildClient(buildGetBusinessDocumentEndpoint(id))
             .getBusinessDocument(id, API_VERSION, sourceSystem)
             .let {
-                MessageDeserializer.deserializeMsgHead(String(Base64.getDecoder().decode(it.businessDocument)))
+                BusinessDocumentDeserializer.deserializeAppRec(String(Base64.getDecoder().decode(it.businessDocument)))
             }
     }
 
@@ -160,6 +142,26 @@ class Client(
                     .appRecStatus(AppRecStatus.OK)
             )
     }
+
+    fun markMessageRead(id: UUID, receiverHerId: Int) {
+        buildClient(buildPutMessageReadEndpoint(id, receiverHerId))
+            .markMessageAsRead(id, receiverHerId, API_VERSION, sourceSystem)
+    }
+
+    private fun NhnMessage.toMessageInfo() = Message(
+        id = id,
+        receiverHerId = receiverHerId,
+    )
+
+    private fun NhnMessage.toMessageInfoWithMetadata() = MessageWithMetadata(
+        id = id,
+        contentType = contentType,
+        receiverHerId = receiverHerId,
+        senderHerId = senderHerId,
+        businessDocumentId = businessDocumentId,
+        businessDocumentDate = businessDocumentGenDate,
+        isAppRec = isAppRec,
+    )
 
     private fun buildClient(endpoint: Endpoint) = Feign.builder()
         .encoder(JacksonEncoder(mapper))

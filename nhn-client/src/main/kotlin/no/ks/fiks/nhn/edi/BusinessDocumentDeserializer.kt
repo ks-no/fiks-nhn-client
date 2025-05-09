@@ -1,4 +1,4 @@
-package no.ks.fiks.nhn.msh
+package no.ks.fiks.nhn.edi
 
 import no.kith.xmlstds.apprec._2004_11_21.AppRec
 import no.kith.xmlstds.apprec._2004_11_21.Inst
@@ -8,17 +8,18 @@ import no.kith.xmlstds.msghead._2006_05_24.CV
 import no.kith.xmlstds.msghead._2006_05_24.Ident
 import no.kith.xmlstds.msghead._2006_05_24.MsgHead
 import no.ks.fiks.hdir.*
+import no.ks.fiks.nhn.msh.*
 import java.io.ByteArrayInputStream
 import java.io.StringReader
 import javax.xml.transform.stream.StreamSource
 import no.kith.xmlstds.dialog._2006_10_11.Dialogmelding as NhnDialogmelding
 import no.kith.xmlstds.msghead._2006_05_24.Organisation as NhnOrganisation
 
-object MessageDeserializer {
+object BusinessDocumentDeserializer {
 
-    fun deserializeMsgHead(messageXml: String): IncomingMessage {
-        val msgHead = XmlContext.createUnmarshaller().unmarshal(StreamSource(StringReader(messageXml)), MsgHead::class.java).value
-        return IncomingMessage(
+    fun deserializeMsgHead(msgHeadXml: String): IncomingBusinessDocument {
+        val msgHead = XmlContext.createUnmarshaller().unmarshal(StreamSource(StringReader(msgHeadXml)), MsgHead::class.java).value
+        return IncomingBusinessDocument(
             id = msgHead.msgInfo.msgId,
             type = msgHead.getType(),
             sender = msgHead.getSender(),
@@ -32,7 +33,7 @@ object MessageDeserializer {
         val appRec = XmlContext.createUnmarshaller().unmarshal(StreamSource(StringReader(appRecXml)), AppRec::class.java).value
         return ApplicationReceipt(
             id = appRec.id,
-            originalMessageId = appRec.originalMsgId.id,
+            acknowledgedBusinessDocumentId = appRec.originalMsgId.id,
             status = StatusForMottakAvMelding.entries.firstOrNull { it.verdi == appRec.status.v && it.navn == appRec.status.dn } ?: throw IllegalArgumentException("Unknown app rec status: ${appRec.status}"),
             errors = appRec?.error?.map { error ->
                 ApplicationReceiptError(
