@@ -24,7 +24,7 @@ private const val MIME_TYPE_PDF = "application/pdf"
 
 // Til alle dataelement av type CS er det angitt hvilket kodeverk som skal benyttes
 // For de fleste dataelement av typen CV er det angitt et standard kodeverk, eller det er angitt eksempler på kodeverk som kan benyttes
-object MessageSerializer {
+object BusinessDocumentSerializer {
 
     fun serializeNhnMessage(message: OutgoingBusinessDocument): String {
         val msgHead = buildMsgHead(message)

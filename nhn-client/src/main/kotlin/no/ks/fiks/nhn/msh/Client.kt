@@ -88,7 +88,7 @@ class Client(
                 API_VERSION, sourceSystem, PostMessageRequest()
                     .contentType(CONTENT_TYPE)
                     .contentTransferEncoding(CONTENT_TRANSFER_ENCODING)
-                    .businessDocument(Base64.getEncoder().encodeToString(MessageSerializer.serializeNhnMessage(businessDocument).toByteArray()))
+                    .businessDocument(Base64.getEncoder().encodeToString(BusinessDocumentSerializer.serializeNhnMessage(businessDocument).toByteArray()))
             )
     }
 
