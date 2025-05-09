@@ -13,5 +13,5 @@ enum class TypeOpplysningPasientsamhandling(
     STATUS_FOR_UTSKRIVNING("8", "Status/plan for utskrivning"),
     ANNEN_HENVENDELSE("99", "Annen henvendelse");
 
-    override val kodeverk: String = "2.16.578.1.12.4.1.1.8258"
+    override val kodeverk: String = "2.16.578.1.12.4.1.1.9152"
 }
