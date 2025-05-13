@@ -1,6 +1,5 @@
 package no.ks.fiks.nhn.edi.v1_0
 
-import no.kith.xmlstds.CS
 import no.kith.xmlstds.CV
 import no.kith.xmlstds.URL
 import no.kith.xmlstds.dialog._2006_10_11.Dialogmelding
@@ -8,7 +7,6 @@ import no.kith.xmlstds.dialog._2006_10_11.Foresporsel
 import no.kith.xmlstds.dialog._2006_10_11.HealthcareProfessional
 import no.kith.xmlstds.dialog._2006_10_11.RollerRelatertNotat
 import no.kith.xmlstds.felleskomponent1.TeleCom
-import no.ks.fiks.hdir.HelsepersonellsFunksjoner
 import no.ks.fiks.hdir.TypeOpplysningPasientsamhandling
 import no.ks.fiks.nhn.edi.toCV
 import no.ks.fiks.nhn.msh.BusinessDocumentMessage
@@ -46,9 +44,6 @@ object DialogmeldingBuilder {
                     )
                 }
             )
-        }
-        .also {
-            XmlContext.validate(it)
         }
 
 }

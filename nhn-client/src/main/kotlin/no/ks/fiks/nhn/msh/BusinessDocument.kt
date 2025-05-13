@@ -3,7 +3,7 @@ package no.ks.fiks.nhn.msh
 import no.ks.fiks.hdir.*
 import java.io.InputStream
 import java.time.OffsetDateTime
-import java.util.UUID
+import java.util.*
 
 data class OutgoingBusinessDocument(
     val id: UUID,

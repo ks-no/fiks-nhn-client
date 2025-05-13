@@ -15,9 +15,7 @@ import no.kith.xmlstds.msghead._2006_05_24.Organisation as NhnOrganisation
 import no.kith.xmlstds.msghead._2006_05_24.Patient as NhnPatient
 import no.kith.xmlstds.msghead._2006_05_24.Receiver as NhnReceiver
 import no.ks.fiks.nhn.edi.v1_0.DialogmeldingBuilder as DialogmeldingBuilder1_0
-import no.ks.fiks.nhn.edi.v1_0.XmlContext as XmlContext1_0
 import no.ks.fiks.nhn.edi.v1_1.DialogmeldingBuilder as DialogmeldingBuilder1_1
-import no.ks.fiks.nhn.edi.v1_1.XmlContext as XmlContext1_1
 
 private const val MI_G_VERSION = "v1.2 2006-05-24" // Eneste gyldige verdi (?)
 
@@ -29,23 +27,15 @@ object BusinessDocumentSerializer {
 
     fun serializeNhnMessage(businessDocument: OutgoingBusinessDocument): String {
         val msgHead = buildMsgHead(businessDocument)
-        val dialogmelding: Any = when (businessDocument.version) {
-            DialogmeldingVersion.V1_0 -> DialogmeldingBuilder1_0.buildDialogmelding(businessDocument.message)
-            DialogmeldingVersion.V1_1 -> DialogmeldingBuilder1_1.buildDialogmelding(businessDocument.message)
-        }
-
-        msgHead.document = listOfNotNull(
-            buildDialogmeldingDocument(dialogmelding),
-            buildVedleggDocument(businessDocument.vedlegg),
-        )
+            .apply {
+                document = listOfNotNull(
+                    buildDialogmeldingDocument(businessDocument),
+                    buildVedleggDocument(businessDocument.vedlegg),
+                )
+            }
 
         return StringWriter()
-            .also {
-                when (businessDocument.version) {
-                    DialogmeldingVersion.V1_0 -> XmlContext1_0.createMarshaller().marshal(msgHead, it)
-                    DialogmeldingVersion.V1_1 -> XmlContext1_1.createMarshaller().marshal(msgHead, it)
-                }
-            }
+            .also { XmlContext.createMarshaller().marshal(msgHead, it) }
             .toString()
     }
 
@@ -111,7 +101,7 @@ object BusinessDocumentSerializer {
                 )
             }
         }
-        .also { XmlContext1_1.validate(it) }
+        .also { XmlContext.validate(it) }
 
     private fun buildMsgInfoType(version: DialogmeldingVersion) =
         when (version) {
@@ -153,13 +143,16 @@ object BusinessDocumentSerializer {
         s = type.kodeverk
     }
 
-    private fun buildDialogmeldingDocument(dialogmelding: Any) =
+    private fun buildDialogmeldingDocument(businessDocument: OutgoingBusinessDocument) =
         Document().apply {
             refDoc = RefDoc().apply {
                 msgType = TypeDokumentreferanse.XML.toMsgHeadCS()
                 content = RefDoc.Content().apply {
                     any = listOf(
-                        dialogmelding,
+                        when (businessDocument.version) {
+                            DialogmeldingVersion.V1_0 -> DialogmeldingBuilder1_0.buildDialogmelding(businessDocument.message)
+                            DialogmeldingVersion.V1_1 -> DialogmeldingBuilder1_1.buildDialogmelding(businessDocument.message)
+                        },
                     )
                 }
             }

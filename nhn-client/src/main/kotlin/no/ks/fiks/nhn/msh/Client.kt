@@ -13,8 +13,8 @@ import no.ks.fiks.helseid.dpop.Endpoint
 import no.ks.fiks.helseid.dpop.HttpMethod
 import no.ks.fiks.helseid.http.HttpRequestHelper
 import no.ks.fiks.nhn.ar.AdresseregisteretClient
-import no.ks.fiks.nhn.edi.BusinessDocumentSerializer
 import no.ks.fiks.nhn.edi.BusinessDocumentDeserializer
+import no.ks.fiks.nhn.edi.BusinessDocumentSerializer
 import no.ks.fiks.nhn.flr.FastlegeregisteretClient
 import no.nhn.msh.v2.api.MessagesControllerApi
 import no.nhn.msh.v2.model.AppRecStatus

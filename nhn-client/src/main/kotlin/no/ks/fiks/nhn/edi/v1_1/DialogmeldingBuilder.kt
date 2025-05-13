@@ -63,8 +63,5 @@ object DialogmeldingBuilder {
                 }
             )
         }
-        .also {
-            XmlContext.validate(it)
-        }
 
 }
