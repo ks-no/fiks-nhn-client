@@ -43,9 +43,9 @@ class FastlegeForPersonReceiverBuilder(
     private fun lookupFastlege(personId: String): CommunicationParty =
         flrClient.lookupFastlege(personId)
             ?.let {
-                arClient.lookupHerId(it.herId ?: throw RuntimeException("Fastlege mangler herId"))
+                arClient.lookupHerId(it.herId ?: throw RuntimeException("Fastlege does not have herId"))
             }
-            ?: throw RuntimeException("Fant ikke fastlege for person")
+            ?: throw RuntimeException("Could not find fastlege for person")
 
 
 }
