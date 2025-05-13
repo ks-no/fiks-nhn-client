@@ -15,7 +15,7 @@
 <!-- Edited by Espen Stranger Seland (KITH) -->
 <!-- Version 1.0 2004-11-21 -->
 <schema xmlns="http://www.w3.org/2001/XMLSchema" xmlns:xsd="http://www.w3.org/2001/XMLSchema.xsd" xmlns:kith="http://www.kith.no/xmlstds" xmlns:ar="http://www.kith.no/xmlstds/apprec/2012-02-15" targetNamespace="http://www.kith.no/xmlstds/apprec/2012-02-15" elementFormDefault="qualified" attributeFormDefault="unqualified">
-    <import namespace="http://www.kith.no/xmlstds" schemaLocation="http://www.kith.no/xmlstds/kith.xsd"/>
+    <import namespace="http://www.kith.no/xmlstds" schemaLocation="kith.xsd"/>
     <annotation>
         <documentation>Applikasjonsmelding</documentation>
     </annotation>
