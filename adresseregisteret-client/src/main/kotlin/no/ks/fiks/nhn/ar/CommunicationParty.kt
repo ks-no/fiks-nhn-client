@@ -39,7 +39,7 @@ enum class Adressetetype(
     ARBEIDSADRESSE("WP");
 
     companion object {
-        private val codeToType = Adressetetype.values().associateBy { it.code }
+        private val codeToType = entries.associateBy { it.code }
 
         fun fromCode(code: String?): Adressetetype? = code?.let { codeToType[it] }
     }

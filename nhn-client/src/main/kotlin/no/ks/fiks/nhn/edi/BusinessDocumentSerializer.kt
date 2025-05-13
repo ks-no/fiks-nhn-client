@@ -1,12 +1,9 @@
 package no.ks.fiks.nhn.edi
 
 import no.kith.xmlstds.base64container.Base64Container
-import no.kith.xmlstds.dialog._2006_10_11.Dialogmelding
 import no.kith.xmlstds.msghead._2006_05_24.*
-import no.ks.fiks.hdir.IdType
-import no.ks.fiks.hdir.MeldingensFunksjon
-import no.ks.fiks.hdir.PersonIdType
-import no.ks.fiks.hdir.TypeDokumentreferanse
+import no.kith.xmlstds.msghead._2006_05_24.HealthcareProfessional
+import no.ks.fiks.hdir.*
 import no.ks.fiks.nhn.msh.*
 import java.io.InputStream
 import java.io.StringWriter
@@ -17,6 +14,8 @@ import javax.xml.datatype.DatatypeFactory
 import no.kith.xmlstds.msghead._2006_05_24.Organisation as NhnOrganisation
 import no.kith.xmlstds.msghead._2006_05_24.Patient as NhnPatient
 import no.kith.xmlstds.msghead._2006_05_24.Receiver as NhnReceiver
+import no.ks.fiks.nhn.edi.v1_0.DialogmeldingBuilder as DialogmeldingBuilder1_0
+import no.ks.fiks.nhn.edi.v1_1.DialogmeldingBuilder as DialogmeldingBuilder1_1
 
 private const val MI_G_VERSION = "v1.2 2006-05-24" // Eneste gyldige verdi (?)
 
@@ -26,38 +25,37 @@ private const val MIME_TYPE_PDF = "application/pdf"
 // For de fleste dataelement av typen CV er det angitt et standard kodeverk, eller det er angitt eksempler på kodeverk som kan benyttes
 object BusinessDocumentSerializer {
 
-    fun serializeNhnMessage(message: OutgoingBusinessDocument): String {
-        val msgHead = buildMsgHead(message)
-        val dialogmelding = DialogmeldingBuilder.buildDialogmelding()
-        val vedlegg = buildVedlegg(message.vedlegg)
-
-        msgHead.document = listOfNotNull(
-            buildDialogmeldingDocument(dialogmelding),
-            buildVedleggDocument(vedlegg),
-        )
+    fun serializeNhnMessage(businessDocument: OutgoingBusinessDocument): String {
+        val msgHead = buildMsgHead(businessDocument)
+            .apply {
+                document = listOfNotNull(
+                    buildDialogmeldingDocument(businessDocument),
+                    buildVedleggDocument(businessDocument.vedlegg),
+                )
+            }
 
         return StringWriter()
             .also { XmlContext.createMarshaller().marshal(msgHead, it) }
             .toString()
     }
 
-    private fun buildMsgHead(message: OutgoingBusinessDocument) = MsgHead()
+    private fun buildMsgHead(businessDocument: OutgoingBusinessDocument) = MsgHead()
         .apply {
             msgInfo = MsgInfo().apply {
-                type = buildMsgInfoType(message.type)
+                type = buildMsgInfoType(businessDocument.version)
                 miGversion = MI_G_VERSION
                 genDate = currentDateTime()
-                msgId = message.id.toString()
-                sender = toSender(message.sender)
-                receiver = when (message.receiver) {
+                msgId = businessDocument.id.toString()
+                sender = toSender(businessDocument.sender)
+                receiver = when (businessDocument.receiver) {
                     is HerIdReceiver -> NhnReceiver().apply {
                         organisation = NhnOrganisation().apply {
-                            organisationName = message.receiver.parent.name
+                            organisationName = businessDocument.receiver.parent.name
                             ident = listOf(
-                                toIdent(message.receiver.parent.id)
+                                toIdent(businessDocument.receiver.parent.id)
                             )
-                            organisation = message.receiver.child
-                                .let { it as? OrganisasjonHerIdReceiverChild }
+                            organisation = businessDocument.receiver.child
+                                .let { it as? OrganizationHerIdReceiverChild }
                                 ?.let {
                                     NhnOrganisation().apply {
                                         organisationName = it.name
@@ -66,7 +64,7 @@ object BusinessDocumentSerializer {
                                         )
                                     }
                                 }
-                            healthcareProfessional = message.receiver.child
+                            healthcareProfessional = businessDocument.receiver.child
                                 .let { it as? PersonHerIdReceiverChild }
                                 ?.let {
                                     HealthcareProfessional().apply {
@@ -81,14 +79,14 @@ object BusinessDocumentSerializer {
                         }
                     }
                 }
-                patient = when (message.receiver) {
+                patient = when (businessDocument.receiver) {
                     is HerIdReceiver -> NhnPatient().apply {
-                        givenName = message.receiver.patient.firstName
-                        middleName = message.receiver.patient.middleName
-                        familyName = message.receiver.patient.lastName
+                        givenName = businessDocument.receiver.patient.firstName
+                        middleName = businessDocument.receiver.patient.middleName
+                        familyName = businessDocument.receiver.patient.lastName
                         ident = listOf(
                             Ident().apply {
-                                id = message.receiver.patient.fnr
+                                id = businessDocument.receiver.patient.fnr
                                 typeId = toCv(PersonIdType.FNR)
                             }
                         )
@@ -105,10 +103,16 @@ object BusinessDocumentSerializer {
         }
         .also { XmlContext.validate(it) }
 
-    private fun buildMsgInfoType(type: MeldingensFunksjon) = CS().apply {
-        v = type.verdi
-        dn = type.navn
-    }
+    private fun buildMsgInfoType(version: DialogmeldingVersion) =
+        when (version) {
+            DialogmeldingVersion.V1_0 -> MeldingensFunksjon.DIALOG_FORESPORSEL
+            DialogmeldingVersion.V1_1 -> MeldingensFunksjon.DIALOG_HELSEFAGLIG
+        }.run {
+            CS().apply {
+                v = verdi
+                dn = navn
+            }
+        }
 
     private fun currentDateTime() = DatatypeFactory.newInstance()
         .newXMLGregorianCalendar(
@@ -116,16 +120,16 @@ object BusinessDocumentSerializer {
                 .format(ZonedDateTime.now().truncatedTo(ChronoUnit.SECONDS))
         )
 
-    private fun toSender(input: Organisation) = Sender().apply {
+    private fun toSender(input: Organization) = Sender().apply {
         organisation = toOrganisation(input)
     }
 
-    private fun toOrganisation(input: Organisation): NhnOrganisation = NhnOrganisation().apply {
+    private fun toOrganisation(input: Organization): NhnOrganisation = NhnOrganisation().apply {
         organisationName = input.name
         ident = listOf(
             toIdent(input.id),
         )
-        organisation = input.childOrganisation?.let { toOrganisation(it) }
+        organisation = input.childOrganization?.let { toOrganisation(it) }
     }
 
     private fun toIdent(input: Id) = Ident().apply {
@@ -139,40 +143,45 @@ object BusinessDocumentSerializer {
         s = type.kodeverk
     }
 
-    private fun buildVedlegg(inputStream: InputStream?) = inputStream?.let {
+    private fun buildDialogmeldingDocument(businessDocument: OutgoingBusinessDocument) =
+        Document().apply {
+            refDoc = RefDoc().apply {
+                msgType = TypeDokumentreferanse.XML.toMsgHeadCS()
+                content = RefDoc.Content().apply {
+                    any = listOf(
+                        when (businessDocument.version) {
+                            DialogmeldingVersion.V1_0 -> DialogmeldingBuilder1_0.buildDialogmelding(businessDocument.message)
+                            DialogmeldingVersion.V1_1 -> DialogmeldingBuilder1_1.buildDialogmelding(businessDocument.message)
+                        },
+                    )
+                }
+            }
+        }
+
+    private fun buildVedleggDocument(vedlegg: Vedlegg) = Document().apply {
+        refDoc = RefDoc().apply {
+            issueDate = TS().apply {
+                v = DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(vedlegg.date.truncatedTo(ChronoUnit.SECONDS))
+            }
+            msgType = TypeDokumentreferanse.VEDLEGG.toMsgHeadCS()
+            mimeType = MIME_TYPE_PDF
+            description = vedlegg.description
+            content = RefDoc.Content().apply {
+                any = listOf(
+                    buildContainer(vedlegg.data)
+                )
+            }
+        }
+    }
+
+    private fun buildContainer(data: InputStream) =
         Base64Container().apply {
-            value = it.readAllBytes()
-        }
-    }
-
-    private fun buildDialogmeldingDocument(dialogmelding: Dialogmelding) =
-        Document().apply {
-            refDoc = RefDoc().apply {
-                msgType = TypeDokumentreferanse.XML.toCS()
-                content = RefDoc.Content().apply {
-                    any = listOf(
-                        dialogmelding,
-                    )
-                }
-            }
+            value = data.readAllBytes()
         }
 
-    private fun buildVedleggDocument(vedlegg: Any?) = vedlegg?.let { vedleggNotNull ->
-        Document().apply {
-            refDoc = RefDoc().apply {
-                issueDate = TS().apply {
-                    v = DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(ZonedDateTime.now().truncatedTo(ChronoUnit.SECONDS)) // TODO: Dato for opprettelsen av vedlegget?
-                }
-                msgType = TypeDokumentreferanse.VEDLEGG.toCS()
-                mimeType = MIME_TYPE_PDF
-                description = "Blablabla" // TODO: Tittel på forsendelsen?
-                content = RefDoc.Content().apply {
-                    any = listOf(
-                        vedleggNotNull
-                    )
-                }
-            }
-        }
-    }
+}
 
+private fun KodeverkVerdi.toMsgHeadCS() = CS().apply {
+    v = verdi
+    dn = navn
 }

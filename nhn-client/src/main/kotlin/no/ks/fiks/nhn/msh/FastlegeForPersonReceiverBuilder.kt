@@ -11,8 +11,8 @@ class FastlegeForPersonReceiverBuilder(
     private val arClient: AdresseregisteretClient,
 ) {
 
-    fun buildFastlegeForPersonReceiver(personId: String): HerIdReceiver {
-        val fastlege = lookupFastlege(personId)
+    fun buildFastlegeForPersonReceiver(person: Person): HerIdReceiver {
+        val fastlege = lookupFastlege(person.fnr)
 
         return HerIdReceiver(
             parent = HerIdReceiverParent(
@@ -31,11 +31,11 @@ class FastlegeForPersonReceiverBuilder(
                 middleName = fastlege.middleName,
                 lastName = fastlege.lastName,
             ),
-            patient = Patient( // TODO: Hvor får vi navn fra, må vi slå opp mot folkeregisteret?
-                fnr = personId,
-                firstName = "Ola",
-                middleName = null,
-                lastName = "Nordperson",
+            patient = Patient(
+                fnr = person.fnr,
+                firstName = person.firstName,
+                middleName = person.middleName,
+                lastName = person.lastName,
             ),
         )
     }
