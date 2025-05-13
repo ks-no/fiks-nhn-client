@@ -1,55 +1,19 @@
 package no.ks.fiks.nhn.msh
 
-import no.ks.fiks.hdir.IdType
-import no.ks.fiks.hdir.MeldingensFunksjon
-import java.io.InputStream
+import java.time.OffsetDateTime
+import java.util.*
 
 data class Message(
-    val type: MeldingensFunksjon,
-    val sender: Organisation,
-    val receiver: Receiver,
-    val vedlegg: InputStream?,
+    val id: UUID,
+    val receiverHerId: Int,
 )
 
-data class Organisation(
-    val name: String,
-    val id: Id,
-    val childOrganisation: Organisation? = null,
+data class MessageWithMetadata(
+    val id: UUID,
+    val contentType: String,
+    val receiverHerId: Int,
+    val senderHerId: Int,
+    val businessDocumentId: String,
+    val businessDocumentDate: OffsetDateTime,
+    val isAppRec: Boolean,
 )
-
-data class Id(
-    val id: String,
-    val type: IdType,
-)
-
-sealed class Receiver
-data class HerIdReceiver(
-    val parent: HerIdReceiverParent,
-    val child: HerIdReceiverChild,
-    val patient: Patient,
-) : Receiver()
-
-data class HerIdReceiverParent(
-    val name: String,
-    val id: Id,
-)
-
-sealed class HerIdReceiverChild
-data class OrganisasjonHerIdReceiverChild(
-    val name: String,
-    val id: Id,
-) : HerIdReceiverChild()
-data class PersonHerIdReceiverChild(
-    val id: Id,
-    val firstName: String,
-    val middleName: String?,
-    val lastName: String,
-) : HerIdReceiverChild()
-
-data class Patient(
-    val fnr: String,
-    val firstName: String,
-    val middleName: String?,
-    val lastName: String,
-)
-

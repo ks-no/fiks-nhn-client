@@ -1,6 +1,5 @@
 package no.ks.fiks.hdir
 
-import no.kith.xmlstds.CV
 import no.kith.xmlstds.msghead._2006_05_24.CS
 
 
