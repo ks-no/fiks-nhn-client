@@ -1,4 +1,4 @@
-package no.ks.fiks.nhn.edi
+package no.ks.fiks.nhn.edi.v1_0
 
 import jakarta.xml.bind.JAXBContext
 import jakarta.xml.bind.Marshaller

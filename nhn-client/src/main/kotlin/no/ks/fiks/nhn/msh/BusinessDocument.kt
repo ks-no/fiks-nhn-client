@@ -2,31 +2,54 @@ package no.ks.fiks.nhn.msh
 
 import no.ks.fiks.hdir.*
 import java.io.InputStream
+import java.time.OffsetDateTime
 import java.util.UUID
 
 data class OutgoingBusinessDocument(
     val id: UUID,
-    val type: MeldingensFunksjon,
-    val sender: Organisation,
+    val sender: Organization,
     val receiver: Receiver,
-    val vedlegg: InputStream?,
+    val message: BusinessDocumentMessage,
+    val vedlegg: Vedlegg,
+    val version: DialogmeldingVersion,
 )
 
 data class FastlegeForPersonOutgoingBusinessDocument(
     val id: UUID,
-    val type: MeldingensFunksjon,
-    val sender: Organisation,
-    val personFnr: String,
-    val vedlegg: InputStream?,
+    val sender: Organization,
+    val person: Person,
+    val message: BusinessDocumentMessage,
+    val vedlegg: Vedlegg,
+    val version: DialogmeldingVersion,
+)
+
+data class Vedlegg(
+    val date: OffsetDateTime,
+    val description: String,
+    val data: InputStream,
+)
+
+data class Person(
+    val fnr: String,
+    val firstName: String,
+    val middleName: String? = null,
+    val lastName: String,
 )
 
 data class IncomingBusinessDocument(
     val id: String,
     val type: MeldingensFunksjon,
-    val sender: Organisation,
+    val sender: Organization,
     val receiver: Receiver,
     val dialogmelding: Dialogmelding?,
     val vedlegg: InputStream?,
+)
+
+data class BusinessDocumentMessage(
+    val subject: String,
+    val body: String,
+    val responsibleHealthcareProfessional: HealthcareProfessional,
+    val recipientContact: RecipientContact,
 )
 
 data class ApplicationReceipt(
@@ -34,8 +57,8 @@ data class ApplicationReceipt(
     val acknowledgedBusinessDocumentId: String,
     val status: StatusForMottakAvMelding,
     val errors: List<ApplicationReceiptError>,
-    val sender: Organisation,
-    val receiver: Organisation,
+    val sender: Organization,
+    val receiver: Organization,
 )
 
 data class ApplicationReceiptError(
@@ -43,10 +66,10 @@ data class ApplicationReceiptError(
     val description: String?,
 )
 
-data class Organisation(
+data class Organization(
     val name: String,
     val id: Id,
-    val childOrganisation: Organisation? = null,
+    val childOrganization: Organization? = null,
 )
 
 data class Id(
@@ -67,7 +90,7 @@ data class HerIdReceiverParent(
 )
 
 sealed class HerIdReceiverChild
-data class OrganisasjonHerIdReceiverChild(
+data class OrganizationHerIdReceiverChild(
     val name: String,
     val id: Id,
 ) : HerIdReceiverChild()
@@ -90,3 +113,19 @@ data class Dialogmelding(
     val sporsmal: String,
 )
 
+data class HealthcareProfessional(
+    val firstName: String,
+    val middleName: String? = null,
+    val lastName: String,
+    val phoneNumber: String,
+    val roleToPatient: HelsepersonellsFunksjoner,
+)
+
+data class RecipientContact(
+    val type: Helsepersonell,
+)
+
+enum class DialogmeldingVersion {
+    V1_0,
+    V1_1,
+}
