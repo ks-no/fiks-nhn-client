@@ -25,6 +25,8 @@ import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.*
 import no.ks.fiks.helseid.Configuration as HelseIdConfiguration
+import no.ks.fiks.nhn.ar.Credentials as ArCredentials
+import no.ks.fiks.nhn.flr.Credentials as FlrCredentials
 import no.nhn.msh.v2.model.Message as NhnMessage
 
 private const val API_VERSION = "2"
@@ -52,19 +54,29 @@ class Client(
 
     private val flrClient = FastlegeregisteretClient(
         environment = configuration.environments.fastlegeregisteretEnvironment,
-        credentials = configuration.getFastlegeregisteretCredentials(),
+        credentials = configuration.fastlegeregisteret.let {
+            FlrCredentials(
+                username = it.username,
+                password = it.password,
+            )
+        },
     )
     private val arClient = AdresseregisteretClient(
         environment = configuration.environments.adresseregisteretEnvironment,
-        credentials = configuration.getAdresseregisteretCredentials(),
+        credentials = configuration.adresseregisteret.let {
+            ArCredentials(
+                username = it.username,
+                password = it.password,
+            )
+        },
     )
     private val receiverBuilder = FastlegeForPersonReceiverBuilder(flrClient, arClient)
 
     private val httpHelper = HttpRequestHelper(
         HelseIdConfiguration(
             environment = configuration.environments.helseIdEnvironment,
-            clientId = configuration.clientId,
-            jwk = configuration.jwk,
+            clientId = configuration.helseId.clientId,
+            jwk = configuration.helseId.jwk,
         )
     )
     private val meldingstjenerEnvironment = configuration.environments.mshEnvironment
