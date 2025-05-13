@@ -17,12 +17,10 @@ import no.kith.xmlstds.msghead._2006_05_24.Receiver as NhnReceiver
 import no.ks.fiks.nhn.edi.v1_0.DialogmeldingBuilder as DialogmeldingBuilder1_0
 import no.ks.fiks.nhn.edi.v1_1.DialogmeldingBuilder as DialogmeldingBuilder1_1
 
-private const val MI_G_VERSION = "v1.2 2006-05-24" // Eneste gyldige verdi (?)
+private const val MSG_HEAD_VERSION = "v1.2 2006-05-24"
 
 private const val MIME_TYPE_PDF = "application/pdf"
 
-// Til alle dataelement av type CS er det angitt hvilket kodeverk som skal benyttes
-// For de fleste dataelement av typen CV er det angitt et standard kodeverk, eller det er angitt eksempler på kodeverk som kan benyttes
 object BusinessDocumentSerializer {
 
     fun serializeNhnMessage(businessDocument: OutgoingBusinessDocument): String {
@@ -43,7 +41,7 @@ object BusinessDocumentSerializer {
         .apply {
             msgInfo = MsgInfo().apply {
                 type = buildMsgInfoType(businessDocument.version)
-                miGversion = MI_G_VERSION
+                miGversion = MSG_HEAD_VERSION
                 genDate = currentDateTime()
                 msgId = businessDocument.id.toString()
                 sender = toSender(businessDocument.sender)
