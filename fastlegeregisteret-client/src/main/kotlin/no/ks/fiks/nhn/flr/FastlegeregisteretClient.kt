@@ -21,10 +21,11 @@ class FastlegeregisteretClient(
         bindingId = SOAPBinding.SOAP12HTTP_BINDING
     }.create(IFlrReadOperations::class.java)
 
-    fun lookupFastlege(patientId: String): Fastlege? = service.getPatientGPDetails(patientId)?.convert()
+    fun getPatientGP(patientId: String): PatientGP? = service.getPatientGPDetails(patientId)?.convert()
 
-    private fun PatientToGPContractAssociation.convert() = Fastlege(
-        herId = gpHerId.value,
+    private fun PatientToGPContractAssociation.convert() = PatientGP(
+        patientId = patientNIN.value,
+        gpHerId = gpHerId.value,
     )
 
 }
