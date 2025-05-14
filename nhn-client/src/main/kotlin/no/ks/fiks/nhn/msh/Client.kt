@@ -70,7 +70,7 @@ class Client(
             )
         },
     )
-    private val receiverBuilder = FastlegeForPersonReceiverBuilder(flrClient, arClient)
+    private val receiverBuilder = GpForPersonReceiverBuilder(flrClient, arClient)
 
     private val httpHelper = HttpRequestHelper(
         HelseIdConfiguration(
@@ -87,7 +87,7 @@ class Client(
             OutgoingBusinessDocument(
                 id = businessDocument.id,
                 sender = businessDocument.sender,
-                receiver = receiverBuilder.buildFastlegeForPersonReceiver(businessDocument.person),
+                receiver = receiverBuilder.buildGpForPersonReceiver(businessDocument.person),
                 message = businessDocument.message,
                 vedlegg = businessDocument.vedlegg,
                 version = businessDocument.version,

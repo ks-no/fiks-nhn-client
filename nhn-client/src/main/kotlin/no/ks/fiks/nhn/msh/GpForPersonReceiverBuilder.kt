@@ -6,12 +6,12 @@ import no.ks.fiks.nhn.ar.AdresseregisteretClient
 import no.ks.fiks.nhn.ar.CommunicationParty
 import no.ks.fiks.nhn.flr.FastlegeregisteretClient
 
-class FastlegeForPersonReceiverBuilder(
+class GpForPersonReceiverBuilder(
     private val flrClient: FastlegeregisteretClient,
     private val arClient: AdresseregisteretClient,
 ) {
 
-    fun buildFastlegeForPersonReceiver(person: Person): HerIdReceiver {
+    fun buildGpForPersonReceiver(person: Person): HerIdReceiver {
         val fastlege = lookupFastlege(person.fnr)
 
         return HerIdReceiver(
@@ -41,11 +41,11 @@ class FastlegeForPersonReceiverBuilder(
     }
 
     private fun lookupFastlege(personId: String): CommunicationParty =
-        flrClient.lookupFastlege(personId)
+        flrClient.getPatientGP(personId)
             ?.let {
-                arClient.lookupHerId(it.herId ?: throw RuntimeException("Fastlege does not have herId"))
+                arClient.lookupHerId(it.gpHerId ?: throw GpNotFoundException("GP does not have HER-id", personId))
             }
-            ?: throw RuntimeException("Could not find fastlege for person")
+            ?: throw GpNotFoundException("Could not find GP for person", personId)
 
 
 }
