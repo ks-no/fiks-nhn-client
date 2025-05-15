@@ -9,6 +9,8 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import feign.Feign
 import feign.jackson.JacksonDecoder
 import feign.jackson.JacksonEncoder
+import no.ks.fiks.hdir.FeilmeldingForApplikasjonskvittering
+import no.ks.fiks.hdir.StatusForMottakAvMelding
 import no.ks.fiks.helseid.dpop.Endpoint
 import no.ks.fiks.helseid.dpop.HttpMethod
 import no.ks.fiks.helseid.http.HttpRequestHelper
@@ -17,6 +19,7 @@ import no.ks.fiks.nhn.edi.BusinessDocumentDeserializer
 import no.ks.fiks.nhn.edi.BusinessDocumentSerializer
 import no.ks.fiks.nhn.flr.FastlegeregisteretClient
 import no.nhn.msh.v2.api.MessagesControllerApi
+import no.nhn.msh.v2.model.AppRecError
 import no.nhn.msh.v2.model.AppRecStatus
 import no.nhn.msh.v2.model.PostAppRecRequest
 import no.nhn.msh.v2.model.PostMessageRequest
@@ -140,7 +143,7 @@ class Client(
             }
     }
 
-    fun getApplicationReceipt(id: UUID): ApplicationReceipt {
+    fun getApplicationReceipt(id: UUID): IncomingApplicationReceipt {
         return buildClient(buildGetBusinessDocumentEndpoint(id))
             .getBusinessDocument(id, API_VERSION, sourceSystem)
             .let {
@@ -148,12 +151,31 @@ class Client(
             }
     }
 
-    fun sendApplicationReceipt(id: UUID, senderHerId: Int) {
-        buildClient(buildPostAppRecEndpoint(id, senderHerId))
+    fun sendApplicationReceipt(receipt: OutgoingApplicationReceipt) {
+        if (receipt.status == StatusForMottakAvMelding.OK && !receipt.errors.isNullOrEmpty()) throw IllegalArgumentException("Must not provide any error messages when status is OK")
+        if (receipt.status != StatusForMottakAvMelding.OK && receipt.errors.isNullOrEmpty()) throw IllegalArgumentException("Must provide at least one error message if status is not OK")
+
+        buildClient(buildPostAppRecEndpoint(receipt.acknowledgedId, receipt.senderHerId))
             .postAppRec(
-                id, senderHerId, API_VERSION, sourceSystem, PostAppRecRequest()
-                    .appRecStatus(AppRecStatus.OK) // TODO: Support different status and error messages
+                receipt.acknowledgedId, receipt.senderHerId, API_VERSION, sourceSystem, PostAppRecRequest()
+                    .appRecStatus(receipt.status.toAppRecStatus())
+                    .appRecErrorList(receipt.errors?.toAppRecErrors())
             )
+    }
+
+    private fun StatusForMottakAvMelding.toAppRecStatus() = when (this) {
+        StatusForMottakAvMelding.OK -> AppRecStatus.OK
+        StatusForMottakAvMelding.OK_FEIL_I_DELMELDING -> AppRecStatus.OK_ERROR_IN_MESSAGE_PART
+        StatusForMottakAvMelding.AVVIST -> AppRecStatus.REJECTED
+    }
+
+    private fun List<ApplicationReceiptError>.toAppRecErrors() = map { it.toAppRecError() }
+
+    private fun ApplicationReceiptError.toAppRecError(): AppRecError {
+        if (type == FeilmeldingForApplikasjonskvittering.UKJENT) throw IllegalArgumentException("Ukjent is not a valid error type for an outgoing application receipt")
+        return AppRecError()
+            .errorCode(type.verdi)
+            .details(details)
     }
 
     fun markMessageRead(id: UUID, receiverHerId: Int) {

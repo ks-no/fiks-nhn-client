@@ -6,7 +6,7 @@ import no.kith.xmlstds.apprec._2004_11_21.Inst
 import no.ks.fiks.hdir.FeilmeldingForApplikasjonskvittering
 import no.ks.fiks.hdir.OrganisasjonIdType
 import no.ks.fiks.hdir.StatusForMottakAvMelding
-import no.ks.fiks.nhn.msh.ApplicationReceipt
+import no.ks.fiks.nhn.msh.IncomingApplicationReceipt
 import no.ks.fiks.nhn.msh.ApplicationReceiptError
 import no.ks.fiks.nhn.msh.Id
 import no.ks.fiks.nhn.msh.Organization
@@ -22,14 +22,14 @@ object AppRecDeserializer {
         .value
         .toApplicationReceipt()
 
-    private fun AppRec.toApplicationReceipt() = ApplicationReceipt(
+    private fun AppRec.toApplicationReceipt() = IncomingApplicationReceipt(
         id = id,
         acknowledgedBusinessDocumentId = originalMsgId.id,
         status = StatusForMottakAvMelding.entries.firstOrNull { it.verdi == status.v && it.navn == status.dn } ?: throw IllegalArgumentException("Unknown app rec status: ${status}"),
         errors = error?.map { error ->
             ApplicationReceiptError(
                 type = FeilmeldingForApplikasjonskvittering.entries.firstOrNull { it.verdi == error.v && it.navn == error.dn } ?: FeilmeldingForApplikasjonskvittering.UKJENT,
-                description = error.ot,
+                details = error.ot,
             )
         } ?: emptyList(),
         sender = sender.hcp.inst.toOrganization(),

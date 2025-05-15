@@ -52,7 +52,7 @@ data class BusinessDocumentMessage(
     val recipientContact: RecipientContact,
 )
 
-data class ApplicationReceipt(
+data class IncomingApplicationReceipt(
     val id: String,
     val acknowledgedBusinessDocumentId: String,
     val status: StatusForMottakAvMelding,
@@ -61,9 +61,16 @@ data class ApplicationReceipt(
     val receiver: Organization,
 )
 
+data class OutgoingApplicationReceipt(
+    val acknowledgedId: UUID,
+    val senderHerId: Int,
+    val status: StatusForMottakAvMelding,
+    val errors: List<ApplicationReceiptError>? = null,
+)
+
 data class ApplicationReceiptError(
     val type: FeilmeldingForApplikasjonskvittering,
-    val description: String?,
+    val details: String?,
 )
 
 data class Organization(
