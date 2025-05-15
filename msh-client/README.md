@@ -8,7 +8,7 @@ Uses the Meldingstjener REST API provided by NHN:
 ```xml
 <dependency>
     <groupId>no.ks.fiks</groupId>
-    <artifactId>nhn-client</artifactId>
+    <artifactId>msh-client</artifactId>
     <version>X.X.X</version>
 </dependency>
 ```
