@@ -14,7 +14,7 @@ data class OutgoingBusinessDocument(
     val version: DialogmeldingVersion,
 )
 
-data class FastlegeForPersonOutgoingBusinessDocument(
+data class GPForPersonOutgoingBusinessDocument(
     val id: UUID,
     val sender: Organization,
     val person: Person,
