@@ -36,7 +36,7 @@ object BusinessDocumentDeserializer {
         )
     }
 
-    fun deserializeAppRec(appRecXml: String): ApplicationReceipt =
+    fun deserializeAppRec(appRecXml: String): IncomingApplicationReceipt =
         when (getAppRecVersion(appRecXml)) {
             AppRecVersion.V1_0 -> AppRecDeserializer1_0.toApplicationReceipt(appRecXml)
             AppRecVersion.V1_1 -> AppRecDeserializer1_1.toApplicationReceipt(appRecXml)

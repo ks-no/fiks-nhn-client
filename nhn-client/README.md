@@ -159,7 +159,14 @@ client.sendMessageToGPForPerson(
 #### Send application receipt
 Sends a receipt to the sender of the message.
 ```kotlin
-client.sendApplicationReceipt(idOfMessageToBeAcknowledged, senderHerId)
+client.sendApplicationReceipt(
+    OutgoingApplicationReceipt(
+        acknowledgedId = UUID.randomUUID(), // Id of the received message that the app rec is acknowledging
+        senderHerId = senderHerId,
+        status = StatusForMottakAvMelding.AVVIST,
+        errors = listOf(ApplicationReceiptError(FeilmeldingForApplikasjonskvittering.ANNEN_FEIL, "Something went wrong")), // Not allowed when status is OK, required otherwise
+    )
+)
 ```
 
 #### Mark message as read
