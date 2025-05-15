@@ -152,7 +152,7 @@ class Client(
     }
 
     fun sendApplicationReceipt(receipt: OutgoingApplicationReceipt) {
-        if (receipt.status == StatusForMottakAvMelding.OK && !receipt.errors.isNullOrEmpty()) throw IllegalArgumentException("Must not provide any error messages when status is OK")
+        if (receipt.status == StatusForMottakAvMelding.OK && !receipt.errors.isNullOrEmpty()) throw IllegalArgumentException("Error messages are not allowed when status is OK")
         if (receipt.status != StatusForMottakAvMelding.OK && receipt.errors.isNullOrEmpty()) throw IllegalArgumentException("Must provide at least one error message if status is not OK")
 
         buildClient(buildPostAppRecEndpoint(receipt.acknowledgedId, receipt.senderHerId))
