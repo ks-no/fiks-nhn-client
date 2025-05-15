@@ -82,7 +82,7 @@ class Client(
     private val meldingstjenerEnvironment = configuration.environments.mshEnvironment
     private val sourceSystem = configuration.sourceSystem
 
-    fun sendMessageToFastlegeForPerson(businessDocument: FastlegeForPersonOutgoingBusinessDocument) {
+    fun sendMessageToGPForPerson(businessDocument: GPForPersonOutgoingBusinessDocument) {
         sendMessage(
             OutgoingBusinessDocument(
                 id = businessDocument.id,
@@ -152,7 +152,7 @@ class Client(
         buildClient(buildPostAppRecEndpoint(id, senderHerId))
             .postAppRec(
                 id, senderHerId, API_VERSION, sourceSystem, PostAppRecRequest()
-                    .appRecStatus(AppRecStatus.OK)
+                    .appRecStatus(AppRecStatus.OK) // TODO: Support different status and error messages
             )
     }
 
