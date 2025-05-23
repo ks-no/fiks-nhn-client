@@ -4,6 +4,7 @@ import no.ks.fiks.hdir.OrganisasjonIdType
 import no.ks.fiks.hdir.PersonIdType
 import no.ks.fiks.nhn.ar.AdresseregisteretClient
 import no.ks.fiks.nhn.ar.CommunicationParty
+import no.ks.fiks.nhn.ar.PersonCommunicationParty
 import no.ks.fiks.nhn.flr.FastlegeregisteretClient
 
 class GpForPersonReceiverBuilder(
@@ -13,12 +14,13 @@ class GpForPersonReceiverBuilder(
 
     fun buildGpForPersonReceiver(person: Person): HerIdReceiver {
         val fastlege = lookupFastlege(person.fnr)
+        val parent = fastlege.parent ?: throw GpNotFoundException("GP does not have a parent", person.fnr)
 
         return HerIdReceiver(
             parent = HerIdReceiverParent(
-                name = fastlege.parent.name,
+                name = parent.name,
                 id = Id(
-                    id = fastlege.parent.herId.toString(),
+                    id = parent.herId.toString(),
                     type = OrganisasjonIdType.HER_ID,
                 ),
             ),
@@ -40,10 +42,12 @@ class GpForPersonReceiverBuilder(
         )
     }
 
-    private fun lookupFastlege(personId: String): CommunicationParty =
+    private fun lookupFastlege(personId: String): PersonCommunicationParty =
         flrClient.getPatientGP(personId)
-            ?.let {
-                arClient.lookupHerId(it.gpHerId ?: throw GpNotFoundException("GP does not have HER-id", personId))
+            ?.let { patientGP ->
+                arClient
+                    .lookupHerId(patientGP.gpHerId ?: throw GpNotFoundException("GP does not have HER-id", personId))
+                    .let { it as? PersonCommunicationParty ?: throw GpNotFoundException("Adresseregisteret returned a communication party that is not a person", personId) }
             }
             ?: throw GpNotFoundException("Could not find GP for person", personId)
 

@@ -41,6 +41,8 @@
 
         <kotest.version>5.9.1</kotest.version>
         <mockk.version>1.13.17</mockk.version>
+        <wiremock.version>3.13.0</wiremock.version>
+        <wiremock-testcontainers.version>1.0-alpha-15</wiremock-testcontainers.version>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -67,6 +69,13 @@
                 <version>${kotlin.version}</version>
             </dependency>
             <dependency>
+                <groupId>com.fasterxml.jackson</groupId>
+                <artifactId>jackson-bom</artifactId>
+                <version>${jackson.version}</version>
+                <scope>import</scope>
+                <type>pom</type>
+            </dependency>
+            <dependency>
                 <groupId>io.github.microutils</groupId>
                 <artifactId>kotlin-logging-jvm</artifactId>
                 <version>${kotlin-logging.version}</version>
@@ -81,16 +90,6 @@
                 <artifactId>httpclient5</artifactId>
                 <version>${httpclient5.version}</version>
             </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-databind</artifactId>
-                <version>${jackson.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.module</groupId>
-                <artifactId>jackson-module-kotlin</artifactId>
-                <version>${jackson.version}</version>
-            </dependency>
 
             <dependency>
                 <groupId>io.kotest</groupId>
@@ -102,6 +101,24 @@
                 <groupId>io.kotest</groupId>
                 <artifactId>kotest-assertions-core-jvm</artifactId>
                 <version>${kotest.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.mockk</groupId>
+                <artifactId>mockk-jvm</artifactId>
+                <version>${mockk.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.wiremock</groupId>
+                <artifactId>wiremock</artifactId>
+                <version>${wiremock.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.wiremock.integrations.testcontainers</groupId>
+                <artifactId>wiremock-testcontainers-module</artifactId>
+                <version>${wiremock-testcontainers.version}</version>
                 <scope>test</scope>
             </dependency>
         </dependencies>
