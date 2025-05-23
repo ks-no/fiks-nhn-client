@@ -1,0 +1,18 @@
+<s:Envelope xmlns:s="http://www.w3.org/2003/05/soap-envelope">
+    <s:Body>
+        <s:Fault>
+            <s:Code>
+                <s:Value>s:Sender</s:Value>
+            </s:Code>
+            <s:Reason>
+                <s:Text xml:lang="nb-NO">ArgumentException: Personen er ikke tilknyttet fastlegekontrakt (reason)</s:Text>
+            </s:Reason>
+            <s:Detail>
+                <GenericFault xmlns="http://register.nhn.no/Common">
+                    <ErrorCode>Feil</ErrorCode>
+                    <Message>ArgumentException: Personen er ikke tilknyttet fastlegekontrakt</Message>
+                </GenericFault>
+            </s:Detail>
+        </s:Fault>
+    </s:Body>
+</s:Envelope>
