@@ -227,7 +227,8 @@ class LookupHerIdTest : StringSpec({
                 .lookupHerId(nextInt(1000, 100000))
         }.asClue {
             it.errorCode shouldBe faultErrorCode
-            it.message shouldBe faultMessage
+            it.faultMessage shouldBe faultMessage
+            it.message shouldBe exceptionMessage
         }
     }
 

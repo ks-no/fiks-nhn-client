@@ -2,6 +2,7 @@ package no.ks.fiks.nhn.ar
 
 import com.github.tomakehurst.wiremock.client.WireMock.*
 import io.kotest.assertions.asClue
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.nulls.beNull
@@ -12,6 +13,7 @@ import io.kotest.matchers.types.shouldBeInstanceOf
 import org.wiremock.integrations.testcontainers.WireMockContainer
 import java.nio.charset.Charset
 import java.util.*
+import kotlin.random.Random.Default.nextInt
 
 class LookupHerIdHttpTest : StringSpec() {
 
@@ -19,34 +21,15 @@ class LookupHerIdHttpTest : StringSpec() {
         .also {
             it.start()
             configureFor(it.port)
-            stubFor(
-                post("/")
-                    .withRequestBody(or(containing("<herId>1</herId>"), containing("<herId>3</herId>")))
-                    .willReturn(
-                        aResponse()
-                            .withHeader("Content-Type", "application/soap+xml; charset=utf-8")
-                            .withBody(ClassLoader.getSystemResource("get-communication-party-details-no-parent-response.xml").readBytes())
-                    )
-            )
-            stubFor(
-                post("/")
-                    .withRequestBody(containing("<herId>2</herId>"))
-                    .willReturn(
-                        aResponse()
-                            .withHeader("Content-Type", "application/soap+xml; charset=utf-8")
-                            .withBody(ClassLoader.getSystemResource("get-communication-party-details-with-parent-response.xml").readBytes())
-                    )
-            )
         }
 
     init {
         "Test lookup without parent" {
-            val username = UUID.randomUUID().toString()
-            val password = UUID.randomUUID().toString()
-            val environment = Environment(wireMock.baseUrl)
+            val herId = nextInt(1, 100000)
+            stubResponse(herId, "get-communication-party-details-no-parent-response.xml")
 
-            AdresseregisteretClient(environment, Credentials(username, password))
-                .lookupHerId(1)
+            AdresseregisteretClient(Environment(wireMock.baseUrl), Credentials(UUID.randomUUID().toString(), UUID.randomUUID().toString()))
+                .lookupHerId(herId)
                 .asClue {
                     it.shouldBeInstanceOf<OrganizationCommunicationParty>()
                     it.herId shouldBe 12345
@@ -65,12 +48,11 @@ class LookupHerIdHttpTest : StringSpec() {
         }
 
         "Test lookup with parent" {
-            val username = UUID.randomUUID().toString()
-            val password = UUID.randomUUID().toString()
-            val environment = Environment(wireMock.baseUrl)
+            val herId = nextInt(1, 100000)
+            stubResponse(herId, "get-communication-party-details-with-parent-response.xml")
 
-            AdresseregisteretClient(environment, Credentials(username, password))
-                .lookupHerId(2)
+            AdresseregisteretClient(Environment(wireMock.baseUrl), Credentials(UUID.randomUUID().toString(), UUID.randomUUID().toString()))
+                .lookupHerId(herId)
                 .asClue {
                     it.shouldBeInstanceOf<OrganizationCommunicationParty>()
                     it.herId shouldBe 55555
@@ -95,12 +77,15 @@ class LookupHerIdHttpTest : StringSpec() {
             val password = UUID.randomUUID().toString()
             val environment = Environment(wireMock.baseUrl)
 
+            val herId = nextInt(1, 100000)
+            stubResponse(herId, "get-communication-party-details-no-parent-response.xml")
+
             AdresseregisteretClient(environment, Credentials(username, password))
-                .lookupHerId(3)
+                .lookupHerId(herId)
 
             val requests = findAll(
                 postRequestedFor(urlEqualTo("/"))
-                    .withRequestBody(containing("<herId>3</herId>"))
+                    .withRequestBody(containing("<herId>$herId</herId>"))
             )
             requests shouldHaveSize 1
             requests.single().asClue { request ->
@@ -115,6 +100,32 @@ class LookupHerIdHttpTest : StringSpec() {
             }
         }
 
+        "Test that error response is translated into AdresseregisteretException" {
+            val herId = nextInt(1, 100000)
+            stubResponse(herId, "get-communication-party-details-not-found-response.xml")
+
+            shouldThrow<AdresseregisteretException> {
+                AdresseregisteretClient(Environment(wireMock.baseUrl), Credentials(UUID.randomUUID().toString(), UUID.randomUUID().toString()))
+                    .lookupHerId(herId)
+            }.asClue {
+                it.message shouldBe "Kommunikasjonspart med oppgitt HER-id eksisterer ikke. (reason)"
+                it.faultMessage shouldBe "Kommunikasjonspart med oppgitt HER-id eksisterer ikke."
+                it.errorCode shouldBe "InvalidHerIdSupplied"
+            }
+        }
+
+    }
+
+    private fun stubResponse(herId: Int, fileName: String) {
+        stubFor(
+            post("/")
+                .withRequestBody(containing("<herId>$herId</herId>"))
+                .willReturn(
+                    aResponse()
+                        .withHeader("Content-Type", "application/soap+xml; charset=utf-8")
+                        .withBody(ClassLoader.getSystemResource(fileName).readBytes())
+                )
+        )
     }
 
 }

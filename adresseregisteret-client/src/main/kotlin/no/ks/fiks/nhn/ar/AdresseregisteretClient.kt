@@ -26,7 +26,7 @@ class AdresseregisteretClient(
                     }
                 }
         } catch (e: ICommunicationPartyServiceGetCommunicationPartyDetailsGenericFaultFaultFaultMessage) {
-            throw AdresseregisteretException(e.faultInfo?.errorCode?.value, e.faultInfo?.message?.value ?: "No error message was returned")
+            throw AdresseregisteretException(e.faultInfo?.errorCode?.value, e.faultInfo?.message?.value, e.message)
         }
 
     private fun Organization.convert() = OrganizationCommunicationParty(
