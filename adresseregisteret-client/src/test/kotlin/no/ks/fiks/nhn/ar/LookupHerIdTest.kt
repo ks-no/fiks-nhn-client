@@ -131,6 +131,68 @@ class LookupHerIdTest : StringSpec({
             }
     }
 
+    "Should handle null values in address" {
+        buildClient(
+            setupServiceMock(
+                buildOrganization(
+                    addresses = listOf(
+                        buildPhysicalAddress(
+                            type = null,
+                            streetAddress = null,
+                            postbox = null,
+                            postalCode = null,
+                            city = null,
+                            country = null,
+                        ),
+                    )
+                )
+            )
+        )
+            .lookupHerId(nextInt(1000, 100000))
+            .asClue {
+                it.shouldBeInstanceOf<OrganizationCommunicationParty>()
+                it.physicalAddresses shouldHaveSize 1
+                with(it.physicalAddresses.single()) {
+                    type shouldBe null
+                    streetAddress shouldBe null
+                    postbox shouldBe null
+                    postalCode shouldBe null
+                    city shouldBe null
+                    country shouldBe null
+                }
+            }
+    }
+
+    "Should handle empty values in address" {
+        buildClient(
+            setupServiceMock(
+                buildOrganization(
+                    addresses = listOf(
+                        buildPhysicalAddress(
+                            type = "",
+                            streetAddress = " ",
+                            postbox = "\t",
+                            city = "",
+                            country = "",
+                        ),
+                    )
+                )
+            )
+        )
+            .lookupHerId(nextInt(1000, 100000))
+            .asClue {
+                it.shouldBeInstanceOf<OrganizationCommunicationParty>()
+                it.physicalAddresses shouldHaveSize 1
+                with(it.physicalAddresses.single()) {
+                    type shouldBe null
+                    streetAddress shouldBe null
+                    postbox shouldBe null
+                    city shouldBe null
+                    country shouldBe null
+                }
+            }
+    }
+
     "Should be able to map person without middle name" {
         val expected = buildOrganizationPerson(middleName = null)
 
@@ -240,15 +302,19 @@ private fun buildService(
 }
 
 private fun buildPhysicalAddress(
-    type: String = Adressetetype.entries.random().code,
-    postalCode: Int = nextInt(0, 10000),
+    type: String? = Adressetetype.entries.random().code,
+    streetAddress: String? = buildRandomString(),
+    postbox: String? = UUID.randomUUID().toString(),
+    postalCode: Int? = nextInt(0, 10000),
+    city: String? = buildRandomString(),
+    country: String? = buildRandomString(),
 ) = PhysicalAddress().apply {
     this.type = buildJAXBElement(Code().apply { codeValue = buildJAXBElement(type) })
-    this.streetAddress = buildJAXBElement(buildRandomString())
-    this.postbox = buildJAXBElement(UUID.randomUUID().toString())
+    this.streetAddress = buildJAXBElement(streetAddress)
+    this.postbox = buildJAXBElement(postbox)
     this.postalCode = postalCode
-    this.city = buildJAXBElement(buildRandomString())
-    this.country = buildJAXBElement(Code().apply { codeText = buildJAXBElement(Adressetetype.entries.random().code) })
+    this.city = buildJAXBElement(city)
+    this.country = buildJAXBElement(Code().apply { codeText = buildJAXBElement(country) })
 }
 
 private fun buildRandomString() = List(nextInt(1, 3)) { UUID.randomUUID().toString().take(nextInt(3, 20)) }.joinToString(" ")

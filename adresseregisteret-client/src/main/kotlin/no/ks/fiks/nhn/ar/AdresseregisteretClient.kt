@@ -1,7 +1,9 @@
 package no.ks.fiks.nhn.ar
 
+import jakarta.xml.bind.JAXBElement
 import jakarta.xml.ws.soap.SOAPBinding
 import no.nhn.register.communicationparty.*
+import org.apache.cxf.feature.LoggingFeature
 import org.apache.cxf.jaxws.JaxWsProxyFactoryBean
 import org.apache.cxf.ws.addressing.WSAddressingFeature
 import no.nhn.register.communicationparty.CommunicationParty as NhnCommunicationParty
@@ -59,19 +61,21 @@ class AdresseregisteretClient(
             }
 
     private fun NhnCommunicationParty.convertPhysicalAddresses() = physicalAddresses.value?.physicalAddress
-        ?.map {
+        ?.map { address ->
             PhysicalAddress(
-                type = Adressetetype.fromCode(it.type.value?.codeValue?.value),
-                streetAddress = it.streetAddress.value,
-                postbox = it.postbox.value,
-                postalCode = it.postalCode?.toString()?.padStart(4, '0'),
-                city = it.city.value,
-                country = it.country.value?.codeText?.value,
+                type = Adressetetype.fromCode(address.type.value?.codeValue?.value),
+                streetAddress = address.streetAddress.valueNotBlank(),
+                postbox = address.postbox.valueNotBlank(),
+                postalCode = address.postalCode?.toString()?.padStart(4, '0'),
+                city = address.city.valueNotBlank(),
+                country = address.country.value?.codeText?.valueNotBlank(),
             )
         }
         ?: emptyList()
 
 }
+
+private fun JAXBElement<String>.valueNotBlank() = value?.takeIf { it.isNotBlank() }
 
 private fun buildService(environment: Environment, credentials: Credentials): ICommunicationPartyService =
     JaxWsProxyFactoryBean().apply {
