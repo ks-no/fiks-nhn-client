@@ -2,26 +2,23 @@ package no.ks.fiks.nhn.flr
 
 import jakarta.xml.ws.soap.SOAPBinding
 import no.nhn.schemas.reg.flr.IFlrReadOperations
+import no.nhn.schemas.reg.flr.IFlrReadOperationsGetPatientGPDetailsGenericFaultFaultFaultMessage
 import no.nhn.schemas.reg.flr.PatientToGPContractAssociation
 import org.apache.cxf.jaxws.JaxWsProxyFactoryBean
 import org.apache.cxf.ws.addressing.WSAddressingFeature
 
 class FastlegeregisteretClient(
-    val environment: Environment,
-    val credentials: Credentials,
+    environment: Environment,
+    credentials: Credentials,
+    private val service: IFlrReadOperations = buildService(environment, credentials)
 ) {
 
-    private val service = JaxWsProxyFactoryBean().apply {
-        address = environment.url
-
-        username = credentials.username
-        password = credentials.password
-
-        features.add(WSAddressingFeature())
-        bindingId = SOAPBinding.SOAP12HTTP_BINDING
-    }.create(IFlrReadOperations::class.java)
-
-    fun getPatientGP(patientId: String): PatientGP? = service.getPatientGPDetails(patientId)?.convert()
+    fun getPatientGP(patientId: String): PatientGP? =
+        try {
+            service.getPatientGPDetails(patientId)?.convert()
+        } catch (e: IFlrReadOperationsGetPatientGPDetailsGenericFaultFaultFaultMessage) {
+            throw FastlegeregisteretException(e.faultInfo?.errorCode?.value, e.faultInfo?.message?.value, e.message)
+        }
 
     private fun PatientToGPContractAssociation.convert() = PatientGP(
         patientId = patientNIN.value,
@@ -29,3 +26,13 @@ class FastlegeregisteretClient(
     )
 
 }
+
+private fun buildService(environment: Environment, credentials: Credentials) = JaxWsProxyFactoryBean().apply {
+    address = environment.url
+
+    username = credentials.username
+    password = credentials.password
+
+    features.add(WSAddressingFeature())
+    bindingId = SOAPBinding.SOAP12HTTP_BINDING
+}.create(IFlrReadOperations::class.java)
