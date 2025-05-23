@@ -3,7 +3,6 @@ package no.ks.fiks.nhn.ar
 import jakarta.xml.bind.JAXBElement
 import jakarta.xml.ws.soap.SOAPBinding
 import no.nhn.register.communicationparty.*
-import org.apache.cxf.feature.LoggingFeature
 import org.apache.cxf.jaxws.JaxWsProxyFactoryBean
 import org.apache.cxf.ws.addressing.WSAddressingFeature
 import no.nhn.register.communicationparty.CommunicationParty as NhnCommunicationParty
