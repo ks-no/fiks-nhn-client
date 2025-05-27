@@ -1,13 +1,47 @@
 package no.ks.fiks.nhn.ar
 
-data class CommunicationParty(
+sealed class CommunicationParty(
     val herId: Int,
+    val parent: CommunicationPartyParent?,
+    val physicalAddresses: List<PhysicalAddress>,
+)
+
+class OrganizationCommunicationParty(
+    herId: Int,
+    parent: CommunicationPartyParent?,
+    physicalAddresses: List<PhysicalAddress>,
+    val organizationNumber: String?,
+) : CommunicationParty(herId, parent, physicalAddresses) {
+
+    override fun toString(): String {
+        return "OrganizationCommunicationParty(herId=$herId, parent=$parent, physicalAddresses=$physicalAddresses, organizationNumber=$organizationNumber)"
+    }
+}
+
+class PersonCommunicationParty(
+    herId: Int,
+    parent: CommunicationPartyParent?,
+    physicalAddresses: List<PhysicalAddress>,
     val firstName: String,
     val middleName: String?,
     val lastName: String,
-    val parent: CommunicationPartyParent,
-    val physicalAddresses: List<PhysicalAddress>,
-)
+) : CommunicationParty(herId, parent, physicalAddresses) {
+
+    override fun toString(): String {
+        return "PersonCommunicationParty(herId=$herId, parent=$parent, physicalAddresses=$physicalAddresses, firstName='$firstName', middleName=$middleName, lastName='$lastName')"
+    }
+}
+
+class ServiceCommunicationParty(
+    herId: Int,
+    parent: CommunicationPartyParent?,
+    physicalAddresses: List<PhysicalAddress>,
+) : CommunicationParty(herId, parent, physicalAddresses) {
+
+    override fun toString(): String {
+        return "ServiceCommunicationParty(herId=$herId, parent=$parent, physicalAddresses=$physicalAddresses)"
+    }
+}
 
 data class CommunicationPartyParent(
     val herId: Int,
