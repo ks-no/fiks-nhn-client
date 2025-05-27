@@ -1,0 +1,99 @@
+<s:Envelope xmlns:s="http://www.w3.org/2003/05/soap-envelope" xmlns:a="http://www.w3.org/2005/08/addressing">
+    <s:Body>
+        <GetCommunicationPartyDetailsResponse xmlns="http://register.nhn.no/CommunicationParty">
+            <GetCommunicationPartyDetailsResult i:type="Organization"
+                                                xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+                <Active>true</Active>
+                <CoverageAreaType i:nil="true" xmlns:b="http://register.nhn.no/Common"/>
+                <DisplayName>Et legekontor</DisplayName>
+                <ElectronicAddresses xmlns:b="http://register.nhn.no/Common">
+                    <b:ElectronicAddress>
+                        <b:Address>test@test.test</b:Address>
+                        <b:Inherited>false</b:Inherited>
+                        <b:LastChanged>2025-05-23T09:16:42.11</b:LastChanged>
+                        <b:Type>
+                            <b:Active>true</b:Active>
+                            <b:CodeText>Epost-adresse</b:CodeText>
+                            <b:CodeValue>E_EPO</b:CodeValue>
+                            <b:LongDescription i:nil="true"/>
+                            <b:OID>9044</b:OID>
+                            <b:SimpleType>type_adressekomponeneter</b:SimpleType>
+                        </b:Type>
+                        <b:TypeCodeValue>E_EPO</b:TypeCodeValue>
+                    </b:ElectronicAddress>
+                </ElectronicAddresses>
+                <FutureElectronicAddresses xmlns:b="http://register.nhn.no/Common"/>
+                <HerId>55555</HerId>
+                <IsValidCommunicationParty>false</IsValidCommunicationParty>
+                <LastChanged>2025-05-17T05:05:05.98</LastChanged>
+                <Municipality xmlns:b="http://register.nhn.no/Common">
+                    <b:Active>true</b:Active>
+                    <b:CodeText>BERGEN</b:CodeText>
+                    <b:CodeValue>4601</b:CodeValue>
+                    <b:LongDescription i:nil="true"/>
+                    <b:OID>3402</b:OID>
+                    <b:SimpleType>kommunenummer</b:SimpleType>
+                </Municipality>
+                <Name>ET LEGEKONTOR</Name>
+                <ParentBusinessType i:nil="true" xmlns:b="http://register.nhn.no/Common"/>
+                <ParentHerId>987654</ParentHerId>
+                <ParentName>Overordnet Organisasjon</ParentName>
+                <ParentOrganizationNumber>-1</ParentOrganizationNumber>
+                <PhysicalAddresses xmlns:b="http://register.nhn.no/Common">
+                    <b:PhysicalAddress>
+                        <b:City>OSLO</b:City>
+                        <b:Country>
+                            <b:Active>true</b:Active>
+                            <b:CodeText>Norge</b:CodeText>
+                            <b:CodeValue>NO</b:CodeValue>
+                            <b:LongDescription i:nil="true"/>
+                            <b:OID>9043</b:OID>
+                            <b:SimpleType>landkoder</b:SimpleType>
+                        </b:Country>
+                        <b:Description/>
+                        <b:Inherited>false</b:Inherited>
+                        <b:LastChanged>2025-01-01T00:00:00</b:LastChanged>
+                        <b:PostalCode>0037</b:PostalCode>
+                        <b:Postbox/>
+                        <b:StreetAddress>Rådhusplassen 1</b:StreetAddress>
+                        <b:Type>
+                            <b:Active>true</b:Active>
+                            <b:CodeText>Postadresse</b:CodeText>
+                            <b:CodeValue>PST</b:CodeValue>
+                            <b:LongDescription i:nil="true"/>
+                            <b:OID>3401</b:OID>
+                            <b:SimpleType>adressetype</b:SimpleType>
+                        </b:Type>
+                        <b:TypeCodeValue>PST</b:TypeCodeValue>
+                    </b:PhysicalAddress>
+                </PhysicalAddresses>
+                <ServerTime>2025-05-23T08:03:58.3087769+02:00</ServerTime>
+                <Type>Organization</Type>
+                <Valid xmlns:b="http://register.nhn.no/Common">
+                    <b:From>2025-01-01T00:00:00</b:From>
+                    <b:To>9999-12-31T23:59:59.999</b:To>
+                </Valid>
+                <BusinessType xmlns:b="http://register.nhn.no/Common">
+                    <b:Active>true</b:Active>
+                    <b:CodeText>Fastlege og annen privat virksomhet som yter helsetjenester</b:CodeText>
+                    <b:CodeValue>103</b:CodeValue>
+                    <b:LongDescription i:nil="true"/>
+                    <b:OID>9040</b:OID>
+                    <b:SimpleType>helsevirksomhet_type</b:SimpleType>
+                </BusinessType>
+                <IndustryCodes xmlns:b="http://register.nhn.no/Common">
+                    <b:Code>
+                        <b:Active>true</b:Active>
+                        <b:CodeText>Allmenn legetjeneste</b:CodeText>
+                        <b:CodeValue>86.211</b:CodeValue>
+                        <b:LongDescription i:nil="true"/>
+                        <b:OID>0</b:OID>
+                        <b:SimpleType>naringskode</b:SimpleType>
+                    </b:Code>
+                </IndustryCodes>
+                <OrganizationNumber>888333444</OrganizationNumber>
+                <Properties xmlns:b="http://register.nhn.no/Common"/>
+            </GetCommunicationPartyDetailsResult>
+        </GetCommunicationPartyDetailsResponse>
+    </s:Body>
+</s:Envelope>
