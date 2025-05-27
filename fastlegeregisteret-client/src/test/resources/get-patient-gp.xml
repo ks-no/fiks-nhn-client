@@ -1,0 +1,10 @@
+<s:Envelope xmlns:s="http://www.w3.org/2003/05/soap-envelope">
+    <s:Body>
+        <GetPatientGPDetailsResponse xmlns="http://schemas.nhn.no/reg/flr">
+            <GetPatientGPDetailsResult>
+                <GPHerId>4657988</GPHerId>
+                <PatientNIN>12345678999</PatientNIN>
+            </GetPatientGPDetailsResult>
+        </GetPatientGPDetailsResponse>
+    </s:Body>
+</s:Envelope>
