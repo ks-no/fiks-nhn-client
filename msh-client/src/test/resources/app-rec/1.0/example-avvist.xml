@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<AppRec xmlns="http://www.kith.no/xmlstds/apprec/2004-11-21"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.kith.no/xmlstds/apprec/2004-11-21 AppRec-v1-2004-11-21.xsd">
+    <MsgType V="APPREC" DN="Applikasjonskvittering"/>
+    <MIGversion>1.0 2008-11-21</MIGversion>
+    <GenDate>2008-12-17T09:30:47</GenDate>
+    <Id>8d018d60-336b-11de-8bd7-0002a5d5c51b</Id>
+    <Sender>
+        <Role V="REQ" DN="Rekvirent"/>
+        <HCP>
+            <Inst>
+                <Name>Kattskinnet legesenter</Name>
+                <Id>56704</Id>
+                <TypeId V=" HER" DN="HER-id"/>
+                <HCPerson>
+                    <Name>Rita Lin</Name>
+                    <Id>258521</Id>
+                    <TypeId V="HER" DN="HER-id"/>
+                </HCPerson>
+            </Inst>
+        </HCP>
+    </Sender>
+    <Receiver>
+        <Role V="RECEIVER" DN="Mottaker"/>
+        <HCP>
+            <Inst>
+                <Name>Testsykehuset HF</Name>
+                <Id>123459</Id>
+                <TypeId V="HER" DN="HER-id"/>
+                <Dept>
+                    <Name>Medisinsk mikrobiologi</Name>
+                    <Id>91126</Id>
+                    <TypeId V="HER" DN="HER-id"/>
+                </Dept>
+            </Inst>
+        </HCP>
+    </Receiver>
+    <Status V="2" DN="Avvist"/>
+    <Error S="2.16.578.1.12.4.1.1.8221" V="E21" DN="Mottaker finnes ikke" OT="Legen har sluttet"/>
+    <OriginalMsgId>
+        <MsgType V="EPIKRISE" DN="Epikrise"/>
+        <IssueDate>2020-06-19T17:02:15</IssueDate>
+        <Id>a6967e6a-8c0a-4be4-a647-c921d3086423</Id>
+    </OriginalMsgId>
+</AppRec>

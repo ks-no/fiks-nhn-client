@@ -52,36 +52,10 @@ data class BusinessDocumentMessage(
     val recipientContact: RecipientContact,
 )
 
-data class IncomingApplicationReceipt(
-    val id: String,
-    val acknowledgedBusinessDocumentId: String,
-    val status: StatusForMottakAvMelding,
-    val errors: List<ApplicationReceiptError>,
-    val sender: Organization,
-    val receiver: Organization,
-)
-
-data class OutgoingApplicationReceipt(
-    val acknowledgedId: UUID,
-    val senderHerId: Int,
-    val status: StatusForMottakAvMelding,
-    val errors: List<ApplicationReceiptError>? = null,
-)
-
-data class ApplicationReceiptError(
-    val type: FeilmeldingForApplikasjonskvittering,
-    val details: String?,
-)
-
 data class Organization(
     val name: String,
     val id: Id,
     val childOrganization: Organization? = null,
-)
-
-data class Id(
-    val id: String,
-    val type: IdType,
 )
 
 sealed class Receiver

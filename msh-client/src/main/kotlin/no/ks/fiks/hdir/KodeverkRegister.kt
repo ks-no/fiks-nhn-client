@@ -13,13 +13,12 @@ object KodeverkRegister {
         .associate {
             KodeverkVerdiKey(
                 it.verdi,
-                it.navn,
-                it.kodeverk
+                it.kodeverk,
             ) to it as KodeverkVerdi
         }
 
-    fun getKodeverk(kodeverk: String, verdi: String, navn: String): KodeverkVerdi {
-        val key = KodeverkVerdiKey(verdi, navn, kodeverk)
+    fun getKodeverk(kodeverk: String, verdi: String): KodeverkVerdi {
+        val key = KodeverkVerdiKey(verdi, kodeverk)
         return register[key]
             ?: throw IllegalArgumentException("No kodeverk exists for key $key")
     }
@@ -27,7 +26,6 @@ object KodeverkRegister {
 }
 
 private data class KodeverkVerdiKey(
-    override val verdi: String,
-    override val navn: String,
-    override val kodeverk: String
-) : KodeverkVerdi
+    val verdi: String,
+    val kodeverk: String
+)
