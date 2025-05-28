@@ -100,6 +100,37 @@ class LookupHerIdHttpTest : StringSpec() {
             }
         }
 
+        "Test that configuration is applied correctly when using builder" {
+            val username = UUID.randomUUID().toString()
+            val password = UUID.randomUUID().toString()
+            val environment = Environment(wireMock.baseUrl)
+
+            val herId = nextInt(1, 100000)
+            stubResponse(herId, "get-communication-party-details-no-parent-response.xml")
+
+            AdresseregisteretClientBuilder()
+                .environment(environment)
+                .credentials(Credentials(username, password))
+                .build()
+                .lookupHerId(herId)
+
+            val requests = findAll(
+                postRequestedFor(urlEqualTo("/"))
+                    .withRequestBody(containing("<herId>$herId</herId>"))
+            )
+            requests shouldHaveSize 1
+            requests.single().asClue { request ->
+                request.absoluteUrl shouldBe "${environment.url}/"
+                val usernamePassword = Base64.getDecoder()
+                    .decode(
+                        request.header("Authorization").firstValue()
+                            .removePrefix("Basic ")
+                    )
+                    .toString(Charset.defaultCharset())
+                usernamePassword shouldBe "$username:$password"
+            }
+        }
+
         "Test that error response is translated into AdresseregisteretException" {
             val herId = nextInt(1, 100000)
             stubResponse(herId, "get-communication-party-details-not-found-response.xml")

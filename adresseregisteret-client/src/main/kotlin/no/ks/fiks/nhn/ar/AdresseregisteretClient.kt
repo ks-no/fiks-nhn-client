@@ -80,6 +80,28 @@ class AdresseregisteretClient(
 
 private fun JAXBElement<String>.valueNotBlank() = value?.takeIf { it.isNotBlank() }
 
+class AdresseregisteretClientBuilder {
+
+    private var environment: Environment? = null
+    private var credentials: Credentials? = null
+    private var service: ICommunicationPartyService? = null
+
+    fun environment(environment: Environment) = apply { this.environment = environment }
+    fun credentials(credentials: Credentials) = apply { this.credentials = credentials }
+    fun service(service: ICommunicationPartyService) = apply { this.service = service }
+
+    fun build(): AdresseregisteretClient {
+        val environment = environment ?: throw IllegalStateException("environment is required")
+        val credentials = credentials ?: throw IllegalStateException("credentials is required")
+        return AdresseregisteretClient(
+            environment = environment,
+            credentials = credentials,
+            service = service ?: buildService(environment, credentials),
+        )
+    }
+
+}
+
 private fun buildService(environment: Environment, credentials: Credentials): ICommunicationPartyService =
     JaxWsProxyFactoryBean().apply {
         address = environment.url
