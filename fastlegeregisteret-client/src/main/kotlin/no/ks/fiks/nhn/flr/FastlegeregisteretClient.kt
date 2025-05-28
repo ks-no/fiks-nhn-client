@@ -27,6 +27,28 @@ class FastlegeregisteretClient(
 
 }
 
+class FastlegeregisteretClientBuilder {
+
+    private var environment: Environment? = null
+    private var credentials: Credentials? = null
+    private var service: IFlrReadOperations? = null
+
+    fun environment(environment: Environment) = apply { this.environment = environment }
+    fun credentials(credentials: Credentials) = apply { this.credentials = credentials }
+    fun service(service: IFlrReadOperations) = apply { this.service = service }
+
+    fun build(): FastlegeregisteretClient {
+        val environment = environment ?: throw IllegalStateException("environment is required")
+        val credentials = credentials ?: throw IllegalStateException("credentials is required")
+        return FastlegeregisteretClient(
+            environment = environment,
+            credentials = credentials,
+            service = service ?: buildService(environment, credentials),
+        )
+    }
+
+}
+
 private fun buildService(environment: Environment, credentials: Credentials) = JaxWsProxyFactoryBean().apply {
     address = environment.url
 

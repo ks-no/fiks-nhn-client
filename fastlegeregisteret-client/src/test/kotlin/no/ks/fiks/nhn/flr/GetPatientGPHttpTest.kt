@@ -109,6 +109,37 @@ class GetPatientGPHttpTest : StringSpec() {
             }
         }
 
+        "Test that configuration is applied correctly when using builder" {
+            val username = UUID.randomUUID().toString()
+            val password = UUID.randomUUID().toString()
+            val environment = Environment(wireMock.baseUrl)
+
+            val patientId = UUID.randomUUID().toString()
+            stubResponse(patientId, "get-patient-gp.xml")
+
+            FastlegeregisteretClientBuilder()
+                .environment(environment)
+                .credentials(Credentials(username, password))
+                .build()
+                .getPatientGP(patientId)
+
+            val requests = findAll(
+                postRequestedFor(urlEqualTo("/"))
+                    .withRequestBody(containing(patientId))
+            )
+            requests shouldHaveSize 1
+            requests.single().asClue { request ->
+                request.absoluteUrl shouldBe "${environment.url}/"
+                val usernamePassword = Base64.getDecoder()
+                    .decode(
+                        request.header("Authorization").firstValue()
+                            .removePrefix("Basic ")
+                    )
+                    .toString(Charset.defaultCharset())
+                usernamePassword shouldBe "$username:$password"
+            }
+        }
+
     }
 
 }
