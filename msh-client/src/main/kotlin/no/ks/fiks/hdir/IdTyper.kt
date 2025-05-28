@@ -7,8 +7,9 @@ enum class PersonIdType(
     override val verdi: String,
     override val navn: String,
 ) : IdType {
+    FNR("FNR", "Fødselsnummer"),
     HER_ID("HER", "HER-id"),
-    FNR("FNR", "Fødselsnummer");
+    HPR("HPR", "HPR-nummer");
 
     override val kodeverk: String = "2.16.578.1.12.4.1.1.8116"
 }
@@ -18,6 +19,7 @@ enum class OrganisasjonIdType(
     override val verdi: String,
     override val navn: String,
 ) : IdType {
+    ENH("ENH", "Organisasjonsnummeret i Enhetsregister"),
     HER_ID("HER", "HER-id");
 
     override val kodeverk: String = "2.16.578.1.12.4.1.1.9051"

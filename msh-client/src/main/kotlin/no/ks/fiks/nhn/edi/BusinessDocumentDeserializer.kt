@@ -158,7 +158,7 @@ object BusinessDocumentDeserializer {
             )
         }
 
-    private fun CV.toIdType() = KodeverkRegister.getKodeverk(s, v, dn) as? IdType ?: throw IllegalArgumentException("Expected kodeverk of a valid IdType, but got ($s, $v, $dn)")
+    private fun CV.toIdType() = KodeverkRegister.getKodeverk(s, v) as? IdType ?: throw IllegalArgumentException("Expected kodeverk of a valid IdType, but got ($s, $v, $dn)")
 
 }
 
