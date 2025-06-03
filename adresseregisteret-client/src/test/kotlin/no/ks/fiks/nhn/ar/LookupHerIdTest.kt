@@ -258,12 +258,14 @@ private fun setupServiceMock(expected: NhnCommunicationParty) = mockk<ICommunica
 
 private fun buildOrganization(
     herId: Int = nextInt(1000, 100000),
+    name: String = buildRandomString(),
     parentHerId: Int = nextInt(1000, 100000),
     parentName: String = buildRandomString(),
     addresses: List<PhysicalAddress> = List(nextInt(1, 5)) { buildPhysicalAddress() },
     organizationNumber: Int = nextInt(100000000, 1000000000),
 ) = Organization().apply {
     this.herId = herId
+    this.name = buildJAXBElement(name)
     this.parentHerId = parentHerId
     this.parentName = buildJAXBElement(parentName)
     this.physicalAddresses = buildJAXBElement(mockk { every { physicalAddress } returns addresses })
@@ -272,6 +274,7 @@ private fun buildOrganization(
 
 private fun buildOrganizationPerson(
     herId: Int = nextInt(1000, 100000),
+    name: String = buildRandomString(),
     parentHerId: Int = nextInt(1000, 100000),
     parentName: String = buildRandomString(),
     firstName: String = buildRandomString(),
@@ -280,6 +283,7 @@ private fun buildOrganizationPerson(
     addresses: List<PhysicalAddress> = List(nextInt(1, 5)) { buildPhysicalAddress() }
 ) = OrganizationPerson().apply {
     this.herId = herId
+    this.name = buildJAXBElement(name)
     this.parentHerId = parentHerId
     this.parentName = buildJAXBElement(parentName)
     this.person = buildJAXBElement(Person().apply {
@@ -292,11 +296,13 @@ private fun buildOrganizationPerson(
 
 private fun buildService(
     herId: Int = nextInt(1000, 100000),
+    name: String = buildRandomString(),
     parentHerId: Int = nextInt(1000, 100000),
     parentName: String = buildRandomString(),
     addresses: List<PhysicalAddress> = List(nextInt(1, 5)) { buildPhysicalAddress() }
 ) = Service().apply {
     this.herId = herId
+    this.name = buildJAXBElement(name)
     this.parentHerId = parentHerId
     this.parentName = buildJAXBElement(parentName)
     this.physicalAddresses = buildJAXBElement(mockk { every { physicalAddress } returns addresses })

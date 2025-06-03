@@ -34,6 +34,7 @@ class AdresseregisteretClient(
 
     private fun Organization.convert() = OrganizationCommunicationParty(
         herId = herId,
+        name = name.value,
         parent = convertParent(),
         physicalAddresses = convertPhysicalAddresses(),
         organizationNumber = organizationNumber?.toString()?.padStart(9, '0'),
@@ -41,6 +42,7 @@ class AdresseregisteretClient(
 
     private fun OrganizationPerson.convert() = PersonCommunicationParty(
         herId = herId,
+        name = name.value,
         parent = convertParent(),
         physicalAddresses = convertPhysicalAddresses(),
         firstName = person.value.firstName.value,
@@ -50,6 +52,7 @@ class AdresseregisteretClient(
 
     private fun Service.convert() = ServiceCommunicationParty(
         herId = herId,
+        name = name.value,
         parent = convertParent(),
         physicalAddresses = convertPhysicalAddresses(),
     )

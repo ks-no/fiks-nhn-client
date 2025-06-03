@@ -1,0 +1,372 @@
+<s:Envelope xmlns:s="http://www.w3.org/2003/05/soap-envelope" xmlns:a="http://www.w3.org/2005/08/addressing">
+    <s:Body>
+        <GetCommunicationPartyDetailsResponse xmlns="http://register.nhn.no/CommunicationParty">
+            <GetCommunicationPartyDetailsResult i:type="Organization"
+                                                xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+                <Active>true</Active>
+                <CoverageAreaType i:nil="true" xmlns:b="http://register.nhn.no/Common"/>
+                <DisplayName i:nil="true"/>
+                <ElectronicAddresses xmlns:b="http://register.nhn.no/Common">
+                    <b:ElectronicAddress>
+                        <b:Address>meldingstjener-api@testedi.nhn.no</b:Address>
+                        <b:Inherited>false</b:Inherited>
+                        <b:LastChanged>2025-04-30T14:13:19.01</b:LastChanged>
+                        <b:Type>
+                            <b:Active>true</b:Active>
+                            <b:CodeText>EDI (Standardisert elektronisk melding)</b:CodeText>
+                            <b:CodeValue>E_EDI</b:CodeValue>
+                            <b:LongDescription i:nil="true"/>
+                            <b:OID>9044</b:OID>
+                            <b:SimpleType>type_adressekomponeneter</b:SimpleType>
+                        </b:Type>
+                        <b:TypeCodeValue>E_EDI</b:TypeCodeValue>
+                    </b:ElectronicAddress>
+                    <b:ElectronicAddress>
+                        <b:Address>
+                            ldap://ldap.test4.buypass.no/dc=Buypass,dc=no,CN=Buypass%20Class%203%20Test4%20CA%20G2?usercertificate;binary?sub?(|(certificateSerialNumber=1978614801669301597418371)(certificateSerialNumber=1978620698775221943443289))
+                        </b:Address>
+                        <b:Inherited>false</b:Inherited>
+                        <b:LastChanged>2025-04-30T14:13:19.01</b:LastChanged>
+                        <b:Type>
+                            <b:Active>true</b:Active>
+                            <b:CodeText>Digital sertifikat</b:CodeText>
+                            <b:CodeValue>E_DS</b:CodeValue>
+                            <b:LongDescription i:nil="true"/>
+                            <b:OID>9044</b:OID>
+                            <b:SimpleType>type_adressekomponeneter</b:SimpleType>
+                        </b:Type>
+                        <b:TypeCodeValue>E_DS</b:TypeCodeValue>
+                    </b:ElectronicAddress>
+                </ElectronicAddresses>
+                <FutureElectronicAddresses xmlns:b="http://register.nhn.no/Common"/>
+                <HerId>8142987</HerId>
+                <IsValidCommunicationParty>false</IsValidCommunicationParty>
+                <LastChanged>2025-04-30T14:13:19.01</LastChanged>
+                <Municipality xmlns:b="http://register.nhn.no/Common">
+                    <b:Active>true</b:Active>
+                    <b:CodeText>OSLO</b:CodeText>
+                    <b:CodeValue>0301</b:CodeValue>
+                    <b:LongDescription i:nil="true"/>
+                    <b:OID>3402</b:OID>
+                    <b:SimpleType>kommunenummer</b:SimpleType>
+                </Municipality>
+                <Name>KS-DIGITALE FELLESTJENESTER AS</Name>
+                <ParentBusinessType i:nil="true" xmlns:b="http://register.nhn.no/Common"/>
+                <ParentHerId>-1</ParentHerId>
+                <ParentName i:nil="true"/>
+                <ParentOrganizationNumber>-1</ParentOrganizationNumber>
+                <PhysicalAddresses xmlns:b="http://register.nhn.no/Common">
+                    <b:PhysicalAddress>
+                        <b:City>OSLO</b:City>
+                        <b:Country i:nil="true"/>
+                        <b:Description/>
+                        <b:Inherited>false</b:Inherited>
+                        <b:LastChanged>2025-03-24T08:57:07.41</b:LastChanged>
+                        <b:PostalCode>161</b:PostalCode>
+                        <b:Postbox/>
+                        <b:StreetAddress>Haakon VIIs gate 9</b:StreetAddress>
+                        <b:Type>
+                            <b:Active>true</b:Active>
+                            <b:CodeText>Besøksadresse</b:CodeText>
+                            <b:CodeValue>RES</b:CodeValue>
+                            <b:LongDescription i:nil="true"/>
+                            <b:OID>3401</b:OID>
+                            <b:SimpleType>adressetype</b:SimpleType>
+                        </b:Type>
+                        <b:TypeCodeValue>RES</b:TypeCodeValue>
+                    </b:PhysicalAddress>
+                    <b:PhysicalAddress>
+                        <b:City>OSLO</b:City>
+                        <b:Country i:nil="true"/>
+                        <b:Description/>
+                        <b:Inherited>false</b:Inherited>
+                        <b:LastChanged>2025-03-24T08:57:07.41</b:LastChanged>
+                        <b:PostalCode>161</b:PostalCode>
+                        <b:Postbox/>
+                        <b:StreetAddress>Haakon VIIs gate 9</b:StreetAddress>
+                        <b:Type>
+                            <b:Active>true</b:Active>
+                            <b:CodeText>Postadresse</b:CodeText>
+                            <b:CodeValue>PST</b:CodeValue>
+                            <b:LongDescription i:nil="true"/>
+                            <b:OID>3401</b:OID>
+                            <b:SimpleType>adressetype</b:SimpleType>
+                        </b:Type>
+                        <b:TypeCodeValue>PST</b:TypeCodeValue>
+                    </b:PhysicalAddress>
+                </PhysicalAddresses>
+                <ServerTime>2025-06-03T07:53:13.7710342+02:00</ServerTime>
+                <Type>Organization</Type>
+                <Valid xmlns:b="http://register.nhn.no/Common">
+                    <b:From>2025-03-24T00:00:00</b:From>
+                    <b:To>2125-03-24T00:00:00</b:To>
+                </Valid>
+                <BusinessType xmlns:b="http://register.nhn.no/Common">
+                    <b:Active>true</b:Active>
+                    <b:CodeText>Øvrig virksomhet som ikke yter helsehjelp (dekker forsikringsselskap mv.)</b:CodeText>
+                    <b:CodeValue>115</b:CodeValue>
+                    <b:LongDescription i:nil="true"/>
+                    <b:OID>9040</b:OID>
+                    <b:SimpleType>helsevirksomhet_type</b:SimpleType>
+                </BusinessType>
+                <IndustryCodes xmlns:b="http://register.nhn.no/Common">
+                    <b:Code>
+                        <b:Active>true</b:Active>
+                        <b:CodeText>Bedriftsrådgivning og annen administrativ rådgiving</b:CodeText>
+                        <b:CodeValue>70.220</b:CodeValue>
+                        <b:LongDescription i:nil="true"/>
+                        <b:OID>0</b:OID>
+                        <b:SimpleType>naringskode</b:SimpleType>
+                    </b:Code>
+                </IndustryCodes>
+                <OrganizationNumber>931796003</OrganizationNumber>
+                <People/>
+                <Properties xmlns:b="http://register.nhn.no/Common"/>
+                <Services>
+                    <Service>
+                        <Active>false</Active>
+                        <CoverageAreaType i:nil="true" xmlns:b="http://register.nhn.no/Common"/>
+                        <DisplayName i:nil="true"/>
+                        <ElectronicAddresses xmlns:b="http://register.nhn.no/Common">
+                            <b:ElectronicAddress>
+                                <b:Address>meldingstjener-api@testedi.nhn.no</b:Address>
+                                <b:Inherited>true</b:Inherited>
+                                <b:LastChanged>2025-04-30T14:13:19.01</b:LastChanged>
+                                <b:Type>
+                                    <b:Active>true</b:Active>
+                                    <b:CodeText>EDI (Standardisert elektronisk melding)</b:CodeText>
+                                    <b:CodeValue>E_EDI</b:CodeValue>
+                                    <b:LongDescription i:nil="true"/>
+                                    <b:OID>9044</b:OID>
+                                    <b:SimpleType>type_adressekomponeneter</b:SimpleType>
+                                </b:Type>
+                                <b:TypeCodeValue>E_EDI</b:TypeCodeValue>
+                            </b:ElectronicAddress>
+                            <b:ElectronicAddress>
+                                <b:Address>
+                                    ldap://ldap.test4.buypass.no/dc=Buypass,dc=no,CN=Buypass%20Class%203%20Test4%20CA%20G2?usercertificate;binary?sub?(|(certificateSerialNumber=1978614801669301597418371)(certificateSerialNumber=1978620698775221943443289))
+                                </b:Address>
+                                <b:Inherited>true</b:Inherited>
+                                <b:LastChanged>2025-04-30T14:13:19.01</b:LastChanged>
+                                <b:Type>
+                                    <b:Active>true</b:Active>
+                                    <b:CodeText>Digital sertifikat</b:CodeText>
+                                    <b:CodeValue>E_DS</b:CodeValue>
+                                    <b:LongDescription i:nil="true"/>
+                                    <b:OID>9044</b:OID>
+                                    <b:SimpleType>type_adressekomponeneter</b:SimpleType>
+                                </b:Type>
+                                <b:TypeCodeValue>E_DS</b:TypeCodeValue>
+                            </b:ElectronicAddress>
+                        </ElectronicAddresses>
+                        <FutureElectronicAddresses xmlns:b="http://register.nhn.no/Common"/>
+                        <HerId>8143040</HerId>
+                        <IsValidCommunicationParty>true</IsValidCommunicationParty>
+                        <LastChanged>2025-04-24T13:46:11.91</LastChanged>
+                        <Municipality xmlns:b="http://register.nhn.no/Common">
+                            <b:Active>true</b:Active>
+                            <b:CodeText>OSLO</b:CodeText>
+                            <b:CodeValue>0301</b:CodeValue>
+                            <b:LongDescription i:nil="true"/>
+                            <b:OID>3402</b:OID>
+                            <b:SimpleType>kommunenummer</b:SimpleType>
+                        </Municipality>
+                        <Name>Bedriftshelsetjeneste</Name>
+                        <ParentBusinessType xmlns:b="http://register.nhn.no/Common">
+                            <b:Active>true</b:Active>
+                            <b:CodeText>Øvrig virksomhet som ikke yter helsehjelp (dekker forsikringsselskap mv.)
+                            </b:CodeText>
+                            <b:CodeValue>115</b:CodeValue>
+                            <b:LongDescription i:nil="true"/>
+                            <b:OID>9040</b:OID>
+                            <b:SimpleType>helsevirksomhet_type</b:SimpleType>
+                        </ParentBusinessType>
+                        <ParentHerId>8142987</ParentHerId>
+                        <ParentName>KS-DIGITALE FELLESTJENESTER AS</ParentName>
+                        <ParentOrganizationNumber>931796003</ParentOrganizationNumber>
+                        <PhysicalAddresses xmlns:b="http://register.nhn.no/Common">
+                            <b:PhysicalAddress>
+                                <b:City>OSLO</b:City>
+                                <b:Country i:nil="true"/>
+                                <b:Description/>
+                                <b:Inherited>true</b:Inherited>
+                                <b:LastChanged>2025-03-24T08:57:07.41</b:LastChanged>
+                                <b:PostalCode>161</b:PostalCode>
+                                <b:Postbox/>
+                                <b:StreetAddress>Haakon VIIs gate 9</b:StreetAddress>
+                                <b:Type>
+                                    <b:Active>true</b:Active>
+                                    <b:CodeText>Besøksadresse</b:CodeText>
+                                    <b:CodeValue>RES</b:CodeValue>
+                                    <b:LongDescription i:nil="true"/>
+                                    <b:OID>3401</b:OID>
+                                    <b:SimpleType>adressetype</b:SimpleType>
+                                </b:Type>
+                                <b:TypeCodeValue>RES</b:TypeCodeValue>
+                            </b:PhysicalAddress>
+                            <b:PhysicalAddress>
+                                <b:City>OSLO</b:City>
+                                <b:Country i:nil="true"/>
+                                <b:Description/>
+                                <b:Inherited>true</b:Inherited>
+                                <b:LastChanged>2025-03-24T08:57:07.41</b:LastChanged>
+                                <b:PostalCode>161</b:PostalCode>
+                                <b:Postbox/>
+                                <b:StreetAddress>Haakon VIIs gate 9</b:StreetAddress>
+                                <b:Type>
+                                    <b:Active>true</b:Active>
+                                    <b:CodeText>Postadresse</b:CodeText>
+                                    <b:CodeValue>PST</b:CodeValue>
+                                    <b:LongDescription i:nil="true"/>
+                                    <b:OID>3401</b:OID>
+                                    <b:SimpleType>adressetype</b:SimpleType>
+                                </b:Type>
+                                <b:TypeCodeValue>PST</b:TypeCodeValue>
+                            </b:PhysicalAddress>
+                        </PhysicalAddresses>
+                        <ServerTime>2025-06-03T07:53:13.7789496+02:00</ServerTime>
+                        <Type>Service</Type>
+                        <Valid xmlns:b="http://register.nhn.no/Common">
+                            <b:From>2025-04-24T00:00:00</b:From>
+                            <b:To>2025-04-24T13:46:11.79</b:To>
+                        </Valid>
+                        <Code xmlns:b="http://register.nhn.no/Common">
+                            <b:Active>true</b:Active>
+                            <b:CodeText>Bedriftshelsetjeneste</b:CodeText>
+                            <b:CodeValue>01</b:CodeValue>
+                            <b:LongDescription>Tjenestetypen har ikke forklaringstekst</b:LongDescription>
+                            <b:OID>8666</b:OID>
+                            <b:SimpleType>andre_helsetjenestetyper</b:SimpleType>
+                        </Code>
+                        <CoverageAreas/>
+                        <Description i:nil="true"/>
+                        <LocationDescription i:nil="true"/>
+                        <Properties xmlns:b="http://register.nhn.no/Common"/>
+                    </Service>
+                    <Service>
+                        <Active>true</Active>
+                        <CoverageAreaType i:nil="true" xmlns:b="http://register.nhn.no/Common"/>
+                        <DisplayName i:nil="true"/>
+                        <ElectronicAddresses xmlns:b="http://register.nhn.no/Common">
+                            <b:ElectronicAddress>
+                                <b:Address>meldingstjener-api@testedi.nhn.no</b:Address>
+                                <b:Inherited>true</b:Inherited>
+                                <b:LastChanged>2025-04-30T14:13:19.01</b:LastChanged>
+                                <b:Type>
+                                    <b:Active>true</b:Active>
+                                    <b:CodeText>EDI (Standardisert elektronisk melding)</b:CodeText>
+                                    <b:CodeValue>E_EDI</b:CodeValue>
+                                    <b:LongDescription i:nil="true"/>
+                                    <b:OID>9044</b:OID>
+                                    <b:SimpleType>type_adressekomponeneter</b:SimpleType>
+                                </b:Type>
+                                <b:TypeCodeValue>E_EDI</b:TypeCodeValue>
+                            </b:ElectronicAddress>
+                            <b:ElectronicAddress>
+                                <b:Address>
+                                    ldap://ldap.test4.buypass.no/dc=Buypass,dc=no,CN=Buypass%20Class%203%20Test4%20CA%20G2?usercertificate;binary?sub?(|(certificateSerialNumber=1978614801669301597418371)(certificateSerialNumber=1978620698775221943443289))
+                                </b:Address>
+                                <b:Inherited>true</b:Inherited>
+                                <b:LastChanged>2025-04-30T14:13:19.01</b:LastChanged>
+                                <b:Type>
+                                    <b:Active>true</b:Active>
+                                    <b:CodeText>Digital sertifikat</b:CodeText>
+                                    <b:CodeValue>E_DS</b:CodeValue>
+                                    <b:LongDescription i:nil="true"/>
+                                    <b:OID>9044</b:OID>
+                                    <b:SimpleType>type_adressekomponeneter</b:SimpleType>
+                                </b:Type>
+                                <b:TypeCodeValue>E_DS</b:TypeCodeValue>
+                            </b:ElectronicAddress>
+                        </ElectronicAddresses>
+                        <FutureElectronicAddresses xmlns:b="http://register.nhn.no/Common"/>
+                        <HerId>8143060</HerId>
+                        <IsValidCommunicationParty>true</IsValidCommunicationParty>
+                        <LastChanged>2025-04-30T09:19:00.09</LastChanged>
+                        <Municipality xmlns:b="http://register.nhn.no/Common">
+                            <b:Active>true</b:Active>
+                            <b:CodeText>OSLO</b:CodeText>
+                            <b:CodeValue>0301</b:CodeValue>
+                            <b:LongDescription i:nil="true"/>
+                            <b:OID>3402</b:OID>
+                            <b:SimpleType>kommunenummer</b:SimpleType>
+                        </Municipality>
+                        <Name>Saksbehandling pasientopplysninger</Name>
+                        <ParentBusinessType xmlns:b="http://register.nhn.no/Common">
+                            <b:Active>true</b:Active>
+                            <b:CodeText>Øvrig virksomhet som ikke yter helsehjelp (dekker forsikringsselskap mv.)
+                            </b:CodeText>
+                            <b:CodeValue>115</b:CodeValue>
+                            <b:LongDescription i:nil="true"/>
+                            <b:OID>9040</b:OID>
+                            <b:SimpleType>helsevirksomhet_type</b:SimpleType>
+                        </ParentBusinessType>
+                        <ParentHerId>8142987</ParentHerId>
+                        <ParentName>KS-DIGITALE FELLESTJENESTER AS</ParentName>
+                        <ParentOrganizationNumber>931796003</ParentOrganizationNumber>
+                        <PhysicalAddresses xmlns:b="http://register.nhn.no/Common">
+                            <b:PhysicalAddress>
+                                <b:City>OSLO</b:City>
+                                <b:Country i:nil="true"/>
+                                <b:Description/>
+                                <b:Inherited>true</b:Inherited>
+                                <b:LastChanged>2025-03-24T08:57:07.41</b:LastChanged>
+                                <b:PostalCode>161</b:PostalCode>
+                                <b:Postbox/>
+                                <b:StreetAddress>Haakon VIIs gate 9</b:StreetAddress>
+                                <b:Type>
+                                    <b:Active>true</b:Active>
+                                    <b:CodeText>Besøksadresse</b:CodeText>
+                                    <b:CodeValue>RES</b:CodeValue>
+                                    <b:LongDescription i:nil="true"/>
+                                    <b:OID>3401</b:OID>
+                                    <b:SimpleType>adressetype</b:SimpleType>
+                                </b:Type>
+                                <b:TypeCodeValue>RES</b:TypeCodeValue>
+                            </b:PhysicalAddress>
+                            <b:PhysicalAddress>
+                                <b:City>OSLO</b:City>
+                                <b:Country i:nil="true"/>
+                                <b:Description/>
+                                <b:Inherited>true</b:Inherited>
+                                <b:LastChanged>2025-03-24T08:57:07.41</b:LastChanged>
+                                <b:PostalCode>161</b:PostalCode>
+                                <b:Postbox/>
+                                <b:StreetAddress>Haakon VIIs gate 9</b:StreetAddress>
+                                <b:Type>
+                                    <b:Active>true</b:Active>
+                                    <b:CodeText>Postadresse</b:CodeText>
+                                    <b:CodeValue>PST</b:CodeValue>
+                                    <b:LongDescription i:nil="true"/>
+                                    <b:OID>3401</b:OID>
+                                    <b:SimpleType>adressetype</b:SimpleType>
+                                </b:Type>
+                                <b:TypeCodeValue>PST</b:TypeCodeValue>
+                            </b:PhysicalAddress>
+                        </PhysicalAddresses>
+                        <ServerTime>2025-06-03T07:53:13.7789156+02:00</ServerTime>
+                        <Type>Service</Type>
+                        <Valid xmlns:b="http://register.nhn.no/Common">
+                            <b:From>2025-04-30T00:00:00</b:From>
+                            <b:To>2125-03-24T00:00:00</b:To>
+                        </Valid>
+                        <Code xmlns:b="http://register.nhn.no/Common">
+                            <b:Active>true</b:Active>
+                            <b:CodeText>Saksbehandling pasientopplysninger</b:CodeText>
+                            <b:CodeValue>8</b:CodeValue>
+                            <b:LongDescription>Saksbehandling som ikke omhandler pasientbehandling, f.eks.
+                                forsikringsselskap
+                            </b:LongDescription>
+                            <b:OID>8666</b:OID>
+                            <b:SimpleType>andre_helsetjenestetyper</b:SimpleType>
+                        </Code>
+                        <CoverageAreas/>
+                        <Description i:nil="true"/>
+                        <LocationDescription i:nil="true"/>
+                        <Properties xmlns:b="http://register.nhn.no/Common"/>
+                    </Service>
+                </Services>
+            </GetCommunicationPartyDetailsResult>
+        </GetCommunicationPartyDetailsResponse>
+    </s:Body>
+</s:Envelope>
