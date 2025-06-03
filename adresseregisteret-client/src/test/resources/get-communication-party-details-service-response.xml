@@ -1,0 +1,211 @@
+<s:Envelope xmlns:s="http://www.w3.org/2003/05/soap-envelope" xmlns:a="http://www.w3.org/2005/08/addressing">
+    <s:Body>
+        <GetCommunicationPartyDetailsResponse xmlns="http://register.nhn.no/CommunicationParty">
+            <GetCommunicationPartyDetailsResult i:type="Service" xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+                <Active>true</Active>
+                <CoverageAreaType i:nil="true" xmlns:b="http://register.nhn.no/Common"/>
+                <DisplayName i:nil="true"/>
+                <ElectronicAddresses xmlns:b="http://register.nhn.no/Common">
+                    <b:ElectronicAddress>
+                        <b:Address>meldingsvalidator@samsvar.nhn.no</b:Address>
+                        <b:Inherited>false</b:Inherited>
+                        <b:LastChanged>2016-11-14T09:27:45.13</b:LastChanged>
+                        <b:Type>
+                            <b:Active>true</b:Active>
+                            <b:CodeText>EDI (Standardisert elektronisk melding)</b:CodeText>
+                            <b:CodeValue>E_EDI</b:CodeValue>
+                            <b:LongDescription i:nil="true"/>
+                            <b:OID>9044</b:OID>
+                            <b:SimpleType>type_adressekomponeneter</b:SimpleType>
+                        </b:Type>
+                        <b:TypeCodeValue>E_EDI</b:TypeCodeValue>
+                    </b:ElectronicAddress>
+                    <b:ElectronicAddress>
+                        <b:Address>
+                            ldap://ldap.buypass.no/dc=Buypass,dc=no,CN=Buypass%20Class%203%20CA?usercertificate;binary?sub?(|(certificateSerialNumber=429310064944711009829792)(certificateSerialNumber=429314915671661112195379))
+                        </b:Address>
+                        <b:Inherited>false</b:Inherited>
+                        <b:LastChanged>2025-02-27T15:43:36.56</b:LastChanged>
+                        <b:Type>
+                            <b:Active>true</b:Active>
+                            <b:CodeText>Digital sertifikat</b:CodeText>
+                            <b:CodeValue>E_DS</b:CodeValue>
+                            <b:LongDescription i:nil="true"/>
+                            <b:OID>9044</b:OID>
+                            <b:SimpleType>type_adressekomponeneter</b:SimpleType>
+                        </b:Type>
+                        <b:TypeCodeValue>E_DS</b:TypeCodeValue>
+                    </b:ElectronicAddress>
+                    <b:ElectronicAddress>
+                        <b:Address>77286287</b:Address>
+                        <b:Inherited>true</b:Inherited>
+                        <b:LastChanged>2020-08-17T10:25:41.33</b:LastChanged>
+                        <b:Type>
+                            <b:Active>true</b:Active>
+                            <b:CodeText>Faxnummer</b:CodeText>
+                            <b:CodeValue>E_FAX</b:CodeValue>
+                            <b:LongDescription i:nil="true"/>
+                            <b:OID>9044</b:OID>
+                            <b:SimpleType>type_adressekomponeneter</b:SimpleType>
+                        </b:Type>
+                        <b:TypeCodeValue>E_FAX</b:TypeCodeValue>
+                    </b:ElectronicAddress>
+                    <b:ElectronicAddress>
+                        <b:Address>kundesenter@nhn.no</b:Address>
+                        <b:Inherited>true</b:Inherited>
+                        <b:LastChanged>2020-08-17T10:25:41.33</b:LastChanged>
+                        <b:Type>
+                            <b:Active>true</b:Active>
+                            <b:CodeText>Epost-adresse</b:CodeText>
+                            <b:CodeValue>E_EPO</b:CodeValue>
+                            <b:LongDescription i:nil="true"/>
+                            <b:OID>9044</b:OID>
+                            <b:SimpleType>type_adressekomponeneter</b:SimpleType>
+                        </b:Type>
+                        <b:TypeCodeValue>E_EPO</b:TypeCodeValue>
+                    </b:ElectronicAddress>
+                    <b:ElectronicAddress>
+                        <b:Address>24200000</b:Address>
+                        <b:Inherited>true</b:Inherited>
+                        <b:LastChanged>2020-08-17T10:25:41.33</b:LastChanged>
+                        <b:Type>
+                            <b:Active>true</b:Active>
+                            <b:CodeText>Telefonnummer</b:CodeText>
+                            <b:CodeValue>E_TLF</b:CodeValue>
+                            <b:LongDescription i:nil="true"/>
+                            <b:OID>9044</b:OID>
+                            <b:SimpleType>type_adressekomponeneter</b:SimpleType>
+                        </b:Type>
+                        <b:TypeCodeValue>E_TLF</b:TypeCodeValue>
+                    </b:ElectronicAddress>
+                    <b:ElectronicAddress>
+                        <b:Address>http://www.nhn.no</b:Address>
+                        <b:Inherited>true</b:Inherited>
+                        <b:LastChanged>2014-12-03T09:47:06.63</b:LastChanged>
+                        <b:Type>
+                            <b:Active>true</b:Active>
+                            <b:CodeText>Hjemmeside</b:CodeText>
+                            <b:CodeValue>E_URL</b:CodeValue>
+                            <b:LongDescription i:nil="true"/>
+                            <b:OID>9044</b:OID>
+                            <b:SimpleType>type_adressekomponeneter</b:SimpleType>
+                        </b:Type>
+                        <b:TypeCodeValue>E_URL</b:TypeCodeValue>
+                    </b:ElectronicAddress>
+                    <b:ElectronicAddress>
+                        <b:Address>dette-er-en-fhir-adresse</b:Address>
+                        <b:Inherited>true</b:Inherited>
+                        <b:LastChanged>2022-02-07T14:19:58.03</b:LastChanged>
+                        <b:Type>
+                            <b:Active>true</b:Active>
+                            <b:CodeText>FHIR-Endepunkt</b:CodeText>
+                            <b:CodeValue>E_FHIR</b:CodeValue>
+                            <b:LongDescription/>
+                            <b:OID>9044</b:OID>
+                            <b:SimpleType>type_adressekomponeneter</b:SimpleType>
+                        </b:Type>
+                        <b:TypeCodeValue>E_FHIR</b:TypeCodeValue>
+                    </b:ElectronicAddress>
+                </ElectronicAddresses>
+                <FutureElectronicAddresses xmlns:b="http://register.nhn.no/Common"/>
+                <HerId>8094866</HerId>
+                <IsValidCommunicationParty>true</IsValidCommunicationParty>
+                <LastChanged>2025-02-27T15:43:36.56</LastChanged>
+                <Municipality xmlns:b="http://register.nhn.no/Common">
+                    <b:Active>true</b:Active>
+                    <b:CodeText>TRONDHEIM</b:CodeText>
+                    <b:CodeValue>5001</b:CodeValue>
+                    <b:LongDescription i:nil="true"/>
+                    <b:OID>3402</b:OID>
+                    <b:SimpleType>kommunenummer</b:SimpleType>
+                </Municipality>
+                <Name>Meldingsvalidering</Name>
+                <ParentBusinessType xmlns:b="http://register.nhn.no/Common">
+                    <b:Active>true</b:Active>
+                    <b:CodeText>Statlig forvaltning</b:CodeText>
+                    <b:CodeValue>113</b:CodeValue>
+                    <b:LongDescription i:nil="true"/>
+                    <b:OID>9040</b:OID>
+                    <b:SimpleType>helsevirksomhet_type</b:SimpleType>
+                </ParentBusinessType>
+                <ParentHerId>112374</ParentHerId>
+                <ParentName>Norsk Helsenett SF</ParentName>
+                <ParentOrganizationNumber>994598759</ParentOrganizationNumber>
+                <PhysicalAddresses xmlns:b="http://register.nhn.no/Common">
+                    <b:PhysicalAddress>
+                        <b:City>TRONDHEIM</b:City>
+                        <b:Country>
+                            <b:Active>true</b:Active>
+                            <b:CodeText>Norge</b:CodeText>
+                            <b:CodeValue>NO</b:CodeValue>
+                            <b:LongDescription i:nil="true"/>
+                            <b:OID>9043</b:OID>
+                            <b:SimpleType>landkoder</b:SimpleType>
+                        </b:Country>
+                        <b:Description/>
+                        <b:Inherited>true</b:Inherited>
+                        <b:LastChanged>2025-01-15T15:55:44.89</b:LastChanged>
+                        <b:PostalCode>7435</b:PostalCode>
+                        <b:Postbox/>
+                        <b:StreetAddress>Postboks 6123</b:StreetAddress>
+                        <b:Type>
+                            <b:Active>true</b:Active>
+                            <b:CodeText>Postadresse</b:CodeText>
+                            <b:CodeValue>PST</b:CodeValue>
+                            <b:LongDescription i:nil="true"/>
+                            <b:OID>3401</b:OID>
+                            <b:SimpleType>adressetype</b:SimpleType>
+                        </b:Type>
+                        <b:TypeCodeValue>PST</b:TypeCodeValue>
+                    </b:PhysicalAddress>
+                    <b:PhysicalAddress>
+                        <b:City>TRONDHEIM</b:City>
+                        <b:Country>
+                            <b:Active>true</b:Active>
+                            <b:CodeText>Norge</b:CodeText>
+                            <b:CodeValue>NO</b:CodeValue>
+                            <b:LongDescription i:nil="true"/>
+                            <b:OID>9043</b:OID>
+                            <b:SimpleType>landkoder</b:SimpleType>
+                        </b:Country>
+                        <b:Description/>
+                        <b:Inherited>true</b:Inherited>
+                        <b:LastChanged>2025-01-15T15:55:44.89</b:LastChanged>
+                        <b:PostalCode>7030</b:PostalCode>
+                        <b:Postbox/>
+                        <b:StreetAddress>Abels gate 9</b:StreetAddress>
+                        <b:Type>
+                            <b:Active>true</b:Active>
+                            <b:CodeText>Besøksadresse</b:CodeText>
+                            <b:CodeValue>RES</b:CodeValue>
+                            <b:LongDescription i:nil="true"/>
+                            <b:OID>3401</b:OID>
+                            <b:SimpleType>adressetype</b:SimpleType>
+                        </b:Type>
+                        <b:TypeCodeValue>RES</b:TypeCodeValue>
+                    </b:PhysicalAddress>
+                </PhysicalAddresses>
+                <ServerTime>2025-06-03T00:59:58.9702064+02:00</ServerTime>
+                <Type>Service</Type>
+                <Valid xmlns:b="http://register.nhn.no/Common">
+                    <b:From>2016-09-20T00:00:00</b:From>
+                    <b:To>2043-09-08T00:00:00</b:To>
+                </Valid>
+                <Code xmlns:b="http://register.nhn.no/Common">
+                    <b:Active>true</b:Active>
+                    <b:CodeText>Meldingsvalidering</b:CodeText>
+                    <b:CodeValue>6</b:CodeValue>
+                    <b:LongDescription>Testmeldinger til meldingsvalideringstjeneste hos Norsk helsenett
+                    </b:LongDescription>
+                    <b:OID>8658</b:OID>
+                    <b:SimpleType>meldingsmottak_i_offentlig_forvaltning</b:SimpleType>
+                </Code>
+                <CoverageAreas/>
+                <Description>Denne brukes til Fullvalidering av fagmeldinger i DRIFT for https://samsvar.nhn.no.
+                </Description>
+                <LocationDescription>Fullvalidering Test- og godkjenningsordning</LocationDescription>
+                <Properties xmlns:b="http://register.nhn.no/Common"/>
+            </GetCommunicationPartyDetailsResult>
+        </GetCommunicationPartyDetailsResponse>
+    </s:Body>
+</s:Envelope>

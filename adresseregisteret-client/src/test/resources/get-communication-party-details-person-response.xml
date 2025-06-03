@@ -1,0 +1,403 @@
+<s:Envelope xmlns:s="http://www.w3.org/2003/05/soap-envelope" xmlns:a="http://www.w3.org/2005/08/addressing">
+    <s:Body>
+        <GetCommunicationPartyDetailsResponse xmlns="http://register.nhn.no/CommunicationParty">
+            <GetCommunicationPartyDetailsResult i:type="OrganizationPerson"
+                                                xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+                <Active>true</Active>
+                <CoverageAreaType i:nil="true" xmlns:b="http://register.nhn.no/Common"/>
+                <DisplayName>Anne-Marie Bach</DisplayName>
+                <ElectronicAddresses xmlns:b="http://register.nhn.no/Common">
+                    <b:ElectronicAddress>
+                        <b:Address>awibej@hotmail.com</b:Address>
+                        <b:Inherited>false</b:Inherited>
+                        <b:LastChanged>2018-02-14T10:25:02.45</b:LastChanged>
+                        <b:Type>
+                            <b:Active>true</b:Active>
+                            <b:CodeText>Epost-adresse</b:CodeText>
+                            <b:CodeValue>E_EPO</b:CodeValue>
+                            <b:LongDescription i:nil="true"/>
+                            <b:OID>9044</b:OID>
+                            <b:SimpleType>type_adressekomponeneter</b:SimpleType>
+                        </b:Type>
+                        <b:TypeCodeValue>E_EPO</b:TypeCodeValue>
+                    </b:ElectronicAddress>
+                    <b:ElectronicAddress>
+                        <b:Address>53437080</b:Address>
+                        <b:Inherited>true</b:Inherited>
+                        <b:LastChanged>2018-01-04T16:24:19.88</b:LastChanged>
+                        <b:Type>
+                            <b:Active>true</b:Active>
+                            <b:CodeText>Telefonnummer</b:CodeText>
+                            <b:CodeValue>E_TLF</b:CodeValue>
+                            <b:LongDescription i:nil="true"/>
+                            <b:OID>9044</b:OID>
+                            <b:SimpleType>type_adressekomponeneter</b:SimpleType>
+                        </b:Type>
+                        <b:TypeCodeValue>E_TLF</b:TypeCodeValue>
+                    </b:ElectronicAddress>
+                    <b:ElectronicAddress>
+                        <b:Address>41763738</b:Address>
+                        <b:Inherited>true</b:Inherited>
+                        <b:LastChanged>2020-01-27T10:31:15.37</b:LastChanged>
+                        <b:Type>
+                            <b:Active>true</b:Active>
+                            <b:CodeText>Sentralbordnummer</b:CodeText>
+                            <b:CodeValue>E_CEN</b:CodeValue>
+                            <b:LongDescription i:nil="true"/>
+                            <b:OID>9044</b:OID>
+                            <b:SimpleType>type_adressekomponeneter</b:SimpleType>
+                        </b:Type>
+                        <b:TypeCodeValue>E_CEN</b:TypeCodeValue>
+                    </b:ElectronicAddress>
+                    <b:ElectronicAddress>
+                        <b:Address>http://www.tysnes.kommune.no/tysnes-legekontor.5561952-329522.html</b:Address>
+                        <b:Inherited>true</b:Inherited>
+                        <b:LastChanged>2016-08-04T09:28:31.6133333</b:LastChanged>
+                        <b:Type>
+                            <b:Active>true</b:Active>
+                            <b:CodeText>Hjemmeside</b:CodeText>
+                            <b:CodeValue>E_URL</b:CodeValue>
+                            <b:LongDescription i:nil="true"/>
+                            <b:OID>9044</b:OID>
+                            <b:SimpleType>type_adressekomponeneter</b:SimpleType>
+                        </b:Type>
+                        <b:TypeCodeValue>E_URL</b:TypeCodeValue>
+                    </b:ElectronicAddress>
+                    <b:ElectronicAddress>
+                        <b:Address>tysnes-kommune@edi.nhn.no</b:Address>
+                        <b:Inherited>true</b:Inherited>
+                        <b:LastChanged>2016-08-04T09:28:31.6133333</b:LastChanged>
+                        <b:Type>
+                            <b:Active>true</b:Active>
+                            <b:CodeText>EDI (Standardisert elektronisk melding)</b:CodeText>
+                            <b:CodeValue>E_EDI</b:CodeValue>
+                            <b:LongDescription i:nil="true"/>
+                            <b:OID>9044</b:OID>
+                            <b:SimpleType>type_adressekomponeneter</b:SimpleType>
+                        </b:Type>
+                        <b:TypeCodeValue>E_EDI</b:TypeCodeValue>
+                    </b:ElectronicAddress>
+                    <b:ElectronicAddress>
+                        <b:Address>53 43 70 81</b:Address>
+                        <b:Inherited>true</b:Inherited>
+                        <b:LastChanged>2016-08-04T09:28:31.6133333</b:LastChanged>
+                        <b:Type>
+                            <b:Active>true</b:Active>
+                            <b:CodeText>Faxnummer</b:CodeText>
+                            <b:CodeValue>E_FAX</b:CodeValue>
+                            <b:LongDescription i:nil="true"/>
+                            <b:OID>9044</b:OID>
+                            <b:SimpleType>type_adressekomponeneter</b:SimpleType>
+                        </b:Type>
+                        <b:TypeCodeValue>E_FAX</b:TypeCodeValue>
+                    </b:ElectronicAddress>
+                </ElectronicAddresses>
+                <FutureElectronicAddresses xmlns:b="http://register.nhn.no/Common"/>
+                <HerId>115522</HerId>
+                <IsValidCommunicationParty>true</IsValidCommunicationParty>
+                <LastChanged>2025-02-27T18:46:48.42</LastChanged>
+                <Municipality xmlns:b="http://register.nhn.no/Common">
+                    <b:Active>true</b:Active>
+                    <b:CodeText>TYSNES</b:CodeText>
+                    <b:CodeValue>4616</b:CodeValue>
+                    <b:LongDescription i:nil="true"/>
+                    <b:OID>3402</b:OID>
+                    <b:SimpleType>kommunenummer</b:SimpleType>
+                </Municipality>
+                <Name>Anne-Marie Bach</Name>
+                <ParentBusinessType xmlns:b="http://register.nhn.no/Common">
+                    <b:Active>true</b:Active>
+                    <b:CodeText>Fastlege og annen privat virksomhet som yter helsetjenester</b:CodeText>
+                    <b:CodeValue>103</b:CodeValue>
+                    <b:LongDescription i:nil="true"/>
+                    <b:OID>9040</b:OID>
+                    <b:SimpleType>helsevirksomhet_type</b:SimpleType>
+                </ParentBusinessType>
+                <ParentHerId>84556</ParentHerId>
+                <ParentName>Tysnes Helsesenter</ParentName>
+                <ParentOrganizationNumber>973942425</ParentOrganizationNumber>
+                <PhysicalAddresses xmlns:b="http://register.nhn.no/Common">
+                    <b:PhysicalAddress>
+                        <b:City>UGGDAL</b:City>
+                        <b:Country i:nil="true"/>
+                        <b:Description/>
+                        <b:Inherited>false</b:Inherited>
+                        <b:LastChanged>2025-01-15T19:13:54.66</b:LastChanged>
+                        <b:PostalCode>5685</b:PostalCode>
+                        <b:Postbox/>
+                        <b:StreetAddress>uggdalsvegen 301</b:StreetAddress>
+                        <b:Type>
+                            <b:Active>true</b:Active>
+                            <b:CodeText>Postadresse</b:CodeText>
+                            <b:CodeValue>PST</b:CodeValue>
+                            <b:LongDescription i:nil="true"/>
+                            <b:OID>3401</b:OID>
+                            <b:SimpleType>adressetype</b:SimpleType>
+                        </b:Type>
+                        <b:TypeCodeValue>PST</b:TypeCodeValue>
+                    </b:PhysicalAddress>
+                </PhysicalAddresses>
+                <ServerTime>2025-06-03T05:51:33.4086286+02:00</ServerTime>
+                <Type>Person</Type>
+                <Valid xmlns:b="http://register.nhn.no/Common">
+                    <b:From>2020-09-22T00:00:00</b:From>
+                    <b:To>9999-12-31T23:59:59.997</b:To>
+                </Valid>
+                <Organizations>
+                    <Organization>
+                        <Active>true</Active>
+                        <CoverageAreaType i:nil="true" xmlns:b="http://register.nhn.no/Common"/>
+                        <DisplayName>Tysnes Helsesenter</DisplayName>
+                        <ElectronicAddresses xmlns:b="http://register.nhn.no/Common">
+                            <b:ElectronicAddress>
+                                <b:Address>53437080</b:Address>
+                                <b:Inherited>false</b:Inherited>
+                                <b:LastChanged>2018-01-04T16:24:19.88</b:LastChanged>
+                                <b:Type>
+                                    <b:Active>true</b:Active>
+                                    <b:CodeText>Telefonnummer</b:CodeText>
+                                    <b:CodeValue>E_TLF</b:CodeValue>
+                                    <b:LongDescription i:nil="true"/>
+                                    <b:OID>9044</b:OID>
+                                    <b:SimpleType>type_adressekomponeneter</b:SimpleType>
+                                </b:Type>
+                                <b:TypeCodeValue>E_TLF</b:TypeCodeValue>
+                            </b:ElectronicAddress>
+                            <b:ElectronicAddress>
+                                <b:Address>41763738</b:Address>
+                                <b:Inherited>false</b:Inherited>
+                                <b:LastChanged>2020-01-27T10:31:15.37</b:LastChanged>
+                                <b:Type>
+                                    <b:Active>true</b:Active>
+                                    <b:CodeText>Sentralbordnummer</b:CodeText>
+                                    <b:CodeValue>E_CEN</b:CodeValue>
+                                    <b:LongDescription i:nil="true"/>
+                                    <b:OID>9044</b:OID>
+                                    <b:SimpleType>type_adressekomponeneter</b:SimpleType>
+                                </b:Type>
+                                <b:TypeCodeValue>E_CEN</b:TypeCodeValue>
+                            </b:ElectronicAddress>
+                            <b:ElectronicAddress>
+                                <b:Address>http://www.tysnes.kommune.no/tysnes-legekontor.5561952-329522.html
+                                </b:Address>
+                                <b:Inherited>false</b:Inherited>
+                                <b:LastChanged>2016-08-04T09:28:31.6133333</b:LastChanged>
+                                <b:Type>
+                                    <b:Active>true</b:Active>
+                                    <b:CodeText>Hjemmeside</b:CodeText>
+                                    <b:CodeValue>E_URL</b:CodeValue>
+                                    <b:LongDescription i:nil="true"/>
+                                    <b:OID>9044</b:OID>
+                                    <b:SimpleType>type_adressekomponeneter</b:SimpleType>
+                                </b:Type>
+                                <b:TypeCodeValue>E_URL</b:TypeCodeValue>
+                            </b:ElectronicAddress>
+                            <b:ElectronicAddress>
+                                <b:Address>tysnes-kommune@edi.nhn.no</b:Address>
+                                <b:Inherited>false</b:Inherited>
+                                <b:LastChanged>2016-08-04T09:28:31.6133333</b:LastChanged>
+                                <b:Type>
+                                    <b:Active>true</b:Active>
+                                    <b:CodeText>EDI (Standardisert elektronisk melding)</b:CodeText>
+                                    <b:CodeValue>E_EDI</b:CodeValue>
+                                    <b:LongDescription i:nil="true"/>
+                                    <b:OID>9044</b:OID>
+                                    <b:SimpleType>type_adressekomponeneter</b:SimpleType>
+                                </b:Type>
+                                <b:TypeCodeValue>E_EDI</b:TypeCodeValue>
+                            </b:ElectronicAddress>
+                            <b:ElectronicAddress>
+                                <b:Address>britt.mehammer@tysnes.kommune.no</b:Address>
+                                <b:Inherited>false</b:Inherited>
+                                <b:LastChanged>2016-08-04T09:28:31.6133333</b:LastChanged>
+                                <b:Type>
+                                    <b:Active>true</b:Active>
+                                    <b:CodeText>Epost-adresse</b:CodeText>
+                                    <b:CodeValue>E_EPO</b:CodeValue>
+                                    <b:LongDescription i:nil="true"/>
+                                    <b:OID>9044</b:OID>
+                                    <b:SimpleType>type_adressekomponeneter</b:SimpleType>
+                                </b:Type>
+                                <b:TypeCodeValue>E_EPO</b:TypeCodeValue>
+                            </b:ElectronicAddress>
+                            <b:ElectronicAddress>
+                                <b:Address>53 43 70 81</b:Address>
+                                <b:Inherited>false</b:Inherited>
+                                <b:LastChanged>2016-08-04T09:28:31.6133333</b:LastChanged>
+                                <b:Type>
+                                    <b:Active>true</b:Active>
+                                    <b:CodeText>Faxnummer</b:CodeText>
+                                    <b:CodeValue>E_FAX</b:CodeValue>
+                                    <b:LongDescription i:nil="true"/>
+                                    <b:OID>9044</b:OID>
+                                    <b:SimpleType>type_adressekomponeneter</b:SimpleType>
+                                </b:Type>
+                                <b:TypeCodeValue>E_FAX</b:TypeCodeValue>
+                            </b:ElectronicAddress>
+                        </ElectronicAddresses>
+                        <FutureElectronicAddresses xmlns:b="http://register.nhn.no/Common"/>
+                        <HerId>84556</HerId>
+                        <IsValidCommunicationParty>false</IsValidCommunicationParty>
+                        <LastChanged>2025-02-27T16:25:32.54</LastChanged>
+                        <Municipality xmlns:b="http://register.nhn.no/Common">
+                            <b:Active>true</b:Active>
+                            <b:CodeText>TYSNES</b:CodeText>
+                            <b:CodeValue>4616</b:CodeValue>
+                            <b:LongDescription i:nil="true"/>
+                            <b:OID>3402</b:OID>
+                            <b:SimpleType>kommunenummer</b:SimpleType>
+                        </Municipality>
+                        <Name>KOMMUNELEGEN I TYSNES</Name>
+                        <ParentBusinessType i:nil="true" xmlns:b="http://register.nhn.no/Common"/>
+                        <ParentHerId>-1</ParentHerId>
+                        <ParentName i:nil="true"/>
+                        <ParentOrganizationNumber>-1</ParentOrganizationNumber>
+                        <PhysicalAddresses xmlns:b="http://register.nhn.no/Common">
+                            <b:PhysicalAddress>
+                                <b:City>UGGDAL</b:City>
+                                <b:Country i:nil="true"/>
+                                <b:Description/>
+                                <b:Inherited>false</b:Inherited>
+                                <b:LastChanged>2025-01-15T13:38:23.27</b:LastChanged>
+                                <b:PostalCode>5685</b:PostalCode>
+                                <b:Postbox/>
+                                <b:StreetAddress>Tysnes Legekontor, Uggdalsvegen 301</b:StreetAddress>
+                                <b:Type>
+                                    <b:Active>true</b:Active>
+                                    <b:CodeText>Postadresse</b:CodeText>
+                                    <b:CodeValue>PST</b:CodeValue>
+                                    <b:LongDescription i:nil="true"/>
+                                    <b:OID>3401</b:OID>
+                                    <b:SimpleType>adressetype</b:SimpleType>
+                                </b:Type>
+                                <b:TypeCodeValue>PST</b:TypeCodeValue>
+                            </b:PhysicalAddress>
+                        </PhysicalAddresses>
+                        <ServerTime>2025-06-03T05:51:33.4137876+02:00</ServerTime>
+                        <Type>Organization</Type>
+                        <Valid xmlns:b="http://register.nhn.no/Common">
+                            <b:From>2020-09-22T00:00:00</b:From>
+                            <b:To>9999-12-31T23:59:59.997</b:To>
+                        </Valid>
+                        <BusinessType xmlns:b="http://register.nhn.no/Common">
+                            <b:Active>true</b:Active>
+                            <b:CodeText>Fastlege og annen privat virksomhet som yter helsetjenester</b:CodeText>
+                            <b:CodeValue>103</b:CodeValue>
+                            <b:LongDescription i:nil="true"/>
+                            <b:OID>9040</b:OID>
+                            <b:SimpleType>helsevirksomhet_type</b:SimpleType>
+                        </BusinessType>
+                        <IndustryCodes xmlns:b="http://register.nhn.no/Common">
+                            <b:Code>
+                                <b:Active>true</b:Active>
+                                <b:CodeText>Allmenn legetjeneste</b:CodeText>
+                                <b:CodeValue>86.211</b:CodeValue>
+                                <b:LongDescription i:nil="true"/>
+                                <b:OID>0</b:OID>
+                                <b:SimpleType>naringskode</b:SimpleType>
+                            </b:Code>
+                        </IndustryCodes>
+                        <OrganizationNumber>973942425</OrganizationNumber>
+                        <People/>
+                        <Properties xmlns:b="http://register.nhn.no/Common"/>
+                        <Services/>
+                    </Organization>
+                </Organizations>
+                <Person xmlns:b="http://register.nhn.no/HPR">
+                    <b:BirthDate>1985-03-18T00:00:00</b:BirthDate>
+                    <b:CitizenId xmlns:c="http://register.nhn.no/Common">
+                        <c:CitizenIdType>SSN</c:CitizenIdType>
+                        <c:Id>180385XXXXX</c:Id>
+                        <c:Sex>
+                            <c:Active>true</c:Active>
+                            <c:CodeText>Kvinne</c:CodeText>
+                            <c:CodeValue>2</c:CodeValue>
+                            <c:LongDescription i:nil="true"/>
+                            <c:OID>3101</c:OID>
+                            <c:SimpleType>kjonn</c:SimpleType>
+                        </c:Sex>
+                    </b:CitizenId>
+                    <b:FirstName>Anne-Marie</b:FirstName>
+                    <b:HPRInformation>
+                        <b:Authorizations>
+                            <b:Authorization>
+                                <b:LastChanged>2025-06-03T05:51:33.4053149</b:LastChanged>
+                                <b:Profession xmlns:c="http://register.nhn.no/Common">
+                                    <c:Active>true</c:Active>
+                                    <c:CodeText>Lege</c:CodeText>
+                                    <c:CodeValue>LE</c:CodeValue>
+                                    <c:LongDescription i:nil="true"/>
+                                    <c:OID>9060</c:OID>
+                                    <c:SimpleType>kategori_helsepersonell</c:SimpleType>
+                                </b:Profession>
+                                <b:Requisition>
+                                    <b:LastChanged>2025-06-03T05:51:33.4053109</b:LastChanged>
+                                    <b:Type xmlns:c="http://register.nhn.no/Common">
+                                        <c:Active>true</c:Active>
+                                        <c:CodeText>Full rekvisisjonsrett</c:CodeText>
+                                        <c:CodeValue>1</c:CodeValue>
+                                        <c:LongDescription i:nil="true"/>
+                                        <c:OID>7701</c:OID>
+                                        <c:SimpleType>helsepersonellregisterets_hpr_klassifikasjon_av_rekvisisjonsrett
+                                        </c:SimpleType>
+                                    </b:Type>
+                                    <b:Valid xmlns:c="http://register.nhn.no/Common">
+                                        <c:From>2013-01-24T00:00:00</c:From>
+                                        <c:To>2065-03-18T00:00:00</c:To>
+                                    </b:Valid>
+                                </b:Requisition>
+                                <b:Specialities/>
+                                <b:Type xmlns:c="http://register.nhn.no/Common">
+                                    <c:Active>true</c:Active>
+                                    <c:CodeText>Autorisasjon</c:CodeText>
+                                    <c:CodeValue>1</c:CodeValue>
+                                    <c:LongDescription i:nil="true"/>
+                                    <c:OID>7704</c:OID>
+                                    <c:SimpleType>helsepersonellregisterets_hpr_klassifikasjon_av_autorisasjoner
+                                    </c:SimpleType>
+                                </b:Type>
+                                <b:Valid xmlns:c="http://register.nhn.no/Common">
+                                    <c:From>2013-01-24T00:00:00</c:From>
+                                    <c:To>2065-03-18T00:00:00</c:To>
+                                </b:Valid>
+                            </b:Authorization>
+                        </b:Authorizations>
+                        <b:HPRNo>7480342</b:HPRNo>
+                        <b:HPRNumber>7480342</b:HPRNumber>
+                        <b:LastChanged>2025-06-03T05:51:33.4052798</b:LastChanged>
+                        <b:SpecialCompetences>
+                            <b:SpecialCompetence>
+                                <b:Type xmlns:c="http://register.nhn.no/Common">
+                                    <c:Active>true</c:Active>
+                                    <c:CodeText>Allmenlege med trygderefusjon</c:CodeText>
+                                    <c:CodeValue>3</c:CodeValue>
+                                    <c:LongDescription i:nil="true"/>
+                                    <c:OID>7702</c:OID>
+                                    <c:SimpleType>helsepersonellregisterets_hpr_klassifikasjon_av_spesialkompetanse
+                                    </c:SimpleType>
+                                </b:Type>
+                                <b:Valid xmlns:c="http://register.nhn.no/Common">
+                                    <c:From>2017-03-28T00:00:00</c:From>
+                                    <c:To>2065-03-18T00:00:00</c:To>
+                                </b:Valid>
+                            </b:SpecialCompetence>
+                        </b:SpecialCompetences>
+                    </b:HPRInformation>
+                    <b:LastChanged>2020-10-27T05:49:14.547</b:LastChanged>
+                    <b:LastName>Bach</b:LastName>
+                    <b:MiddleName i:nil="true"/>
+                    <b:Sex xmlns:c="http://register.nhn.no/Common">
+                        <c:Active>true</c:Active>
+                        <c:CodeText>Mann</c:CodeText>
+                        <c:CodeValue>1</c:CodeValue>
+                        <c:LongDescription i:nil="true"/>
+                        <c:OID>3101</c:OID>
+                        <c:SimpleType>kjonn</c:SimpleType>
+                    </b:Sex>
+                </Person>
+                <Properties xmlns:b="http://register.nhn.no/Common"/>
+                <Title>Lege</Title>
+            </GetCommunicationPartyDetailsResult>
+        </GetCommunicationPartyDetailsResponse>
+    </s:Body>
+</s:Envelope>

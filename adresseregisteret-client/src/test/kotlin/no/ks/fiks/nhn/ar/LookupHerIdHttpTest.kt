@@ -4,6 +4,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.*
 import io.kotest.assertions.asClue
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.StringSpec
+import io.kotest.matchers.collections.shouldHaveSingleElement
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.nulls.beNull
 import io.kotest.matchers.should
@@ -24,6 +25,96 @@ class LookupHerIdHttpTest : StringSpec() {
         }
 
     init {
+
+        "Test lookup organzation" {
+            val herId = nextInt(1, 100000)
+            stubResponse(herId, "get-communication-party-details-organzation-response.xml")
+
+            AdresseregisteretClient(Environment(wireMock.baseUrl), Credentials(UUID.randomUUID().toString(), UUID.randomUUID().toString()))
+                .lookupHerId(herId)
+                .asClue { party ->
+                    party.shouldBeInstanceOf<OrganizationCommunicationParty>()
+                    party.herId shouldBe 8142987
+                    party.name shouldBe "KS-DIGITALE FELLESTJENESTER AS"
+                    party.parent should beNull()
+                    party.physicalAddresses shouldHaveSize 2
+                    with(party.physicalAddresses.single { it.type == AddressType.POSTADRESSE }) {
+                        type shouldBe AddressType.POSTADRESSE
+                        streetAddress shouldBe "Haakon VIIs gate 9"
+                        postbox should beNull()
+                        postalCode shouldBe "0161"
+                        city shouldBe "OSLO"
+                        country should beNull()
+                    }
+                    with(party.physicalAddresses.single { it.type == AddressType.BESOKSADRESSE }) {
+                        type shouldBe AddressType.BESOKSADRESSE
+                        streetAddress shouldBe "Haakon VIIs gate 9"
+                        postbox should beNull()
+                        postalCode shouldBe "0161"
+                        city shouldBe "OSLO"
+                        country should beNull()
+                    }
+                }
+        }
+
+        "Test lookup person" {
+            val herId = nextInt(1, 100000)
+            stubResponse(herId, "get-communication-party-details-person-response.xml")
+
+            AdresseregisteretClient(Environment(wireMock.baseUrl), Credentials(UUID.randomUUID().toString(), UUID.randomUUID().toString()))
+                .lookupHerId(herId)
+                .asClue { party ->
+                    party.shouldBeInstanceOf<PersonCommunicationParty>()
+                    party.herId shouldBe 115522
+                    party.name shouldBe "Anne-Marie Bach"
+                    party.parent shouldNot beNull()
+                    party.parent!!.herId shouldBe 84556
+                    party.parent!!.name shouldBe "Tysnes Helsesenter"
+                    party.physicalAddresses shouldHaveSize 1
+                    with(party.physicalAddresses.single()) {
+                        type shouldBe AddressType.POSTADRESSE
+                        streetAddress shouldBe "uggdalsvegen 301"
+                        postbox should beNull()
+                        postalCode shouldBe "5685"
+                        city shouldBe "UGGDAL"
+                        country should beNull()
+                    }
+                }
+        }
+
+        "Test lookup service" {
+            val herId = nextInt(1, 100000)
+            stubResponse(herId, "get-communication-party-details-service-response.xml")
+
+            AdresseregisteretClient(Environment(wireMock.baseUrl), Credentials(UUID.randomUUID().toString(), UUID.randomUUID().toString()))
+                .lookupHerId(herId)
+                .asClue { party ->
+                    party.shouldBeInstanceOf<ServiceCommunicationParty>()
+                    party.herId shouldBe 8094866
+                    party.name shouldBe "Meldingsvalidering"
+                    party.parent shouldNot beNull()
+                    party.parent!!.herId shouldBe 112374
+                    party.parent!!.name shouldBe "Norsk Helsenett SF"
+                    party.physicalAddresses shouldHaveSize 2
+                    with(party.physicalAddresses.single { it.type == AddressType.POSTADRESSE }) {
+                        type shouldBe AddressType.POSTADRESSE
+                        streetAddress shouldBe "Postboks 6123"
+                        postbox should beNull()
+                        postalCode shouldBe "7435"
+                        city shouldBe "TRONDHEIM"
+                        country shouldBe "Norge"
+                    }
+                    with(party.physicalAddresses.single { it.type == AddressType.BESOKSADRESSE }) {
+                        type shouldBe AddressType.BESOKSADRESSE
+                        streetAddress shouldBe "Abels gate 9"
+                        postbox should beNull()
+                        postalCode shouldBe "7030"
+                        city shouldBe "TRONDHEIM"
+                        country shouldBe "Norge"
+                    }
+                }
+        }
+
         "Test lookup without parent" {
             val herId = nextInt(1, 100000)
             stubResponse(herId, "get-communication-party-details-no-parent-response.xml")
@@ -33,6 +124,7 @@ class LookupHerIdHttpTest : StringSpec() {
                 .asClue {
                     it.shouldBeInstanceOf<OrganizationCommunicationParty>()
                     it.herId shouldBe 12345
+                    it.name shouldBe "ET LEGEKONTOR"
                     it.parent should beNull()
                     it.physicalAddresses shouldHaveSize 1
                     with(it.physicalAddresses.single()) {
@@ -56,6 +148,7 @@ class LookupHerIdHttpTest : StringSpec() {
                 .asClue {
                     it.shouldBeInstanceOf<OrganizationCommunicationParty>()
                     it.herId shouldBe 55555
+                    it.name shouldBe "ET LEGEKONTOR"
                     it.parent shouldNot beNull()
                     it.parent!!.herId shouldBe 987654
                     it.parent!!.name shouldBe "Overordnet Organisasjon"
