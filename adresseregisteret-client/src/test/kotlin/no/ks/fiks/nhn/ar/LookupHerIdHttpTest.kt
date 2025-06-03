@@ -36,7 +36,7 @@ class LookupHerIdHttpTest : StringSpec() {
                     it.parent should beNull()
                     it.physicalAddresses shouldHaveSize 1
                     with(it.physicalAddresses.single()) {
-                        type shouldBe Adressetetype.POSTADRESSE
+                        type shouldBe AddressType.POSTADRESSE
                         streetAddress shouldBe "Testveien 123"
                         postbox should beNull()
                         postalCode shouldBe "5020"
@@ -61,7 +61,7 @@ class LookupHerIdHttpTest : StringSpec() {
                     it.parent!!.name shouldBe "Overordnet Organisasjon"
                     it.physicalAddresses shouldHaveSize 1
                     with(it.physicalAddresses.single()) {
-                        type shouldBe Adressetetype.POSTADRESSE
+                        type shouldBe AddressType.POSTADRESSE
                         streetAddress shouldBe "Rådhusplassen 1"
                         postbox should beNull()
                         postalCode shouldBe "0037"

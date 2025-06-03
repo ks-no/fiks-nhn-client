@@ -108,8 +108,8 @@ class LookupHerIdTest : StringSpec({
     }
 
     "Unknown address type should map to null" {
-        val type1 = Adressetetype.entries.random()
-        val type2 = Adressetetype.entries.random()
+        val type1 = AddressType.entries.random()
+        val type2 = AddressType.entries.random()
 
         buildClient(
             setupServiceMock(
@@ -303,7 +303,7 @@ private fun buildService(
 }
 
 private fun buildPhysicalAddress(
-    type: String? = Adressetetype.entries.random().code,
+    type: String? = AddressType.entries.random().code,
     streetAddress: String? = buildRandomString(),
     postbox: String? = UUID.randomUUID().toString(),
     postalCode: Int? = nextInt(0, 10000),
