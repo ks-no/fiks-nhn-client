@@ -66,7 +66,7 @@ class AdresseregisteretClient(
     private fun NhnCommunicationParty.convertPhysicalAddresses() = physicalAddresses.value?.physicalAddress
         ?.map { address ->
             PhysicalAddress(
-                type = Adressetetype.fromCode(address.type.value?.codeValue?.value),
+                type = AddressType.fromCode(address.type.value?.codeValue?.value),
                 streetAddress = address.streetAddress.valueNotBlank(),
                 postbox = address.postbox.valueNotBlank(),
                 postalCode = address.postalCode?.toString()?.padStart(4, '0'),

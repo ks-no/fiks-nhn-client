@@ -49,7 +49,7 @@ data class CommunicationPartyParent(
 )
 
 data class PhysicalAddress(
-    val type: Adressetetype?,
+    val type: AddressType?,
     val streetAddress: String?,
     val postbox: String?,
     val postalCode: String?,
@@ -59,7 +59,7 @@ data class PhysicalAddress(
 
 
 // Kodeverk 3401
-enum class Adressetetype(
+enum class AddressType(
     val code: String,
 ) {
     UBRUKELIG_ADRESSE("BAD"),
@@ -75,6 +75,6 @@ enum class Adressetetype(
     companion object {
         private val codeToType = entries.associateBy { it.code }
 
-        fun fromCode(code: String?): Adressetetype? = code?.let { codeToType[it] }
+        fun fromCode(code: String?): AddressType? = code?.let { codeToType[it] }
     }
 }
