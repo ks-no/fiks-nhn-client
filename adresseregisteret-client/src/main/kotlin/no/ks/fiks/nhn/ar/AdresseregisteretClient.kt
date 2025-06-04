@@ -34,7 +34,7 @@ class AdresseregisteretClient(
 
     fun lookupPostalAddress(herId: Int): PhysicalAddress? =
         lookupHerId(herId)?.let { communicationParty ->
-            require(communicationParty.physicalAddresses.isNotEmpty()) {
+            if (communicationParty.physicalAddresses.isEmpty()) {
                 throw AddressNotFoundException("Could not find any physicalAdresses related to herId")
             }
             log.debug("Found ${communicationParty.physicalAddresses.size} addresses for $herId")

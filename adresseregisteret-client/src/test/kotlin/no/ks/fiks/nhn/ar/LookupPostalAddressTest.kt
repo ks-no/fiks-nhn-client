@@ -28,36 +28,12 @@ class LookupPostalAddressTest : FreeSpec(){
           }
       }
 
-      "Verify that communicationparty with no relevant physicalAddress throws AddressNotFoundException" {
-          val organizationPerson =
-              buildOrganizationPerson(
-                  addresses =
-                      listOf(
-                          buildPhysicalAddress(type = AddressType.UBRUKELIG_ADRESSE.code),
-                          buildPhysicalAddress(type = AddressType.ARBEIDSADRESSE.code),
-                          buildPhysicalAddress(type = AddressType.MIDLERTIDIG_ADRESSE.code),
-                          buildPhysicalAddress(type = AddressType.BOSTEDSADRESSE.code),
-                          buildPhysicalAddress(type = AddressType.FOLKEREGISTERADRESSE.code),
-                          buildPhysicalAddress(type = AddressType.FERIEADRESSE.code),
-                          buildPhysicalAddress(type = AddressType.FAKTURERINGSADRESSE.code),
-                      )
-              )
-          assertThrows<AddressNotFoundException> {
-              buildClient(setupServiceMock(organizationPerson))
-                  .lookupPostalAddress(nextInt(1000, 100000))
-          }.asClue {
-              it.message shouldBe "Could not find any relevant physicalAdresses related to herId"
-          }
-      }
-
       "Verify that postadresse is primarily chosen if many physicalAddresses are present" {
           val organizationPerson =
               buildOrganizationPerson(
                   addresses =
                       listOf(
                           buildPhysicalAddress(type = AddressType.BESOKSADRESSE.code),
-                          buildPhysicalAddress(type = AddressType.BOSTEDSADRESSE.code),
-                          buildPhysicalAddress(type = AddressType.MIDLERTIDIG_ADRESSE.code),
                           buildPhysicalAddress(type = AddressType.POSTADRESSE.code),
                           buildPhysicalAddress(type = AddressType.BESOKSADRESSE.code),
                       )
@@ -73,8 +49,6 @@ class LookupPostalAddressTest : FreeSpec(){
               buildOrganizationPerson(
                   addresses =
                       listOf(
-                          buildPhysicalAddress(type = AddressType.MIDLERTIDIG_ADRESSE.code),
-                          buildPhysicalAddress(type = AddressType.BOSTEDSADRESSE.code),
                           buildPhysicalAddress(type = AddressType.BESOKSADRESSE.code),
                       )
               )

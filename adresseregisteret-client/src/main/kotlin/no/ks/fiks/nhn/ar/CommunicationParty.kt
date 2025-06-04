@@ -66,15 +66,8 @@ data class PhysicalAddress(
 enum class AddressType(
     val code: String,
 ) {
-    UBRUKELIG_ADRESSE("BAD"),
-    BOSTEDSADRESSE("H"),
-    FOLKEREGISTERADRESSE("HP"),
-    FERIEADRESSE("HV"),
-    FAKTURERINGSADRESSE("INV"),
     POSTADRESSE("PST"),
-    BESOKSADRESSE("RES"),
-    MIDLERTIDIG_ADRESSE("TMP"),
-    ARBEIDSADRESSE("WP");
+    BESOKSADRESSE("RES");
 
     companion object {
         private val codeToType = entries.associateBy { it.code }
