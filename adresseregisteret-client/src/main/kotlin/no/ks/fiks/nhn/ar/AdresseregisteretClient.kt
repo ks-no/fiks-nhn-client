@@ -40,12 +40,12 @@ class AdresseregisteretClient(
             log.debug("Found ${communicationParty.physicalAddresses.size} addresses for $herId")
 
             val addressPriority = listOf(
-                Adressetetype.POSTADRESSE,
-                Adressetetype.BOSTEDSADRESSE,
-                Adressetetype.BESOKSADRESSE,
-                Adressetetype.MIDLERTIDIG_ADRESSE,
-                Adressetetype.FERIEADRESSE,
-                Adressetetype.FAKTURERINGSADRESSE,
+                AddressType.POSTADRESSE,
+                AddressType.BOSTEDSADRESSE,
+                AddressType.BESOKSADRESSE,
+                AddressType.MIDLERTIDIG_ADRESSE,
+                AddressType.FERIEADRESSE,
+                AddressType.FAKTURERINGSADRESSE,
             )
 
             addressPriority.asSequence()

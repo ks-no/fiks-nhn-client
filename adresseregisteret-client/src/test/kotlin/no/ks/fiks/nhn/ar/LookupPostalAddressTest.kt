@@ -33,8 +33,8 @@ class LookupPostalAddressTest : FreeSpec(){
               buildOrganizationPerson(
                   addresses =
                       listOf(
-                          buildPhysicalAddress(type = Adressetetype.UBRUKELIG_ADRESSE.code),
-                          buildPhysicalAddress(type = Adressetetype.ARBEIDSADRESSE.code)
+                          buildPhysicalAddress(type = AddressType.UBRUKELIG_ADRESSE.code),
+                          buildPhysicalAddress(type = AddressType.ARBEIDSADRESSE.code)
                       )
               )
           assertThrows<AddressNotFoundException> {
@@ -50,15 +50,15 @@ class LookupPostalAddressTest : FreeSpec(){
               buildOrganizationPerson(
                   addresses =
                       listOf(
-                          buildPhysicalAddress(type = Adressetetype.BOSTEDSADRESSE.code),
-                          buildPhysicalAddress(type = Adressetetype.MIDLERTIDIG_ADRESSE.code),
-                          buildPhysicalAddress(type = Adressetetype.POSTADRESSE.code),
-                          buildPhysicalAddress(type = Adressetetype.BESOKSADRESSE.code),
+                          buildPhysicalAddress(type = AddressType.BOSTEDSADRESSE.code),
+                          buildPhysicalAddress(type = AddressType.MIDLERTIDIG_ADRESSE.code),
+                          buildPhysicalAddress(type = AddressType.POSTADRESSE.code),
+                          buildPhysicalAddress(type = AddressType.BESOKSADRESSE.code),
                       )
               )
           buildClient(setupServiceMock(organizationPerson))
               .lookupPostalAddress(nextInt(1000, 100000)).asClue {
-                  it!!.type shouldBe Adressetetype.POSTADRESSE
+                  it!!.type shouldBe AddressType.POSTADRESSE
               }
       }
 
@@ -67,14 +67,14 @@ class LookupPostalAddressTest : FreeSpec(){
               buildOrganizationPerson(
                   addresses =
                       listOf(
-                          buildPhysicalAddress(type = Adressetetype.MIDLERTIDIG_ADRESSE.code),
-                          buildPhysicalAddress(type = Adressetetype.BOSTEDSADRESSE.code),
-                          buildPhysicalAddress(type = Adressetetype.BESOKSADRESSE.code),
+                          buildPhysicalAddress(type = AddressType.MIDLERTIDIG_ADRESSE.code),
+                          buildPhysicalAddress(type = AddressType.BOSTEDSADRESSE.code),
+                          buildPhysicalAddress(type = AddressType.BESOKSADRESSE.code),
                       )
               )
           buildClient(setupServiceMock(organizationPerson))
               .lookupPostalAddress(nextInt(1000, 100000)).asClue {
-                  it!!.type shouldBe Adressetetype.BOSTEDSADRESSE
+                  it!!.type shouldBe AddressType.BOSTEDSADRESSE
               }
       }
   }

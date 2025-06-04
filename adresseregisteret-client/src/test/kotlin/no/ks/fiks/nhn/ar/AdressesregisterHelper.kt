@@ -23,12 +23,14 @@ fun setupServiceMock(expected: NhnCommunicationParty?) = mockk<ICommunicationPar
 
 fun buildOrganization(
     herId: Int = nextInt(1000, 100000),
+    name: String = buildRandomString(),
     parentHerId: Int = nextInt(1000, 100000),
     parentName: String = buildRandomString(),
-    addresses: List<no.nhn.common.ar.PhysicalAddress> = List(nextInt(1, 5)) { buildPhysicalAddress() },
+    addresses: List<PhysicalAddress> = List(nextInt(1, 5)) { buildPhysicalAddress() },
     organizationNumber: Int = nextInt(100000000, 1000000000),
 ) = Organization().apply {
     this.herId = herId
+    this.name = buildJAXBElement(name)
     this.parentHerId = parentHerId
     this.parentName = buildJAXBElement(parentName)
     this.physicalAddresses = buildJAXBElement(mockk { every { physicalAddress } returns addresses })
@@ -37,6 +39,7 @@ fun buildOrganization(
 
 fun buildOrganizationPerson(
     herId: Int = nextInt(1000, 100000),
+    name: String = buildRandomString(),
     parentHerId: Int = nextInt(1000, 100000),
     parentName: String = buildRandomString(),
     firstName: String = buildRandomString(),
@@ -45,6 +48,7 @@ fun buildOrganizationPerson(
     addresses: List<PhysicalAddress> = List(nextInt(1, 5)) { buildPhysicalAddress() }
 ) = OrganizationPerson().apply {
     this.herId = herId
+    this.name = buildJAXBElement(name)
     this.parentHerId = parentHerId
     this.parentName = buildJAXBElement(parentName)
     this.person = buildJAXBElement(Person().apply {
@@ -57,18 +61,20 @@ fun buildOrganizationPerson(
 
 fun buildService(
     herId: Int = nextInt(1000, 100000),
+    name: String = buildRandomString(),
     parentHerId: Int = nextInt(1000, 100000),
     parentName: String = buildRandomString(),
-    addresses: List<no.nhn.common.ar.PhysicalAddress> = List(nextInt(1, 5)) { buildPhysicalAddress() }
+    addresses: List<PhysicalAddress> = List(nextInt(1, 5)) { buildPhysicalAddress() }
 ) = Service().apply {
     this.herId = herId
+    this.name = buildJAXBElement(name)
     this.parentHerId = parentHerId
     this.parentName = buildJAXBElement(parentName)
     this.physicalAddresses = buildJAXBElement(mockk { every { physicalAddress } returns addresses })
 }
 
 fun buildPhysicalAddress(
-    type: String? = Adressetetype.entries.random().code,
+    type: String? = AddressType.entries.random().code,
     streetAddress: String? = buildRandomString(),
     postbox: String? = UUID.randomUUID().toString(),
     postalCode: Int? = nextInt(0, 10000),
