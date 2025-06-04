@@ -1,0 +1,81 @@
+package no.ks.fiks.nhn.ar
+
+import io.kotest.assertions.asClue
+import io.kotest.core.spec.style.FreeSpec
+import io.kotest.matchers.shouldBe
+import org.junit.jupiter.api.assertThrows
+import kotlin.random.Random.Default.nextInt
+
+class LookupPostalAddressTest : FreeSpec(){
+  init {
+
+      "Verify that missing communicationparty throws Exception" {
+          assertThrows<AddressNotFoundException> {
+              buildClient(setupServiceMock(null))
+                  .lookupPostalAddress(nextInt(1000, 100000))
+          }.asClue {
+              it.message shouldBe "Did not find any communication party related to herId"
+          }
+      }
+
+      "Verify that communicationparty with no physicalAddress throws Exception" {
+          val organizationPerson = buildOrganizationPerson(addresses = emptyList())
+          assertThrows<AddressNotFoundException> {
+              buildClient(setupServiceMock(organizationPerson))
+                  .lookupPostalAddress(nextInt(1000, 100000))
+          }.asClue {
+              it.message shouldBe "Could not find any physicalAdresses related to herId"
+          }
+      }
+
+      "Verify that communicationparty with no relevant physicalAddress throws Exception" {
+          val organizationPerson =
+              buildOrganizationPerson(
+                  addresses =
+                      listOf(
+                          buildPhysicalAddress(type = Adressetetype.UBRUKELIG_ADRESSE.code),
+                          buildPhysicalAddress(type = Adressetetype.ARBEIDSADRESSE.code)
+                      )
+              )
+          assertThrows<AddressNotFoundException> {
+              buildClient(setupServiceMock(organizationPerson))
+                  .lookupPostalAddress(nextInt(1000, 100000))
+          }.asClue {
+              it.message shouldBe "Could not find any relevant physicalAdresses related to herId"
+          }
+      }
+
+      "Verify that postadresse is primarily chosen" {
+          val organizationPerson =
+              buildOrganizationPerson(
+                  addresses =
+                      listOf(
+                          buildPhysicalAddress(type = Adressetetype.BOSTEDSADRESSE.code),
+                          buildPhysicalAddress(type = Adressetetype.MIDLERTIDIG_ADRESSE.code),
+                          buildPhysicalAddress(type = Adressetetype.POSTADRESSE.code),
+                          buildPhysicalAddress(type = Adressetetype.BESOKSADRESSE.code),
+                      )
+              )
+          buildClient(setupServiceMock(organizationPerson))
+              .lookupPostalAddress(nextInt(1000, 100000)).asClue {
+                  it!!.type shouldBe Adressetetype.POSTADRESSE
+              }
+      }
+
+      "Verify that bostedsadresse is chosen if postadresse is not present" {
+          val organizationPerson =
+              buildOrganizationPerson(
+                  addresses =
+                      listOf(
+                          buildPhysicalAddress(type = Adressetetype.MIDLERTIDIG_ADRESSE.code),
+                          buildPhysicalAddress(type = Adressetetype.BOSTEDSADRESSE.code),
+                          buildPhysicalAddress(type = Adressetetype.BESOKSADRESSE.code),
+                      )
+              )
+          buildClient(setupServiceMock(organizationPerson))
+              .lookupPostalAddress(nextInt(1000, 100000)).asClue {
+                  it!!.type shouldBe Adressetetype.BOSTEDSADRESSE
+              }
+      }
+  }
+}

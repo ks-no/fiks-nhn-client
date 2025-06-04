@@ -1,7 +1,5 @@
 package no.ks.fiks.nhn.ar
 
-class AdresseregisteretException(
-    val errorCode: String?,
-    val faultMessage: String?,
+class AddressNotFoundException(
     message: String?,
 ) : AdresseregisteretClientException(message)

@@ -1,6 +1,5 @@
 package no.ks.fiks.nhn.ar
 
-import jakarta.ws.rs.NotFoundException
 import jakarta.xml.bind.JAXBElement
 import jakarta.xml.ws.soap.SOAPBinding
 import mu.KotlinLogging
@@ -33,22 +32,28 @@ class AdresseregisteretClient(
             throw AdresseregisteretException(e.faultInfo?.errorCode?.value, e.faultInfo?.message?.value, e.message)
         }
 
-    fun lookupPostalAdresse(herId: Int): PhysicalAddress? =
-        lookupHerId(herId).let { communicationParty ->
-            if (communicationParty == null)
-               throw AdresseregisteretException("NoCommunicationParty", "Did not find any communication party related to herId", "")
-            if (communicationParty.physicalAddresses.isEmpty()) {
-                throw AdresseregisteretException("NoPhysicalAdress", "Could not find any physicalAdresses related to herId", "")
+    fun lookupPostalAddress(herId: Int): PhysicalAddress? =
+        lookupHerId(herId)?.let { communicationParty ->
+            require(communicationParty.physicalAddresses.isNotEmpty()) {
+                throw AddressNotFoundException("Could not find any physicalAdresses related to herId")
             }
-            val physicalAddresses = communicationParty.physicalAddresses
-            return physicalAddresses.firstOrNull { it.type == Adressetetype.POSTADRESSE }
-                ?: physicalAddresses.firstOrNull { it.type == Adressetetype.BOSTEDSADRESSE }
-                ?: physicalAddresses.firstOrNull { it.type == Adressetetype.MIDLERTIDIG_ADRESSE }
-                ?: physicalAddresses.firstOrNull { it.type == Adressetetype.FERIEADRESSE }
-                ?: physicalAddresses.firstOrNull { it.type == Adressetetype.FAKTURERINGSADRESSE }
-                ?: physicalAddresses.firstOrNull { it.type == Adressetetype.FOLKEREGISTERADRESSE }
-                ?: throw AdresseregisteretException("NoRelevantPhysicalAdress","Could not find any relevant physicalAdresses related to herId", "")
-        }
+            log.debug("Found ${communicationParty.physicalAddresses.size} addresses for $herId")
+
+            val addressPriority = listOf(
+                Adressetetype.POSTADRESSE,
+                Adressetetype.BOSTEDSADRESSE,
+                Adressetetype.BESOKSADRESSE,
+                Adressetetype.MIDLERTIDIG_ADRESSE,
+                Adressetetype.FERIEADRESSE,
+                Adressetetype.FAKTURERINGSADRESSE,
+            )
+
+            addressPriority.asSequence()
+                .mapNotNull { type -> communicationParty.physicalAddresses.firstOrNull { it.type == type } }
+                .firstOrNull()
+                ?: throw AddressNotFoundException("Could not find any relevant physicalAdresses related to herId")
+        } ?: throw AddressNotFoundException("Did not find any communication party related to herId")
+
 
     private fun Organization.convert() = OrganizationCommunicationParty(
         herId = herId,
