@@ -9,7 +9,7 @@ import kotlin.random.Random.Default.nextInt
 class LookupPostalAddressTest : FreeSpec(){
   init {
 
-      "Verify that missing communicationparty throws Exception" {
+      "Verify that missing communicationparty throws AddressNotFoundException" {
           assertThrows<AddressNotFoundException> {
               buildClient(setupServiceMock(null))
                   .lookupPostalAddress(nextInt(1000, 100000))
@@ -18,7 +18,7 @@ class LookupPostalAddressTest : FreeSpec(){
           }
       }
 
-      "Verify that communicationparty with no physicalAddress throws Exception" {
+      "Verify that communicationparty with no physicalAddress throws AddressNotFoundException" {
           val organizationPerson = buildOrganizationPerson(addresses = emptyList())
           assertThrows<AddressNotFoundException> {
               buildClient(setupServiceMock(organizationPerson))
@@ -28,7 +28,7 @@ class LookupPostalAddressTest : FreeSpec(){
           }
       }
 
-      "Verify that communicationparty with no relevant physicalAddress throws Exception" {
+      "Verify that communicationparty with no relevant physicalAddress throws AddressNotFoundException" {
           val organizationPerson =
               buildOrganizationPerson(
                   addresses =
@@ -45,7 +45,7 @@ class LookupPostalAddressTest : FreeSpec(){
           }
       }
 
-      "Verify that postadresse is primarily chosen" {
+      "Verify that postadresse is primarily chosen if many physicalAddresses are present" {
           val organizationPerson =
               buildOrganizationPerson(
                   addresses =
