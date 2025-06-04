@@ -209,7 +209,7 @@ class LookupHerIdTest : StringSpec({
         val faultErrorCode = UUID.randomUUID().toString()
         val faultMessage = UUID.randomUUID().toString()
 
-        shouldThrow<AdresseregisteretException> {
+        shouldThrow<AdresseregisteretApiException> {
             buildClient(
                 mockk {
                     every { getCommunicationPartyDetails(any()) } throws ICommunicationPartyServiceGetCommunicationPartyDetailsGenericFaultFaultFaultMessage(

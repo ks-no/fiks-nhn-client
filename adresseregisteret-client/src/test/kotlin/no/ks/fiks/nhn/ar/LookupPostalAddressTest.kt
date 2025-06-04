@@ -34,7 +34,12 @@ class LookupPostalAddressTest : FreeSpec(){
                   addresses =
                       listOf(
                           buildPhysicalAddress(type = AddressType.UBRUKELIG_ADRESSE.code),
-                          buildPhysicalAddress(type = AddressType.ARBEIDSADRESSE.code)
+                          buildPhysicalAddress(type = AddressType.ARBEIDSADRESSE.code),
+                          buildPhysicalAddress(type = AddressType.MIDLERTIDIG_ADRESSE.code),
+                          buildPhysicalAddress(type = AddressType.BOSTEDSADRESSE.code),
+                          buildPhysicalAddress(type = AddressType.FOLKEREGISTERADRESSE.code),
+                          buildPhysicalAddress(type = AddressType.FERIEADRESSE.code),
+                          buildPhysicalAddress(type = AddressType.FAKTURERINGSADRESSE.code),
                       )
               )
           assertThrows<AddressNotFoundException> {
@@ -50,6 +55,7 @@ class LookupPostalAddressTest : FreeSpec(){
               buildOrganizationPerson(
                   addresses =
                       listOf(
+                          buildPhysicalAddress(type = AddressType.BESOKSADRESSE.code),
                           buildPhysicalAddress(type = AddressType.BOSTEDSADRESSE.code),
                           buildPhysicalAddress(type = AddressType.MIDLERTIDIG_ADRESSE.code),
                           buildPhysicalAddress(type = AddressType.POSTADRESSE.code),
@@ -74,7 +80,7 @@ class LookupPostalAddressTest : FreeSpec(){
               )
           buildClient(setupServiceMock(organizationPerson))
               .lookupPostalAddress(nextInt(1000, 100000)).asClue {
-                  it!!.type shouldBe AddressType.BOSTEDSADRESSE
+                  it!!.type shouldBe AddressType.BESOKSADRESSE
               }
       }
   }

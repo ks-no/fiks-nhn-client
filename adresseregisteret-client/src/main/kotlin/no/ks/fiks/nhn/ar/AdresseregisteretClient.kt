@@ -29,7 +29,7 @@ class AdresseregisteretClient(
                 }
         } catch (e: ICommunicationPartyServiceGetCommunicationPartyDetailsGenericFaultFaultFaultMessage) {
             log.debug(e) { "Exception was thrown by service" }
-            throw AdresseregisteretException(e.faultInfo?.errorCode?.value, e.faultInfo?.message?.value, e.message)
+            throw AdresseregisteretApiException(e.faultInfo?.errorCode?.value, e.faultInfo?.message?.value, e.message)
         }
 
     fun lookupPostalAddress(herId: Int): PhysicalAddress? =
@@ -41,16 +41,10 @@ class AdresseregisteretClient(
 
             val addressPriority = listOf(
                 AddressType.POSTADRESSE,
-                AddressType.BOSTEDSADRESSE,
                 AddressType.BESOKSADRESSE,
-                AddressType.MIDLERTIDIG_ADRESSE,
-                AddressType.FERIEADRESSE,
-                AddressType.FAKTURERINGSADRESSE,
             )
 
-            addressPriority.asSequence()
-                .mapNotNull { type -> communicationParty.physicalAddresses.firstOrNull { it.type == type } }
-                .firstOrNull()
+            addressPriority.firstNotNullOfOrNull { type -> communicationParty.physicalAddresses.firstOrNull { it.type == type } }
                 ?: throw AddressNotFoundException("Could not find any relevant physicalAdresses related to herId")
         } ?: throw AddressNotFoundException("Did not find any communication party related to herId")
 

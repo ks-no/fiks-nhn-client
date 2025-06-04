@@ -4,7 +4,6 @@ import com.github.tomakehurst.wiremock.client.WireMock.*
 import io.kotest.assertions.asClue
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.StringSpec
-import io.kotest.matchers.collections.shouldHaveSingleElement
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.nulls.beNull
 import io.kotest.matchers.should
@@ -228,7 +227,7 @@ class LookupHerIdHttpTest : StringSpec() {
             val herId = nextInt(1, 100000)
             stubResponse(herId, "get-communication-party-details-not-found-response.xml")
 
-            shouldThrow<AdresseregisteretException> {
+            shouldThrow<AdresseregisteretApiException> {
                 AdresseregisteretClient(Environment(wireMock.baseUrl), Credentials(UUID.randomUUID().toString(), UUID.randomUUID().toString()))
                     .lookupHerId(herId)
             }.asClue {
