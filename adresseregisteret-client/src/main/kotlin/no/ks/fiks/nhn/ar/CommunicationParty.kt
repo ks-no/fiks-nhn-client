@@ -61,6 +61,14 @@ data class PhysicalAddress(
     val country: String?,
 )
 
+data class PostalAddress(
+    val name: String?,
+    val streetAddress: String?,
+    val postbox: String?,
+    val postalCode: String?,
+    val city: String?,
+    val country: String?,
+)
 
 // Kodeverk 3401
 enum class AddressType(
@@ -75,3 +83,13 @@ enum class AddressType(
         fun fromCode(code: String?): AddressType? = code?.let { codeToType[it] }
     }
 }
+
+fun PhysicalAddress.toPreferredPostalAddress(name: String) =
+    PostalAddress(
+        name = name,
+        streetAddress = streetAddress,
+        postbox = postbox,
+        postalCode = postalCode,
+        city = city,
+        country = country,
+    )
