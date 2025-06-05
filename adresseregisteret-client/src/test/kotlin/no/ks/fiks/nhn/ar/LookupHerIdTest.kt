@@ -11,14 +11,9 @@ import io.kotest.matchers.shouldNot
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.every
 import io.mockk.mockk
-import jakarta.xml.bind.JAXBElement
-import no.nhn.common.ar.Code
 import no.nhn.common.ar.GenericFault
-import no.nhn.common.ar.PhysicalAddress
 import no.nhn.register.communicationparty.*
-import no.nhn.register.hpr.Person
 import java.util.*
-import javax.xml.namespace.QName
 import kotlin.random.Random.Default.nextInt
 import no.nhn.register.communicationparty.CommunicationParty as NhnCommunicationParty
 
@@ -214,7 +209,7 @@ class LookupHerIdTest : StringSpec({
         val faultErrorCode = UUID.randomUUID().toString()
         val faultMessage = UUID.randomUUID().toString()
 
-        shouldThrow<AdresseregisteretException> {
+        shouldThrow<AdresseregisteretApiException> {
             buildClient(
                 mockk {
                     every { getCommunicationPartyDetails(any()) } throws ICommunicationPartyServiceGetCommunicationPartyDetailsGenericFaultFaultFaultMessage(
@@ -238,7 +233,7 @@ private infix fun CommunicationParty.shouldHaveSameValuesAs(expected: NhnCommuni
     herId shouldBe expected.herId
     parent shouldNot beNull()
     parent!!.herId shouldBe expected.parentHerId
-    parent!!.name shouldBe expected.parentName.value
+    parent.name shouldBe expected.parentName.value
     physicalAddresses shouldHaveSize expected.physicalAddresses.value.physicalAddress.size
     physicalAddresses.zip(expected.physicalAddresses.value.physicalAddress).forEach { (actual, expected) ->
         actual.type!!.code shouldBe expected.type.value.codeValue.value
@@ -249,81 +244,3 @@ private infix fun CommunicationParty.shouldHaveSameValuesAs(expected: NhnCommuni
         actual.country shouldBe expected.country.value.codeText.value
     }
 }
-
-private fun buildClient(service: ICommunicationPartyService) = AdresseregisteretClient(Environment(""), Credentials("", ""), service)
-
-private fun setupServiceMock(expected: NhnCommunicationParty) = mockk<ICommunicationPartyService> {
-    every { getCommunicationPartyDetails(any()) } returns expected
-}
-
-private fun buildOrganization(
-    herId: Int = nextInt(1000, 100000),
-    name: String = buildRandomString(),
-    parentHerId: Int = nextInt(1000, 100000),
-    parentName: String = buildRandomString(),
-    addresses: List<PhysicalAddress> = List(nextInt(1, 5)) { buildPhysicalAddress() },
-    organizationNumber: Int = nextInt(100000000, 1000000000),
-) = Organization().apply {
-    this.herId = herId
-    this.name = buildJAXBElement(name)
-    this.parentHerId = parentHerId
-    this.parentName = buildJAXBElement(parentName)
-    this.physicalAddresses = buildJAXBElement(mockk { every { physicalAddress } returns addresses })
-    this.organizationNumber = organizationNumber
-}
-
-private fun buildOrganizationPerson(
-    herId: Int = nextInt(1000, 100000),
-    name: String = buildRandomString(),
-    parentHerId: Int = nextInt(1000, 100000),
-    parentName: String = buildRandomString(),
-    firstName: String = buildRandomString(),
-    middleName: String? = buildRandomString(),
-    lastName: String = buildRandomString(),
-    addresses: List<PhysicalAddress> = List(nextInt(1, 5)) { buildPhysicalAddress() }
-) = OrganizationPerson().apply {
-    this.herId = herId
-    this.name = buildJAXBElement(name)
-    this.parentHerId = parentHerId
-    this.parentName = buildJAXBElement(parentName)
-    this.person = buildJAXBElement(Person().apply {
-        this.firstName = buildJAXBElement(firstName)
-        this.middleName = buildJAXBElement(middleName)
-        this.lastName = buildJAXBElement(lastName)
-    })
-    this.physicalAddresses = buildJAXBElement(mockk { every { physicalAddress } returns addresses })
-}
-
-private fun buildService(
-    herId: Int = nextInt(1000, 100000),
-    name: String = buildRandomString(),
-    parentHerId: Int = nextInt(1000, 100000),
-    parentName: String = buildRandomString(),
-    addresses: List<PhysicalAddress> = List(nextInt(1, 5)) { buildPhysicalAddress() }
-) = Service().apply {
-    this.herId = herId
-    this.name = buildJAXBElement(name)
-    this.parentHerId = parentHerId
-    this.parentName = buildJAXBElement(parentName)
-    this.physicalAddresses = buildJAXBElement(mockk { every { physicalAddress } returns addresses })
-}
-
-private fun buildPhysicalAddress(
-    type: String? = AddressType.entries.random().code,
-    streetAddress: String? = buildRandomString(),
-    postbox: String? = UUID.randomUUID().toString(),
-    postalCode: Int? = nextInt(0, 10000),
-    city: String? = buildRandomString(),
-    country: String? = buildRandomString(),
-) = PhysicalAddress().apply {
-    this.type = buildJAXBElement(Code().apply { codeValue = buildJAXBElement(type) })
-    this.streetAddress = buildJAXBElement(streetAddress)
-    this.postbox = buildJAXBElement(postbox)
-    this.postalCode = postalCode
-    this.city = buildJAXBElement(city)
-    this.country = buildJAXBElement(Code().apply { codeText = buildJAXBElement(country) })
-}
-
-private fun buildRandomString() = List(nextInt(1, 3)) { UUID.randomUUID().toString().take(nextInt(3, 20)) }.joinToString(" ")
-
-private inline fun <reified T> buildJAXBElement(value: T) = JAXBElement(QName.valueOf("field"), T::class.java, value)

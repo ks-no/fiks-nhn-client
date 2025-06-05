@@ -29,8 +29,23 @@ class AdresseregisteretClient(
                 }
         } catch (e: ICommunicationPartyServiceGetCommunicationPartyDetailsGenericFaultFaultFaultMessage) {
             log.debug(e) { "Exception was thrown by service" }
-            throw AdresseregisteretException(e.faultInfo?.errorCode?.value, e.faultInfo?.message?.value, e.message)
+            throw AdresseregisteretApiException(e.faultInfo?.errorCode?.value, e.faultInfo?.message?.value, e.message)
         }
+
+    fun lookupPostalAddress(herId: Int): PostalAddress? =
+        lookupHerId(herId)?.let { communicationParty ->
+            if (communicationParty.physicalAddresses.isEmpty()) {
+                throw AddressNotFoundException("Could not find any physicalAdresses related to herId")
+            }
+            log.debug("Found ${communicationParty.physicalAddresses.size} addresses for $herId")
+
+            val addressPriority = listOf(AddressType.POSTADRESSE, AddressType.BESOKSADRESSE)
+
+            addressPriority.firstNotNullOfOrNull { type -> communicationParty.physicalAddresses.firstOrNull { it.type == type } }
+                ?.toPostalAddress(communicationParty.name)
+                ?: throw AddressNotFoundException("Could not find any relevant physicalAdresses related to herId")
+        } ?: throw AddressNotFoundException("Did not find any communication party related to herId")
+
 
     private fun Organization.convert() = OrganizationCommunicationParty(
         herId = herId,

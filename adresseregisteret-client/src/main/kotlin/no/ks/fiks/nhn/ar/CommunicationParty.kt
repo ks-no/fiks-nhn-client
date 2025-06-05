@@ -61,20 +61,21 @@ data class PhysicalAddress(
     val country: String?,
 )
 
+data class PostalAddress(
+    val name: String?,
+    val streetAddress: String?,
+    val postbox: String?,
+    val postalCode: String?,
+    val city: String?,
+    val country: String?,
+)
 
 // Kodeverk 3401
 enum class AddressType(
     val code: String,
 ) {
-    UBRUKELIG_ADRESSE("BAD"),
-    BOSTEDSADRESSE("H"),
-    FOLKEREGISTERADRESSE("HP"),
-    FERIEADRESSE("HV"),
-    FAKTURERINGSADRESSE("INV"),
     POSTADRESSE("PST"),
-    BESOKSADRESSE("RES"),
-    MIDLERTIDIG_ADRESSE("TMP"),
-    ARBEIDSADRESSE("WP");
+    BESOKSADRESSE("RES");
 
     companion object {
         private val codeToType = entries.associateBy { it.code }
@@ -82,3 +83,13 @@ enum class AddressType(
         fun fromCode(code: String?): AddressType? = code?.let { codeToType[it] }
     }
 }
+
+fun PhysicalAddress.toPostalAddress(name: String) =
+    PostalAddress(
+        name = name,
+        streetAddress = streetAddress,
+        postbox = postbox,
+        postalCode = postalCode,
+        city = city,
+        country = country,
+    )
