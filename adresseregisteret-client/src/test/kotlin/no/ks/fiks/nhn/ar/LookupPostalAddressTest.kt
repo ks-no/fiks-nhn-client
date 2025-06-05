@@ -54,7 +54,7 @@ class LookupPostalAddressTest : FreeSpec(){
               }
       }
 
-      "Verify that first instance of bostedsadresse is chosen if postadresse is not present" {
+      "Verify that first instance of besoksadresse is chosen if postadresse is not present" {
           val besoksadresse = buildPhysicalAddress(type = AddressType.BESOKSADRESSE.code)
           val name = UUID.randomUUID().toString()
           val organizationPerson =

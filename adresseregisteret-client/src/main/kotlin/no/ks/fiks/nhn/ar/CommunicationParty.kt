@@ -84,7 +84,7 @@ enum class AddressType(
     }
 }
 
-fun PhysicalAddress.toPreferredPostalAddress(name: String) =
+fun PhysicalAddress.toPostalAddress(name: String) =
     PostalAddress(
         name = name,
         streetAddress = streetAddress,

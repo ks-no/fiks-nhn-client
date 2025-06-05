@@ -42,7 +42,7 @@ class AdresseregisteretClient(
             val addressPriority = listOf(AddressType.POSTADRESSE, AddressType.BESOKSADRESSE)
 
             addressPriority.firstNotNullOfOrNull { type -> communicationParty.physicalAddresses.firstOrNull { it.type == type } }
-                ?.toPreferredPostalAddress(communicationParty.name)
+                ?.toPostalAddress(communicationParty.name)
                 ?: throw AddressNotFoundException("Could not find any relevant physicalAdresses related to herId")
         } ?: throw AddressNotFoundException("Did not find any communication party related to herId")
 
