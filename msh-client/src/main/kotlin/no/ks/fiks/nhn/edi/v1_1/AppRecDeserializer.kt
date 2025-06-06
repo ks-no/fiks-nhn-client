@@ -2,14 +2,14 @@ package no.ks.fiks.nhn.edi.v1_1
 
 import jakarta.xml.bind.JAXBContext
 import no.kith.xmlstds.apprec._2012_02_15.AppRec
+import no.kith.xmlstds.apprec._2012_02_15.Dept
+import no.kith.xmlstds.apprec._2012_02_15.HCPerson
 import no.kith.xmlstds.apprec._2012_02_15.Inst
 import no.ks.fiks.hdir.FeilmeldingForApplikasjonskvittering
 import no.ks.fiks.hdir.OrganisasjonIdType
+import no.ks.fiks.hdir.PersonIdType
 import no.ks.fiks.hdir.StatusForMottakAvMelding
-import no.ks.fiks.nhn.msh.IncomingApplicationReceipt
-import no.ks.fiks.nhn.msh.ApplicationReceiptError
-import no.ks.fiks.nhn.msh.Id
-import no.ks.fiks.nhn.msh.Organization
+import no.ks.fiks.nhn.msh.*
 import java.io.StringReader
 import javax.xml.transform.stream.StreamSource
 
@@ -25,35 +25,59 @@ object AppRecDeserializer {
     private fun AppRec.toApplicationReceipt() = IncomingApplicationReceipt(
         id = id,
         acknowledgedBusinessDocumentId = originalMsgId.id,
-        status = StatusForMottakAvMelding.entries.firstOrNull { it.verdi == status.v && it.navn == status.dn } ?: throw IllegalArgumentException("Unknown app rec status: ${status}"),
+        status = StatusForMottakAvMelding.entries.firstOrNull { it.verdi == status.v } ?: throw IllegalArgumentException("Unknown app rec status: ${status.v}, ${status.dn}"),
         errors = error?.map { error ->
             ApplicationReceiptError(
-                type = FeilmeldingForApplikasjonskvittering.entries.firstOrNull { it.verdi == error.v && it.navn == error.dn } ?: FeilmeldingForApplikasjonskvittering.UKJENT,
+                type = FeilmeldingForApplikasjonskvittering.entries.firstOrNull { it.verdi == error.v } ?: FeilmeldingForApplikasjonskvittering.UKJENT,
                 details = error.ot,
             )
         } ?: emptyList(),
-        sender = sender.hcp.inst.toOrganization(),
-        receiver = receiver.hcp.inst.toOrganization(),
+        sender = sender.hcp.inst.toInstitution(),
+        receiver = receiver.hcp.inst.toInstitution(),
     )
 
-    private fun Inst.toOrganization() = Organization(
+    private fun Inst.toInstitution() = Institution(
         name = name,
         id = toId(),
-        childOrganization = dept.firstOrNull()?.let {
-            Organization(
+        department = dept.firstOrNull()?.let {
+            Department(
                 name = it.name,
-                id = toId(),
+                id = it.toId(),
+            )
+        },
+        person = hcPerson.firstOrNull()?.let {
+            InstitutionPerson(
+                name = it.name,
+                id = it.toId(),
             )
         }
     )
 
-    private fun Inst.toId() = OrganisasjonIdType.entries.firstOrNull { it.verdi == typeId.v && it.navn == typeId.dn }
+    private fun Inst.toId() = OrganisasjonIdType.entries.firstOrNull { it.verdi == typeId.v }
         ?.let { type ->
             Id(
                 id = id,
                 type = type,
             )
         }
-        ?: throw IllegalArgumentException("Unknown type for organisation id: $typeId")
+        ?: throw IllegalArgumentException("Unknown type for organisation id: ${typeId.v}, ${typeId.dn}")
+
+    private fun Dept.toId() = OrganisasjonIdType.entries.firstOrNull { it.verdi == typeId.v }
+        ?.let { type ->
+            Id(
+                id = id,
+                type = type,
+            )
+        }
+        ?: throw IllegalArgumentException("Unknown type for organisation id: ${typeId.v}, ${typeId.dn}")
+
+    private fun HCPerson.toId() = PersonIdType.entries.firstOrNull { it.verdi == typeId.v }
+        ?.let { type ->
+            Id(
+                id = id,
+                type = type,
+            )
+        }
+        ?: throw IllegalArgumentException("Unknown type for person id: ${typeId.v}, ${typeId.dn}")
 
 }

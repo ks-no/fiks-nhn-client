@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<AppRec xmlns="http://www.kith.no/xmlstds/apprec/2012-02-15"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.kith.no/xmlstds/apprec/2012-02-15 AppRec-v1.1.xsd">
+    <MsgType V="APPREC" DN="Applikasjonskvittering"/>
+    <MIGversion>v1.1 2012-02-15</MIGversion>
+    <GenDate>2025-05-26T00:00:00</GenDate>
+    <Id>f6d24037-a43f-4509-8dfa-88b578554858</Id>
+    <Sender>
+        <HCP>
+            <Inst>
+                <Name>KS-DIGITALE FELLESTJENESTER AS</Name>
+                <Id>8142987</Id>
+                <TypeId V="HER" DN="HER-id"/>
+            </Inst>
+        </HCP>
+    </Sender>
+    <Receiver>
+        <HCP>
+            <Inst>
+                <Name>Test Testinstitusjon</Name>
+                <Id>998877</Id>
+                <TypeId V="HER" DN="HER-id"/>
+            </Inst>
+        </HCP>
+    </Receiver>
+    <Status V="123" DN="Some status"/>
+    <OriginalMsgId>
+        <MsgType V="DIALOG_HELSEFAGLIG" DN="Helsefaglig dialog"/>
+        <IssueDate>2025-05-25T00:00:00</IssueDate>
+        <Id>5d79bd68-a58c-4599-a4e7-9db28ea20099</Id>
+    </OriginalMsgId>
+</AppRec>

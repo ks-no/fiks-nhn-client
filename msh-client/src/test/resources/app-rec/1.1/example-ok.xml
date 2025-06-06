@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<AppRec xmlns="http://www.kith.no/xmlstds/apprec/2012-02-15"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.kith.no/xmlstds/apprec/2012-02-15 AppRec-v1.1.xsd">
+    <MsgType V="APPREC" DN="Applikasjonskvittering"/>
+    <MIGversion>v1.1 2012-02-15</MIGversion>
+    <GenDate>2012-02-17T10:31:07</GenDate>
+    <Id>5e4f20c0-c41b-11e0-962b-0800200c9a66</Id>
+    <Sender>
+        <Role V="PRIM" DN="Primærmottaker"/>
+        <HCP>
+            <Inst>
+                <Name>Kattskinnet legesenter</Name>
+                <Id>56704</Id>
+                <TypeId V="HER" DN="HER-id"/>
+                <HCPerson>
+                    <Name>August September</Name>
+                    <Id>369767</Id>
+                    <TypeId V="HER" DN="HER-id"/>
+                </HCPerson>
+            </Inst>
+        </HCP>
+    </Sender>
+    <Receiver>
+        <Role V="AVS" DN="Avsender"/>
+        <HCP>
+            <Inst>
+                <Name>SYKEHUSET I VESTFOLD HF</Name>
+                <Id>69</Id>
+                <TypeId V="HER" DN="HER-id"/>
+                <Dept>
+                    <Name>Kirurgi</Name>
+                    <Id>89583</Id>
+                    <TypeId V="HER" DN=" HER-id"/>
+                </Dept>
+            </Inst>
+        </HCP>
+    </Receiver>
+    <Status V="1" DN="OK"/>
+    <OriginalMsgId>
+        <MsgType V="EPIKRISE" DN="Epikrise"/>
+        <IssueDate>2012-02-17T08:32:15</IssueDate>
+        <Id>4c793d90-c41b-11e0-962b-0800200c9a66</Id>
+    </OriginalMsgId>
+</AppRec>
