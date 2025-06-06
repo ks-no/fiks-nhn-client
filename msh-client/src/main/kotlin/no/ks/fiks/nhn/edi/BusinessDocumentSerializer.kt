@@ -28,7 +28,7 @@ object BusinessDocumentSerializer {
             .apply {
                 document = listOfNotNull(
                     buildDialogmeldingDocument(businessDocument),
-                    buildVedleggDocument(businessDocument.vedlegg),
+                    buildVedleggDocument(businessDocument.vedlegg), // TODO: Limit vedlegg size to ~18 MB
                 )
             }
 
@@ -45,50 +45,46 @@ object BusinessDocumentSerializer {
                 genDate = currentDateTime()
                 msgId = businessDocument.id.toString()
                 sender = toSender(businessDocument.sender)
-                receiver = when (businessDocument.receiver) {
-                    is HerIdReceiver -> NhnReceiver().apply {
-                        organisation = NhnOrganisation().apply {
-                            organisationName = businessDocument.receiver.parent.name
-                            ident = listOf(
-                                toIdent(businessDocument.receiver.parent.id)
-                            )
-                            organisation = businessDocument.receiver.child
-                                .let { it as? OrganizationHerIdReceiverChild }
-                                ?.let {
-                                    NhnOrganisation().apply {
-                                        organisationName = it.name
-                                        ident = listOf(
-                                            toIdent(it.id)
-                                        )
-                                    }
+                receiver = NhnReceiver().apply {
+                    organisation = NhnOrganisation().apply {
+                        organisationName = businessDocument.receiver.parent.name
+                        ident = listOf(
+                            toIdent(businessDocument.receiver.parent.id)
+                        )
+                        organisation = businessDocument.receiver.child
+                            .let { it as? OrganizationReceiverDetails }
+                            ?.let {
+                                NhnOrganisation().apply {
+                                    organisationName = it.name
+                                    ident = listOf(
+                                        toIdent(it.id)
+                                    )
                                 }
-                            healthcareProfessional = businessDocument.receiver.child
-                                .let { it as? PersonHerIdReceiverChild }
-                                ?.let {
-                                    HealthcareProfessional().apply {
-                                        givenName = it.firstName
-                                        middleName = it.middleName
-                                        familyName = it.lastName
-                                        ident = listOf(
-                                            toIdent(it.id)
-                                        )
-                                    }
+                            }
+                        healthcareProfessional = businessDocument.receiver.child
+                            .let { it as? PersonReceiverDetails }
+                            ?.let {
+                                HealthcareProfessional().apply {
+                                    givenName = it.firstName
+                                    middleName = it.middleName
+                                    familyName = it.lastName
+                                    ident = listOf(
+                                        toIdent(it.id)
+                                    )
                                 }
-                        }
+                            }
                     }
                 }
-                patient = when (businessDocument.receiver) {
-                    is HerIdReceiver -> NhnPatient().apply {
-                        givenName = businessDocument.receiver.patient.firstName
-                        middleName = businessDocument.receiver.patient.middleName
-                        familyName = businessDocument.receiver.patient.lastName
-                        ident = listOf(
-                            Ident().apply {
-                                id = businessDocument.receiver.patient.fnr
-                                typeId = toCv(PersonIdType.FNR)
-                            }
-                        )
-                    }
+                patient = NhnPatient().apply {
+                    givenName = businessDocument.receiver.patient.firstName
+                    middleName = businessDocument.receiver.patient.middleName
+                    familyName = businessDocument.receiver.patient.lastName
+                    ident = listOf(
+                        Ident().apply {
+                            id = businessDocument.receiver.patient.fnr
+                            typeId = toCv(PersonIdType.FNR)
+                        }
+                    )
                 }
                 document = listOf( // Kan ikke være tom før valideringen
                     Document().apply {
@@ -127,7 +123,14 @@ object BusinessDocumentSerializer {
         ident = listOf(
             toIdent(input.id),
         )
-        organisation = input.childOrganization?.let { toOrganisation(it) }
+        organisation = toOrganisation(input.childOrganization)
+    }
+
+    private fun toOrganisation(input: ChildOrganization): NhnOrganisation = NhnOrganisation().apply {
+        organisationName = input.name
+        ident = listOf(
+            toIdent(input.id),
+        )
     }
 
     private fun toIdent(input: Id) = Ident().apply {
@@ -156,7 +159,7 @@ object BusinessDocumentSerializer {
             }
         }
 
-    private fun buildVedleggDocument(vedlegg: Vedlegg) = Document().apply {
+    private fun buildVedleggDocument(vedlegg: OutgoingVedlegg) = Document().apply {
         refDoc = RefDoc().apply {
             issueDate = TS().apply {
                 v = DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(vedlegg.date.truncatedTo(ChronoUnit.SECONDS))

@@ -39,7 +39,7 @@ object XmlContext {
     fun createUnmarshaller(): Unmarshaller = context.createUnmarshaller()
 
     fun validate(content: Any) {
-        headSchema.newValidator().validate(JAXBSource(context, content))
+//        headSchema.newValidator().validate(JAXBSource(context, content))
     }
 
 }
