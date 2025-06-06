@@ -9,11 +9,11 @@ import no.kith.xmlstds.dialog._2006_10_11.RollerRelatertNotat
 import no.kith.xmlstds.felleskomponent1.TeleCom
 import no.ks.fiks.hdir.TypeOpplysningPasientsamhandling
 import no.ks.fiks.nhn.edi.toCV
-import no.ks.fiks.nhn.msh.BusinessDocumentMessage
+import no.ks.fiks.nhn.msh.OutgoingMessage
 
 object DialogmeldingBuilder {
 
-    fun buildDialogmelding(message: BusinessDocumentMessage) = Dialogmelding()
+    fun buildDialogmelding(message: OutgoingMessage) = Dialogmelding()
         .apply {
             foresporsel = listOf(
                 Foresporsel().apply {

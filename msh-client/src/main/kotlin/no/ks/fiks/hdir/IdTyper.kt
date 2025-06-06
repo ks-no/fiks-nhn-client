@@ -1,6 +1,6 @@
 package no.ks.fiks.hdir
 
-interface IdType : KodeverkVerdi
+sealed interface IdType : KodeverkVerdi
 
 // Kodeverk: 8116 ID-type for personer
 enum class PersonIdType(
@@ -15,7 +15,7 @@ enum class PersonIdType(
 }
 
 // Kodeverk: 9051 ID-typer for organisatoriske enheter
-enum class OrganisasjonIdType(
+enum class OrganizationIdType(
     override val verdi: String,
     override val navn: String,
 ) : IdType {
