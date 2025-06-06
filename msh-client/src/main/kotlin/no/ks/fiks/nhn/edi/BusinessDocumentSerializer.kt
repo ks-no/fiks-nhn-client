@@ -86,7 +86,7 @@ object BusinessDocumentSerializer {
                         }
                     )
                 }
-                document = listOf( // Kan ikke være tom før valideringen
+                document = listOf( // Add empty doc for validation, which is overwritten later
                     Document().apply {
                         refDoc = RefDoc().apply {
                             msgType = CS()
