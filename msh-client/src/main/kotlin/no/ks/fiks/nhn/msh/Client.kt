@@ -55,7 +55,7 @@ class Client(
             })
         })
 
-    val flrClient = FastlegeregisteretClient(
+    private val flrClient = FastlegeregisteretClient(
         environment = configuration.environments.fastlegeregisteretEnvironment,
         credentials = configuration.fastlegeregisteret.let {
             FlrCredentials(
@@ -64,7 +64,7 @@ class Client(
             )
         },
     )
-    val arClient = AdresseregisteretClient(
+    private val arClient = AdresseregisteretClient(
         environment = configuration.environments.adresseregisteretEnvironment,
         credentials = configuration.adresseregisteret.let {
             ArCredentials(

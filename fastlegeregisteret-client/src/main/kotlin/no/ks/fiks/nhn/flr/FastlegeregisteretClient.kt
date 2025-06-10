@@ -33,6 +33,7 @@ class FastlegeregisteretClientBuilder {
     private var credentials: Credentials? = null
     private var service: IFlrReadOperations? = null
 
+    fun url(url: String) = apply { this.environment = Environment(url) }
     fun environment(environment: Environment) = apply { this.environment = environment }
     fun credentials(credentials: Credentials) = apply { this.credentials = credentials }
     fun service(service: IFlrReadOperations) = apply { this.service = service }

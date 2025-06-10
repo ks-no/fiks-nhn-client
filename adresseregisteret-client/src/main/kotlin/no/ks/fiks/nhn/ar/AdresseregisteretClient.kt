@@ -104,6 +104,7 @@ class AdresseregisteretClientBuilder {
     private var credentials: Credentials? = null
     private var service: ICommunicationPartyService? = null
 
+    fun url(url: String) = apply { this.environment = Environment(url) }
     fun environment(environment: Environment) = apply { this.environment = environment }
     fun credentials(credentials: Credentials) = apply { this.credentials = credentials }
     fun service(service: ICommunicationPartyService) = apply { this.service = service }
