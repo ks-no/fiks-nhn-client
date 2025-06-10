@@ -11,11 +11,11 @@ import no.kith.xmlstds.felleskomponent1.TeleCom
 import no.ks.fiks.hdir.HelsepersonellsFunksjoner
 import no.ks.fiks.hdir.TemaForHelsefagligDialog
 import no.ks.fiks.nhn.edi.toCV
-import no.ks.fiks.nhn.msh.BusinessDocumentMessage
+import no.ks.fiks.nhn.msh.OutgoingMessage
 
 object DialogmeldingBuilder {
 
-    fun buildDialogmelding(message: BusinessDocumentMessage) = Dialogmelding()
+    fun buildDialogmelding(message: OutgoingMessage) = Dialogmelding()
         .apply {
             notat = listOf(
                 Notat().apply {

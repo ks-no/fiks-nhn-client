@@ -1,6 +1,6 @@
 package no.ks.fiks.nhn.msh
 
-import no.ks.fiks.hdir.OrganisasjonIdType
+import no.ks.fiks.hdir.OrganizationIdType
 import no.ks.fiks.hdir.PersonIdType
 import no.ks.fiks.nhn.ar.AdresseregisteretClient
 import no.ks.fiks.nhn.ar.PersonCommunicationParty
@@ -11,20 +11,20 @@ class GpForPersonReceiverBuilder(
     private val arClient: AdresseregisteretClient,
 ) {
 
-    fun buildGpForPersonReceiver(person: Person): HerIdReceiver {
+    fun buildGpForPersonReceiver(person: Person): Receiver {
         val fastlege = lookupFastlege(person.fnr)
         val parent = fastlege.parent ?: throw GpNotFoundException("GP does not have a parent", person.fnr)
 
-        return HerIdReceiver(
-            parent = HerIdReceiverParent(
+        return Receiver(
+            parent = OrganizationReceiverDetails(
                 name = parent.name,
-                id = Id(
+                id = OrganizationId(
                     id = parent.herId.toString(),
-                    type = OrganisasjonIdType.HER_ID,
+                    type = OrganizationIdType.HER_ID,
                 ),
             ),
-            child = PersonHerIdReceiverChild(
-                id = Id(
+            child = PersonReceiverDetails(
+                id = PersonId(
                     id = fastlege.herId.toString(),
                     type = PersonIdType.HER_ID,
                 ),

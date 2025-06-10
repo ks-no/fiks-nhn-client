@@ -6,7 +6,7 @@ import no.kith.xmlstds.apprec._2004_11_21.Dept
 import no.kith.xmlstds.apprec._2004_11_21.HCPerson
 import no.kith.xmlstds.apprec._2004_11_21.Inst
 import no.ks.fiks.hdir.FeilmeldingForApplikasjonskvittering
-import no.ks.fiks.hdir.OrganisasjonIdType
+import no.ks.fiks.hdir.OrganizationIdType
 import no.ks.fiks.hdir.PersonIdType
 import no.ks.fiks.hdir.StatusForMottakAvMelding
 import no.ks.fiks.nhn.msh.*
@@ -53,18 +53,18 @@ object AppRecDeserializer {
         }
     )
 
-    private fun Inst.toId() = OrganisasjonIdType.entries.firstOrNull { it.verdi == typeId.v }
+    private fun Inst.toId() = OrganizationIdType.entries.firstOrNull { it.verdi == typeId.v }
         ?.let { type ->
-            Id(
+            OrganizationId(
                 id = id,
                 type = type,
             )
         }
         ?: throw IllegalArgumentException("Unknown type for organisation id: ${typeId.v}, ${typeId.dn}")
 
-    private fun Dept.toId() = OrganisasjonIdType.entries.firstOrNull { it.verdi == typeId.v }
+    private fun Dept.toId() = OrganizationIdType.entries.firstOrNull { it.verdi == typeId.v }
         ?.let { type ->
-            Id(
+            OrganizationId(
                 id = id,
                 type = type,
             )
@@ -73,7 +73,7 @@ object AppRecDeserializer {
 
     private fun HCPerson.toId() = PersonIdType.entries.firstOrNull { it.verdi == typeId.v }
         ?.let { type ->
-            Id(
+            PersonId(
                 id = id,
                 type = type,
             )

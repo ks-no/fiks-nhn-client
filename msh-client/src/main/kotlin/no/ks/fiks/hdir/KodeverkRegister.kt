@@ -7,7 +7,7 @@ object KodeverkRegister {
         HelsepersonellsFunksjoner.entries,
         MeldingensFunksjon.entries,
         TypeDokumentreferanse.entries,
-        OrganisasjonIdType.entries,
+        OrganizationIdType.entries,
         PersonIdType.entries,
     ).flatten()
         .associate {
