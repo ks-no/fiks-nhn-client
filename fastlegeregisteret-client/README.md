@@ -21,7 +21,7 @@ Prod:
 ### Setting up the client
 ```kotlin
 val client = FastlegeregisteretClient(
-    environment = Environment.TEST,
+    url = Environment.TEST,
     credentials = Credentials(
         username = username,
         password = password,

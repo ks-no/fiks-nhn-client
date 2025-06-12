@@ -21,7 +21,7 @@ Prod:
 ### Setting up the client
 ```kotlin
 val client = AdresseregisteretClient(
-    environment = "https://ws-web.test.nhn.no/v1/Ar",
+    url = "https://ws-web.test.nhn.no/v1/Ar",
     credentials = Credentials(
         username = username,
         password = password,
