@@ -8,9 +8,9 @@ import org.apache.cxf.jaxws.JaxWsProxyFactoryBean
 import org.apache.cxf.ws.addressing.WSAddressingFeature
 
 class FastlegeregisteretClient(
-    environment: Environment,
+    url: String,
     credentials: Credentials,
-    private val service: IFlrReadOperations = buildService(environment, credentials)
+    private val service: IFlrReadOperations = buildService(url, credentials)
 ) {
 
     fun getPatientGP(patientId: String): PatientGP? =
@@ -29,29 +29,28 @@ class FastlegeregisteretClient(
 
 class FastlegeregisteretClientBuilder {
 
-    private var environment: Environment? = null
+    private var url: String? = null
     private var credentials: Credentials? = null
     private var service: IFlrReadOperations? = null
 
-    fun url(url: String) = apply { this.environment = Environment(url) }
-    fun environment(environment: Environment) = apply { this.environment = environment }
+    fun url(url: String) = apply { this.url = url }
     fun credentials(credentials: Credentials) = apply { this.credentials = credentials }
     fun service(service: IFlrReadOperations) = apply { this.service = service }
 
     fun build(): FastlegeregisteretClient {
-        val environment = environment ?: throw IllegalStateException("environment is required")
+        val url = url ?: throw IllegalStateException("url is required")
         val credentials = credentials ?: throw IllegalStateException("credentials is required")
         return FastlegeregisteretClient(
-            environment = environment,
+            url = url,
             credentials = credentials,
-            service = service ?: buildService(environment, credentials),
+            service = service ?: buildService(url, credentials),
         )
     }
 
 }
 
-private fun buildService(environment: Environment, credentials: Credentials) = JaxWsProxyFactoryBean().apply {
-    address = environment.url
+private fun buildService(url: String, credentials: Credentials) = JaxWsProxyFactoryBean().apply {
+    address = url
 
     username = credentials.username
     password = credentials.password

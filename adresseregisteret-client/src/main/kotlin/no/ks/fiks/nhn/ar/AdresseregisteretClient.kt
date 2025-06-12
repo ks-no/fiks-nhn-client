@@ -11,9 +11,9 @@ import no.nhn.register.communicationparty.CommunicationParty as NhnCommunication
 private val log = KotlinLogging.logger { }
 
 class AdresseregisteretClient(
-    environment: Environment,
+    url: String,
     credentials: Credentials,
-    private val service: ICommunicationPartyService = buildService(environment, credentials),
+    private val service: ICommunicationPartyService = buildService(url, credentials),
 ) {
 
     fun lookupHerId(herId: Int): CommunicationParty? =
@@ -100,30 +100,29 @@ private fun JAXBElement<String>.valueNotBlank() = value?.takeIf { it.isNotBlank(
 
 class AdresseregisteretClientBuilder {
 
-    private var environment: Environment? = null
+    private var url: String? = null
     private var credentials: Credentials? = null
     private var service: ICommunicationPartyService? = null
 
-    fun url(url: String) = apply { this.environment = Environment(url) }
-    fun environment(environment: Environment) = apply { this.environment = environment }
+    fun url(url: String) = apply { this.url = url }
     fun credentials(credentials: Credentials) = apply { this.credentials = credentials }
     fun service(service: ICommunicationPartyService) = apply { this.service = service }
 
     fun build(): AdresseregisteretClient {
-        val environment = environment ?: throw IllegalStateException("environment is required")
+        val url = url ?: throw IllegalStateException("url is required")
         val credentials = credentials ?: throw IllegalStateException("credentials is required")
         return AdresseregisteretClient(
-            environment = environment,
+            url = url,
             credentials = credentials,
-            service = service ?: buildService(environment, credentials),
+            service = service ?: buildService(url, credentials),
         )
     }
 
 }
 
-private fun buildService(environment: Environment, credentials: Credentials): ICommunicationPartyService =
+private fun buildService(url: String, credentials: Credentials): ICommunicationPartyService =
     JaxWsProxyFactoryBean().apply {
-        address = environment.url
+        address = url
 
         username = credentials.username
         password = credentials.password

@@ -26,7 +26,7 @@ class GetPatientGPHttpTest : StringSpec() {
             stubResponse(patientId, "get-patient-gp.xml")
 
             val client = FastlegeregisteretClient(
-                environment = Environment(wireMock.baseUrl),
+                url = wireMock.baseUrl,
                 credentials = Credentials(
                     username = UUID.randomUUID().toString(),
                     password = UUID.randomUUID().toString(),
@@ -46,7 +46,7 @@ class GetPatientGPHttpTest : StringSpec() {
             stubResponse(patientId, "get-patient-gp-not-found.xml")
 
             val client = FastlegeregisteretClient(
-                environment = Environment(wireMock.baseUrl),
+                url = wireMock.baseUrl,
                 credentials = Credentials(
                     username = UUID.randomUUID().toString(),
                     password = UUID.randomUUID().toString(),
@@ -66,7 +66,7 @@ class GetPatientGPHttpTest : StringSpec() {
             stubResponse(patientId, "get-patient-gp-invalid-nin.xml")
 
             val client = FastlegeregisteretClient(
-                environment = Environment(wireMock.baseUrl),
+                url = wireMock.baseUrl,
                 credentials = Credentials(
                     username = UUID.randomUUID().toString(),
                     password = UUID.randomUUID().toString(),
@@ -84,12 +84,11 @@ class GetPatientGPHttpTest : StringSpec() {
         "Test that configuration is applied correctly" {
             val username = UUID.randomUUID().toString()
             val password = UUID.randomUUID().toString()
-            val environment = Environment(wireMock.baseUrl)
 
             val patientId = UUID.randomUUID().toString()
             stubResponse(patientId, "get-patient-gp.xml")
 
-            FastlegeregisteretClient(environment, Credentials(username, password))
+            FastlegeregisteretClient(wireMock.baseUrl, Credentials(username, password))
                 .getPatientGP(patientId)
 
             val requests = findAll(
@@ -98,7 +97,7 @@ class GetPatientGPHttpTest : StringSpec() {
             )
             requests shouldHaveSize 1
             requests.single().asClue { request ->
-                request.absoluteUrl shouldBe "${environment.url}/"
+                request.absoluteUrl shouldBe "${wireMock.baseUrl}/"
                 val usernamePassword = Base64.getDecoder()
                     .decode(
                         request.header("Authorization").firstValue()
@@ -112,13 +111,12 @@ class GetPatientGPHttpTest : StringSpec() {
         "Test that configuration is applied correctly when using builder" {
             val username = UUID.randomUUID().toString()
             val password = UUID.randomUUID().toString()
-            val environment = Environment(wireMock.baseUrl)
 
             val patientId = UUID.randomUUID().toString()
             stubResponse(patientId, "get-patient-gp.xml")
 
             FastlegeregisteretClientBuilder()
-                .environment(environment)
+                .url(wireMock.baseUrl)
                 .credentials(Credentials(username, password))
                 .build()
                 .getPatientGP(patientId)
@@ -129,7 +127,7 @@ class GetPatientGPHttpTest : StringSpec() {
             )
             requests shouldHaveSize 1
             requests.single().asClue { request ->
-                request.absoluteUrl shouldBe "${environment.url}/"
+                request.absoluteUrl shouldBe "${wireMock.baseUrl}/"
                 val usernamePassword = Base64.getDecoder()
                     .decode(
                         request.header("Authorization").firstValue()

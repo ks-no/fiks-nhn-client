@@ -29,7 +29,7 @@ class LookupHerIdHttpTest : StringSpec() {
             val herId = nextInt(1, 100000)
             stubResponse(herId, "get-communication-party-details-organzation-response.xml")
 
-            AdresseregisteretClient(Environment(wireMock.baseUrl), Credentials(UUID.randomUUID().toString(), UUID.randomUUID().toString()))
+            AdresseregisteretClient(wireMock.baseUrl, Credentials(UUID.randomUUID().toString(), UUID.randomUUID().toString()))
                 .lookupHerId(herId)
                 .asClue { party ->
                     party.shouldBeInstanceOf<OrganizationCommunicationParty>()
@@ -60,7 +60,7 @@ class LookupHerIdHttpTest : StringSpec() {
             val herId = nextInt(1, 100000)
             stubResponse(herId, "get-communication-party-details-person-response.xml")
 
-            AdresseregisteretClient(Environment(wireMock.baseUrl), Credentials(UUID.randomUUID().toString(), UUID.randomUUID().toString()))
+            AdresseregisteretClient(wireMock.baseUrl, Credentials(UUID.randomUUID().toString(), UUID.randomUUID().toString()))
                 .lookupHerId(herId)
                 .asClue { party ->
                     party.shouldBeInstanceOf<PersonCommunicationParty>()
@@ -85,7 +85,7 @@ class LookupHerIdHttpTest : StringSpec() {
             val herId = nextInt(1, 100000)
             stubResponse(herId, "get-communication-party-details-service-response.xml")
 
-            AdresseregisteretClient(Environment(wireMock.baseUrl), Credentials(UUID.randomUUID().toString(), UUID.randomUUID().toString()))
+            AdresseregisteretClient(wireMock.baseUrl, Credentials(UUID.randomUUID().toString(), UUID.randomUUID().toString()))
                 .lookupHerId(herId)
                 .asClue { party ->
                     party.shouldBeInstanceOf<ServiceCommunicationParty>()
@@ -118,7 +118,7 @@ class LookupHerIdHttpTest : StringSpec() {
             val herId = nextInt(1, 100000)
             stubResponse(herId, "get-communication-party-details-no-parent-response.xml")
 
-            AdresseregisteretClient(Environment(wireMock.baseUrl), Credentials(UUID.randomUUID().toString(), UUID.randomUUID().toString()))
+            AdresseregisteretClient(wireMock.baseUrl, Credentials(UUID.randomUUID().toString(), UUID.randomUUID().toString()))
                 .lookupHerId(herId)
                 .asClue {
                     it.shouldBeInstanceOf<OrganizationCommunicationParty>()
@@ -142,7 +142,7 @@ class LookupHerIdHttpTest : StringSpec() {
             val herId = nextInt(1, 100000)
             stubResponse(herId, "get-communication-party-details-with-parent-response.xml")
 
-            AdresseregisteretClient(Environment(wireMock.baseUrl), Credentials(UUID.randomUUID().toString(), UUID.randomUUID().toString()))
+            AdresseregisteretClient(wireMock.baseUrl, Credentials(UUID.randomUUID().toString(), UUID.randomUUID().toString()))
                 .lookupHerId(herId)
                 .asClue {
                     it.shouldBeInstanceOf<OrganizationCommunicationParty>()
@@ -150,7 +150,7 @@ class LookupHerIdHttpTest : StringSpec() {
                     it.name shouldBe "ET LEGEKONTOR"
                     it.parent shouldNot beNull()
                     it.parent!!.herId shouldBe 987654
-                    it.parent!!.name shouldBe "Overordnet Organisasjon"
+                    it.parent.name shouldBe "Overordnet Organisasjon"
                     it.physicalAddresses shouldHaveSize 1
                     with(it.physicalAddresses.single()) {
                         type shouldBe AddressType.POSTADRESSE
@@ -167,12 +167,12 @@ class LookupHerIdHttpTest : StringSpec() {
         "Test that configuration is applied correctly" {
             val username = UUID.randomUUID().toString()
             val password = UUID.randomUUID().toString()
-            val environment = Environment(wireMock.baseUrl)
+            val url = wireMock.baseUrl
 
             val herId = nextInt(1, 100000)
             stubResponse(herId, "get-communication-party-details-no-parent-response.xml")
 
-            AdresseregisteretClient(environment, Credentials(username, password))
+            AdresseregisteretClient(url, Credentials(username, password))
                 .lookupHerId(herId)
 
             val requests = findAll(
@@ -181,7 +181,7 @@ class LookupHerIdHttpTest : StringSpec() {
             )
             requests shouldHaveSize 1
             requests.single().asClue { request ->
-                request.absoluteUrl shouldBe "${environment.url}/"
+                request.absoluteUrl shouldBe "${url}/"
                 val usernamePassword = Base64.getDecoder()
                     .decode(
                         request.header("Authorization").firstValue()
@@ -195,13 +195,13 @@ class LookupHerIdHttpTest : StringSpec() {
         "Test that configuration is applied correctly when using builder" {
             val username = UUID.randomUUID().toString()
             val password = UUID.randomUUID().toString()
-            val environment = Environment(wireMock.baseUrl)
+            val url = wireMock.baseUrl
 
             val herId = nextInt(1, 100000)
             stubResponse(herId, "get-communication-party-details-no-parent-response.xml")
 
             AdresseregisteretClientBuilder()
-                .environment(environment)
+                .url(url)
                 .credentials(Credentials(username, password))
                 .build()
                 .lookupHerId(herId)
@@ -212,7 +212,7 @@ class LookupHerIdHttpTest : StringSpec() {
             )
             requests shouldHaveSize 1
             requests.single().asClue { request ->
-                request.absoluteUrl shouldBe "${environment.url}/"
+                request.absoluteUrl shouldBe "${url}/"
                 val usernamePassword = Base64.getDecoder()
                     .decode(
                         request.header("Authorization").firstValue()
@@ -258,7 +258,7 @@ class LookupHerIdHttpTest : StringSpec() {
             stubResponse(herId, "get-communication-party-details-not-found-response.xml")
 
             shouldThrow<AdresseregisteretApiException> {
-                AdresseregisteretClient(Environment(wireMock.baseUrl), Credentials(UUID.randomUUID().toString(), UUID.randomUUID().toString()))
+                AdresseregisteretClient(wireMock.baseUrl, Credentials(UUID.randomUUID().toString(), UUID.randomUUID().toString()))
                     .lookupHerId(herId)
             }.asClue {
                 it.message shouldBe "Kommunikasjonspart med oppgitt HER-id eksisterer ikke. (reason)"
