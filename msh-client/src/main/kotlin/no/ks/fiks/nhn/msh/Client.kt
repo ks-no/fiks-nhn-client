@@ -42,7 +42,7 @@ class Client(
     configuration: Configuration,
 ) {
 
-    private val baseUrl = configuration.environments.mshEnvironment.url
+    private val baseUrl = configuration.environments.mshBaseUrl
 
     private val mapper = ObjectMapper()
         .registerModule(JavaTimeModule())
@@ -56,7 +56,7 @@ class Client(
         })
 
     private val flrClient = FastlegeregisteretClient(
-        environment = configuration.environments.fastlegeregisteretEnvironment,
+        url = configuration.environments.fastlegeregisterUrl,
         credentials = configuration.fastlegeregisteret.let {
             FlrCredentials(
                 username = it.username,
@@ -65,7 +65,7 @@ class Client(
         },
     )
     private val arClient = AdresseregisteretClient(
-        environment = configuration.environments.adresseregisteretEnvironment,
+        url = configuration.environments.adresseregisterUrl,
         credentials = configuration.adresseregisteret.let {
             ArCredentials(
                 username = it.username,
@@ -82,7 +82,7 @@ class Client(
             jwk = configuration.helseId.jwk,
         )
     )
-    private val meldingstjenerEnvironment = configuration.environments.mshEnvironment
+    private val meldingstjenerBaseUrl = configuration.environments.mshBaseUrl
     private val sourceSystem = configuration.sourceSystem
 
     fun sendMessageToGPForPerson(businessDocument: GPForPersonOutgoingBusinessDocument) {
@@ -206,7 +206,7 @@ class Client(
                 it.header(name, value)
             }
         }
-        .target(MessagesControllerApi::class.java, meldingstjenerEnvironment.url)
+        .target(MessagesControllerApi::class.java, meldingstjenerBaseUrl)
 
     private fun buildGetMessagesEndpoint() = Endpoint(HttpMethod.GET, "$baseUrl/Messages")
     private fun buildPostMessagesEndpoint() = Endpoint(HttpMethod.POST, "$baseUrl/Messages")

@@ -76,7 +76,7 @@ class GetPatientGPTest : StringSpec({
 
 })
 
-private fun buildClient(service: IFlrReadOperations) = FastlegeregisteretClient(Environment(""), Credentials("", ""), service)
+private fun buildClient(service: IFlrReadOperations) = FastlegeregisteretClient("", Credentials("", ""), service)
 
 private fun setupServiceMock(expected: PatientToGPContractAssociation?) = mockk<IFlrReadOperations> {
     every { getPatientGPDetails(any()) } returns expected

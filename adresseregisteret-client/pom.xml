@@ -27,7 +27,6 @@
         <dependency>
             <groupId>no.ks.fiks</groupId>
             <artifactId>helseid-client</artifactId>
-            <version>${helseid.version}</version>
         </dependency>
 
 

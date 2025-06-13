@@ -1,9 +1,6 @@
 package no.ks.fiks.nhn.msh
 
 import no.ks.fiks.helseid.Environment as HelseIdEnvironment
-import no.ks.fiks.nhn.ar.Environment as ArEnvironment
-import no.ks.fiks.nhn.flr.Environment as FlrEnvironment
-import no.ks.fiks.nhn.msh.Environment as MshEnvironment
 
 data class Configuration(
     val environments: Environments,
@@ -16,46 +13,29 @@ data class Configuration(
 
 data class Environments(
     val helseIdEnvironment: HelseIdEnvironment,
-    val adresseregisteretEnvironment: ArEnvironment,
-    val fastlegeregisteretEnvironment: FlrEnvironment,
-    val mshEnvironment: MshEnvironment,
-) {
-    companion object {
-        val TEST = Environments(
-            HelseIdEnvironment.TEST,
-            ArEnvironment.TEST,
-            FlrEnvironment.TEST,
-            MshEnvironment.TEST,
-        )
-        val PROD = Environments(
-            HelseIdEnvironment.PROD,
-            ArEnvironment.PROD,
-            FlrEnvironment.PROD,
-            MshEnvironment.PROD,
-        )
-
-    }
-}
+    val adresseregisterUrl: String,
+    val fastlegeregisterUrl: String,
+    val mshBaseUrl: String,
+)
 
 class EnvironmentsBuilder {
 
     private var helseIdEnvironment: HelseIdEnvironment? = null
-    private var adresseregisteretEnvironment: ArEnvironment? = null
-    private var fastlegeregisteretEnvironment: FlrEnvironment? = null
-    private var mshEnvironment: MshEnvironment? = null
+    private var adresseregisterUrl: String? = null
+    private var fastlegeregisterUrl: String? = null
+    private var mshBaseUrl: String? = null
 
     fun helseIdEnvironment(url: String, audience: String) = apply { helseIdEnvironment = HelseIdEnvironment(url, audience) }
-    fun adresseregisteretEnvironment(url: String) = apply { adresseregisteretEnvironment = ArEnvironment(url) }
-    fun fastlegeregisteretEnvironment(url: String) = apply { fastlegeregisteretEnvironment = FlrEnvironment(url) }
-    fun mshEnvironment(url: String) = apply { mshEnvironment = MshEnvironment(url) }
+    fun adresseregisteretUrl(url: String) = apply { adresseregisterUrl = url }
+    fun fastlegeregisteretUrl(url: String) = apply { fastlegeregisterUrl = url }
+    fun mshBaseUrl(url: String) = apply { mshBaseUrl = url }
 
     fun build(): Environments = Environments(
         helseIdEnvironment = helseIdEnvironment ?: throw IllegalStateException("helseIdEnvironment is required"),
-        adresseregisteretEnvironment = adresseregisteretEnvironment ?: throw IllegalStateException("adresseregisteretEnvironment is required"),
-        fastlegeregisteretEnvironment = fastlegeregisteretEnvironment ?: throw IllegalStateException("fastlegeregisteretEnvironment is required"),
-        mshEnvironment = mshEnvironment ?: throw IllegalStateException("mshEnvironment is required"),
+        adresseregisterUrl = adresseregisterUrl ?: throw IllegalStateException("adresseregisteretEnvironment is required"),
+        fastlegeregisterUrl = fastlegeregisterUrl ?: throw IllegalStateException("fastlegeregisteretEnvironment is required"),
+        mshBaseUrl = mshBaseUrl ?: throw IllegalStateException("mshBaseUrl is required"),
     )
-
 }
 
 data class HelseIdConfiguration(

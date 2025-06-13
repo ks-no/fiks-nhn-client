@@ -4,6 +4,11 @@ Uses the Fastlegeregisteret web service provided by NHN:
 - https://register-web.test.nhn.no/docs/arkitektur/register/flr.html
 - https://www.nhn.no/tjenester/fastlegeregisteret
 
+Test:
+- https://ws-web.test.nhn.no/v2/flr
+Prod:
+- https://ws.nhn.no/v2/flr
+
 ### Import using Maven
 ```xml
 <dependency>
@@ -16,7 +21,7 @@ Uses the Fastlegeregisteret web service provided by NHN:
 ### Setting up the client
 ```kotlin
 val client = FastlegeregisteretClient(
-    environment = Environment.TEST,
+    url = Environment.TEST,
     credentials = Credentials(
         username = username,
         password = password,
