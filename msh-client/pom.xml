@@ -40,6 +40,10 @@
             <artifactId>msh-api-v2</artifactId>
         </dependency>
         <dependency>
+            <groupId>no.ks.fiks</groupId>
+            <artifactId>helseid-client</artifactId>
+        </dependency>
+        <dependency>
             <groupId>jakarta.xml.bind</groupId>
             <artifactId>jakarta.xml.bind-api</artifactId>
             <version>${jakarta.xml.bind-api.version}</version>

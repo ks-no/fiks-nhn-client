@@ -42,7 +42,7 @@ class Client(
     configuration: Configuration,
 ) {
 
-    private val baseUrl = configuration.environments.mshBaseurl
+    private val baseUrl = configuration.environments.mshBaseUrl
 
     private val mapper = ObjectMapper()
         .registerModule(JavaTimeModule())
@@ -82,7 +82,7 @@ class Client(
             jwk = configuration.helseId.jwk,
         )
     )
-    private val meldingstjenerBaseurl = configuration.environments.mshBaseurl
+    private val meldingstjenerBaseUrl = configuration.environments.mshBaseUrl
     private val sourceSystem = configuration.sourceSystem
 
     fun sendMessageToGPForPerson(businessDocument: GPForPersonOutgoingBusinessDocument) {
@@ -206,7 +206,7 @@ class Client(
                 it.header(name, value)
             }
         }
-        .target(MessagesControllerApi::class.java, meldingstjenerBaseurl)
+        .target(MessagesControllerApi::class.java, meldingstjenerBaseUrl)
 
     private fun buildGetMessagesEndpoint() = Endpoint(HttpMethod.GET, "$baseUrl/Messages")
     private fun buildPostMessagesEndpoint() = Endpoint(HttpMethod.POST, "$baseUrl/Messages")
