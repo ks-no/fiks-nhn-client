@@ -78,7 +78,7 @@ private class AuthorizationRequestInterceptor(
     override fun apply(template: RequestTemplate) {
         val endpoint = Endpoint(
             method = HttpMethod.valueOf(template.method()),
-            url = template.url(),
+            url = template.feignTarget().url() + template.path(),
         )
         if (accessTokenRequestBuilder == null) {
             httpHelper.addDpopAuthorizationHeader(endpoint) { name, value ->
