@@ -41,19 +41,19 @@ class EnvironmentsBuilder {
 data class HelseIdConfiguration(
     val clientId: String,
     val jwk: String,
-    val tokenConfiguration: HelseIdTokenConfiguration? = null,
+    val tokenParams: HelseIdTokenParameters? = null,
 )
-data class HelseIdTokenConfiguration(
-    val tenantConfiguration: HelseIdTenantConfiguration? = null,
+data class HelseIdTokenParameters(
+    val tenant: HelseIdTenantParameters? = null,
 )
-sealed class HelseIdTenantConfiguration
-class SingleTenantHelseIdTokenConfiguration(
+sealed class HelseIdTenantParameters
+class SingleTenantHelseIdTokenParameters(
     val childOrganization: String,
-) :  HelseIdTenantConfiguration()
-class MultiTenantHelseIdTokenConfiguration(
+) :  HelseIdTenantParameters()
+class MultiTenantHelseIdTokenParameters(
     val parentOrganization: String,
     val childOrganization: String? = null,
-) :  HelseIdTenantConfiguration()
+) :  HelseIdTenantParameters()
 
 data class Credentials(
     val username: String,

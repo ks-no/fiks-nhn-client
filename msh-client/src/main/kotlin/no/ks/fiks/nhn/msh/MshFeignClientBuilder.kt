@@ -53,17 +53,22 @@ internal object MshFeignClientBuilder {
     )
 
     private fun buildBaseAccessTokenRequest(configuration: Configuration) =
-        configuration.helseId.tokenConfiguration?.tenantConfiguration?.let { config ->
-            when (config) {
-                is SingleTenantHelseIdTokenConfiguration -> AccessTokenRequestBuilder()
-                    .tenancyType(TenancyType.SINGLE)
-                    .childOrganizationNumber(config.childOrganization)
+        configuration.helseId.tokenParams?.let { config ->
+            AccessTokenRequestBuilder()
+                .also { builder ->
+                    config.tenant?.apply {
+                        when (this) {
+                            is SingleTenantHelseIdTokenParameters -> builder
+                                .tenancyType(TenancyType.SINGLE)
+                                .childOrganizationNumber(childOrganization)
 
-                is MultiTenantHelseIdTokenConfiguration -> AccessTokenRequestBuilder()
-                    .tenancyType(TenancyType.MULTI)
-                    .parentOrganizationNumber(config.parentOrganization)
-                    .also { if (config.childOrganization != null) it.childOrganizationNumber(config.childOrganization) }
-            }
+                            is MultiTenantHelseIdTokenParameters -> builder
+                                .tenancyType(TenancyType.MULTI)
+                                .parentOrganizationNumber(parentOrganization)
+                                .also { if (childOrganization != null) builder.childOrganizationNumber(childOrganization) }
+                        }
+                    }
+                }
         }
 
 }
