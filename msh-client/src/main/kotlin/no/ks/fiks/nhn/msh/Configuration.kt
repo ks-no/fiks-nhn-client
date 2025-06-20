@@ -43,14 +43,17 @@ data class HelseIdConfiguration(
     val jwk: String,
     val tokenConfiguration: HelseIdTokenConfiguration? = null,
 )
-sealed class HelseIdTokenConfiguration
+data class HelseIdTokenConfiguration(
+    val tenantConfiguration: HelseIdTenantConfiguration? = null,
+)
+sealed class HelseIdTenantConfiguration
 class SingleTenantHelseIdTokenConfiguration(
     val childOrganization: String,
-) :  HelseIdTokenConfiguration()
+) :  HelseIdTenantConfiguration()
 class MultiTenantHelseIdTokenConfiguration(
     val parentOrganization: String,
     val childOrganization: String? = null,
-) :  HelseIdTokenConfiguration()
+) :  HelseIdTenantConfiguration()
 
 data class Credentials(
     val username: String,

@@ -53,7 +53,7 @@ internal object MshFeignClientBuilder {
     )
 
     private fun buildBaseAccessTokenRequest(configuration: Configuration) =
-        configuration.helseId.tokenConfiguration.let { config ->
+        configuration.helseId.tokenConfiguration?.tenantConfiguration?.let { config ->
             when (config) {
                 is SingleTenantHelseIdTokenConfiguration -> AccessTokenRequestBuilder()
                     .tenancyType(TenancyType.SINGLE)
@@ -63,8 +63,6 @@ internal object MshFeignClientBuilder {
                     .tenancyType(TenancyType.MULTI)
                     .parentOrganizationNumber(config.parentOrganization)
                     .also { if (config.childOrganization != null) it.childOrganizationNumber(config.childOrganization) }
-
-                null -> null
             }
         }
 
