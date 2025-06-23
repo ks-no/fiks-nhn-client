@@ -9,6 +9,9 @@ object KodeverkRegister {
         TypeDokumentreferanse.entries,
         OrganizationIdType.entries,
         PersonIdType.entries,
+        TypeOpplysningPasientsamhandlingPleieOgOmsorg.entries,
+        TypeOpplysningPasientsamhandlingLege.entries,
+        TemaForHelsefagligDialog.entries,
     ).flatten()
         .associate {
             KodeverkVerdiKey(

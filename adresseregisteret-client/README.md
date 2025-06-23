@@ -4,10 +4,8 @@ Uses the Adresseregisteret web service provided by NHN:
 - https://register-web.test.nhn.no/docs/arkitektur/register/ar.html
 - https://www.nhn.no/tjenester/adresseregisteret
 
-Test:
-- https://ws-web.test.nhn.no/v1/Ar
-Prod:
-- https://ws.nhn.no/v1/Ar
+Test: https://ws-web.test.nhn.no/v1/Ar  
+Prod: https://ws.nhn.no/v1/Ar
 
 ### Import using Maven
 ```xml

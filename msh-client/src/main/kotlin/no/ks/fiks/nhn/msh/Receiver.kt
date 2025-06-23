@@ -6,17 +6,27 @@ data class Receiver(
     val patient: Patient,
 )
 
-sealed class ReceiverDetails(val id: Id)
+sealed class ReceiverDetails(val ids: List<Id>)
+
 class OrganizationReceiverDetails(
-    id: OrganizationId,
+    ids: List<OrganizationId>,
     val name: String,
-) : ReceiverDetails(id)
+) : ReceiverDetails(ids) {
+    override fun toString(): String {
+        return "OrganizationReceiverDetails(ids='$ids', name='$name')"
+    }
+}
+
 class PersonReceiverDetails(
-    id: PersonId,
+    ids: List<PersonId>,
     val firstName: String,
     val middleName: String?,
     val lastName: String,
-) : ReceiverDetails(id)
+) : ReceiverDetails(ids) {
+    override fun toString(): String {
+        return "PersonReceiverDetails(ids='$ids', firstName='$firstName', middleName=$middleName, lastName='$lastName')"
+    }
+}
 
 data class Patient(
     val fnr: String,

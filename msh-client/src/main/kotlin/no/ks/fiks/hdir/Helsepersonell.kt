@@ -40,8 +40,7 @@ enum class Helsepersonell(
     TANNPLEIER("TP", "Tannpleier"),
     TANNTEKNIKER("TT", "Tanntekniker"),
     VETERINAER("VE", "Veterinær"),
-    VERNEPLEIER("VP", "Vernepleier"),
-    UKJENT("XX", "Ukjent/uspesifisert");
+    VERNEPLEIER("VP", "Vernepleier");
 
 
     override val kodeverk: String = "2.16.578.1.12.4.1.1.9060"
