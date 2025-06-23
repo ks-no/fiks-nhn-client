@@ -4,10 +4,8 @@ Uses the Fastlegeregisteret web service provided by NHN:
 - https://register-web.test.nhn.no/docs/arkitektur/register/flr.html
 - https://www.nhn.no/tjenester/fastlegeregisteret
 
-Test:
-- https://ws-web.test.nhn.no/v2/flr
-Prod:
-- https://ws.nhn.no/v2/flr
+Test: https://ws-web.test.nhn.no/v2/flr
+Prod: https://ws.nhn.no/v2/flr
 
 ### Import using Maven
 ```xml

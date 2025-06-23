@@ -2,60 +2,71 @@ package no.ks.fiks.nhn.edi
 
 import io.kotest.assertions.asClue
 import io.kotest.core.spec.style.StringSpec
+import io.kotest.matchers.collections.shouldHaveSingleElement
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.nulls.beNull
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNot
 import io.kotest.matchers.types.shouldBeInstanceOf
-import no.ks.fiks.hdir.MeldingensFunksjon
-import no.ks.fiks.hdir.OrganizationIdType
-import no.ks.fiks.hdir.TemaForHelsefagligDialog
-import no.ks.fiks.hdir.TypeOpplysningPasientsamhandling
-import no.ks.fiks.nhn.msh.Dialogmelding
-import no.ks.fiks.nhn.msh.HelsefagligDialog
+import no.ks.fiks.hdir.*
 import no.ks.fiks.nhn.msh.OrganizationReceiverDetails
 import no.ks.fiks.nhn.readResourceContent
 import no.ks.fiks.nhn.readResourceContentAsString
+import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.OffsetDateTime
 
 class BusinessDocumentDeserializerTest : StringSpec({
 
-    "Should be able to deserialize Dialogmelding 1.0 Forespørsel og svar" {
+    "Should be able to deserialize Dialogmelding 1.0 Forespørsel" {
         BusinessDocumentDeserializer.deserializeMsgHead(
-            readResourceContentAsString("dialogmelding/1.0/foresporsel-og-svar/samsvar-test-message.xml")
+            readResourceContentAsString("dialogmelding/1.0/foresporsel-og-svar/dialog-foresporsel-samsvar-test.xml")
         ).asClue {
             it.id shouldBe "6ddb98ed-9e34-4efa-9163-62e4ea0cbf43"
+            it.date shouldBe LocalDateTime.of(2025, 5, 13, 11, 51, 1)
             it.type shouldBe MeldingensFunksjon.DIALOG_FORESPORSEL
 
             with(it.sender) {
                 name shouldBe "NORSK HELSENETT SF"
-                id.id shouldBe "112374"
-                id.type shouldBe OrganizationIdType.HER_ID
+                ids.single().id shouldBe "112374"
+                ids.single().type shouldBe OrganizationIdType.HER_ID
 
-                with(childOrganization) {
+                with(childOrganization!!) {
                     name shouldBe "Meldingsvalidering"
-                    id.id shouldBe "8094866"
-                    id.type shouldBe OrganizationIdType.HER_ID
+                    ids.single().id shouldBe "8094866"
+                    ids.single().type shouldBe OrganizationIdType.HER_ID
                 }
             }
 
             with(it.receiver) {
                 parent.name shouldBe "KS-DIGITALE FELLESTJENESTER AS"
-                parent.id.id shouldBe "8142987"
-                parent.id.type shouldBe OrganizationIdType.HER_ID
+                parent.ids.single().id shouldBe "8142987"
+                parent.ids.single().type shouldBe OrganizationIdType.HER_ID
 
                 child.shouldBeInstanceOf<OrganizationReceiverDetails>()
                 with(child as OrganizationReceiverDetails) {
                     name shouldBe "Saksbehandling pasientopplysninger"
-                    id.id shouldBe "8143060"
-                    id.type shouldBe OrganizationIdType.HER_ID
+                    ids.single().id shouldBe "8143060"
+                    ids.single().type shouldBe OrganizationIdType.HER_ID
+                }
+
+                with(patient) {
+                    fnr shouldBe "15720255178"
+                    firstName shouldBe "BRUN"
+                    middleName should beNull()
+                    lastName shouldBe "LENESTOL"
                 }
             }
 
-            it.message.shouldBeInstanceOf<Dialogmelding>()
-            with(it.message as Dialogmelding) {
-                type shouldBe TypeOpplysningPasientsamhandling.ANNEN_HENVENDELSE
-                sporsmal shouldBe "Pas går snart tom for cetirizin 10mg tabl og amlodipin 5mg tbl. Ber om fornyelse av resept."
+            it.message shouldNot beNull()
+            with(it.message!!) {
+                foresporsel shouldNot beNull()
+                with(foresporsel!!) {
+                    type shouldBe TypeOpplysningPasientsamhandlingPleieOgOmsorg.ANNEN_HENVENDELSE
+                    sporsmal shouldBe "Pas går snart tom for cetirizin 10mg tabl og amlodipin 5mg tbl. Ber om fornyelse av resept."
+                }
+                notat should beNull()
             }
 
             it.vedlegg shouldNot beNull()
@@ -69,6 +80,60 @@ class BusinessDocumentDeserializerTest : StringSpec({
         }
     }
 
+    "Should be able to deserialize Dialogmelding 1.0 Svar" {
+        BusinessDocumentDeserializer.deserializeMsgHead(
+            readResourceContentAsString("dialogmelding/1.0/foresporsel-og-svar/dialog-svar-webmed-test.xml")
+        ).asClue { doc ->
+            doc.id shouldBe "a748bb20-4e0f-4922-9b06-ec2c101eb9c1"
+            doc.date shouldBe LocalDateTime.of(2025, 6, 10, 10, 55, 20)
+            doc.type shouldBe MeldingensFunksjon.DIALOG_SVAR
+
+            with(doc.sender) {
+                name shouldBe "WebMed Feature PPS"
+                ids shouldHaveSize 2
+                ids shouldHaveSingleElement { it.id == "8142952" && it.type == OrganizationIdType.HER_ID }
+                ids shouldHaveSingleElement { it.id == "999988939" && it.type == OrganizationIdType.ENH }
+
+                childOrganization should beNull()
+            }
+
+            with(doc.receiver) {
+                parent.name shouldBe "KS-DIGITALE FELLESTJENESTER AS"
+                parent.ids.single().id shouldBe "8142987"
+                parent.ids.single().type shouldBe OrganizationIdType.HER_ID
+
+                child.shouldBeInstanceOf<OrganizationReceiverDetails>()
+                with(child as OrganizationReceiverDetails) {
+                    name shouldBe "SvarUt meldingsformidler"
+                    ids.single().id shouldBe "8143060"
+                    ids.single().type shouldBe OrganizationIdType.HER_ID
+                }
+
+                with(patient) {
+                    fnr shouldBe "15720255178"
+                    firstName shouldBe "BRUN"
+                    middleName should beNull()
+                    lastName shouldBe "LENESTOL"
+                }
+            }
+
+            doc.message shouldNot beNull()
+            with(doc.message!!) {
+                foresporsel should beNull()
+                notat shouldNot beNull()
+                with(notat!!) {
+                    tema shouldBe TypeOpplysningPasientsamhandlingLege.ANNEN_HENVENDELSE
+                    temaBeskrivelse should beNull()
+                    innhold shouldBe """Lege svarer med notat.
+                            Innkommende melding vises OK. """
+                    dato shouldBe LocalDate.of(2025, 6, 10)
+                }
+            }
+
+            doc.vedlegg should beNull()
+        }
+    }
+
     "Should be able to deserialize Dialogmelding 1.1 Helsefaglig dialog" {
         BusinessDocumentDeserializer.deserializeMsgHead(
             readResourceContentAsString("dialogmelding/1.1/helsefaglig-dialog/samsvar-test-message.xml")
@@ -78,32 +143,39 @@ class BusinessDocumentDeserializerTest : StringSpec({
 
             with(it.sender) {
                 name shouldBe "NORSK HELSENETT SF"
-                id.id shouldBe "112374"
-                id.type shouldBe OrganizationIdType.HER_ID
+                ids.single().id shouldBe "112374"
+                ids.single().type shouldBe OrganizationIdType.HER_ID
 
-                with(childOrganization) {
+                with(childOrganization!!) {
                     name shouldBe "Meldingsvalidering"
-                    id.id shouldBe "8094866"
-                    id.type shouldBe OrganizationIdType.HER_ID
+                    ids.single().id shouldBe "8094866"
+                    ids.single().type shouldBe OrganizationIdType.HER_ID
                 }
             }
 
             with(it.receiver) {
                 parent.name shouldBe "KS-DIGITALE FELLESTJENESTER AS"
-                parent.id.id shouldBe "8142987"
-                parent.id.type shouldBe OrganizationIdType.HER_ID
+                parent.ids.single().id shouldBe "8142987"
+                parent.ids.single().type shouldBe OrganizationIdType.HER_ID
 
                 child.shouldBeInstanceOf<OrganizationReceiverDetails>()
                 with(child as OrganizationReceiverDetails) {
                     name shouldBe "Saksbehandling pasientopplysninger"
-                    id.id shouldBe "8143060"
-                    id.type shouldBe OrganizationIdType.HER_ID
+                    ids.single().id shouldBe "8143060"
+                    ids.single().type shouldBe OrganizationIdType.HER_ID
                 }
             }
 
-            it.message.shouldBeInstanceOf<HelsefagligDialog>()
-            with(it.message as HelsefagligDialog) {
-                tema shouldBe TemaForHelsefagligDialog.FORESPORSEL_HELSEOPPLYSNINGER
+            it.message shouldNot beNull()
+            with(it.message!!) {
+                foresporsel should beNull()
+                notat shouldNot beNull()
+                with(notat!!) {
+                    tema shouldBe TemaForHelsefagligDialog.FORESPORSEL_HELSEOPPLYSNINGER
+                    temaBeskrivelse shouldBe "EKG tatt i dag"
+                    innhold shouldBe "Pasienten er henvist til kardiologisk poliklinikk for utredning med spørsmål om cardial årsak og mulig angina pectoris. Ettersender EKG tatt i dag uten funn. Se vedlegg."
+                    dato should beNull()
+                }
             }
 
             it.vedlegg shouldNot beNull()

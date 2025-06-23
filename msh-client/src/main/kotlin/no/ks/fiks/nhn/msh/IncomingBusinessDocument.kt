@@ -2,27 +2,37 @@ package no.ks.fiks.nhn.msh
 
 import no.ks.fiks.hdir.*
 import java.io.InputStream
+import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.util.*
 
 data class IncomingBusinessDocument(
     val id: String,
+    val date: LocalDateTime?,
     val type: MeldingensFunksjon,
     val sender: Organization,
     val receiver: Receiver,
-    val message: IncomingMessage?,
+    val message: Dialogmelding?,
     val vedlegg: IncomingVedlegg?,
 )
 
-sealed class IncomingMessage
 data class Dialogmelding(
-    val type: TypeOpplysningPasientsamhandling,
-    val sporsmal: String,
-) : IncomingMessage()
+    val foresporsel: Foresporsel?,
+    val notat: Notat?,
+)
 
-data class HelsefagligDialog(
-    val tema: TemaForHelsefagligDialog,
-) : IncomingMessage()
+data class Foresporsel(
+    val type: KodeverkVerdi,
+    val sporsmal: String?,
+)
+
+data class Notat(
+    val tema: KodeverkVerdi,
+    val temaBeskrivelse: String?,
+    val innhold: String?,
+    val dato: LocalDate?,
+)
 
 data class IncomingVedlegg(
     val date: OffsetDateTime?,

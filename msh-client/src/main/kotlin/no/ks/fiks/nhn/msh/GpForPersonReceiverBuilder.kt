@@ -18,15 +18,19 @@ class GpForPersonReceiverBuilder(
         return Receiver(
             parent = OrganizationReceiverDetails(
                 name = parent.name,
-                id = OrganizationId(
-                    id = parent.herId.toString(),
-                    type = OrganizationIdType.HER_ID,
+                ids = listOf(
+                    OrganizationId(
+                        id = parent.herId.toString(),
+                        type = OrganizationIdType.HER_ID,
+                    )
                 ),
             ),
             child = PersonReceiverDetails(
-                id = PersonId(
-                    id = fastlege.herId.toString(),
-                    type = PersonIdType.HER_ID,
+                ids = listOf(
+                    PersonId(
+                        id = fastlege.herId.toString(),
+                        type = PersonIdType.HER_ID,
+                    )
                 ),
                 firstName = fastlege.firstName,
                 middleName = fastlege.middleName,

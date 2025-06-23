@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<MsgHead xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xsi:schemaLocation="http://www.kith.no/xmlstds/msghead/2006-05-24 MsgHead-v1_2.xsd" xmlns="http://www.kith.no/xmlstds/msghead/2006-05-24">
+    <MsgInfo>
+        <Type V="DIALOG_SVAR" DN="Svar" />
+        <MIGversion>v1.2 2006-05-24</MIGversion>
+        <GenDate>2025-06-10T14:12:29+02:00</GenDate>
+        <MsgId>edfa9473-097e-478e-bbea-89eb59d78fd9</MsgId>
+        <Ack V="J" DN="Ja" />
+        <ConversationRef>
+            <RefToParent>4caf06e0-6df9-4f64-9b36-87b451fd051c</RefToParent>
+            <RefToConversation>4caf06e0-6df9-4f64-9b36-87b451fd051c</RefToConversation>
+        </ConversationRef>
+        <Sender>
+            <Organisation>
+                <OrganisationName>WebMed Feature PPS</OrganisationName>
+                <Ident>
+                    <Id>8142952</Id>
+                    <TypeId V="HER" S="2.16.578.1.12.4.1.1.9051" DN="HER-id" />
+                </Ident>
+                <Ident>
+                    <Id>999988939</Id>
+                    <TypeId V="ENH" S="2.16.578.1.12.4.1.1.9051" DN="Organisasjonsnummeret i Enhetsregister" />
+                </Ident>
+                <Address>
+                    <StreetAdr>Søren Bulls vei 25</StreetAdr>
+                    <PostalCode>1051</PostalCode>
+                    <City>Oslo</City>
+                </Address>
+                <TeleCom>
+                    <TeleAddress V="tel:73521234" />
+                </TeleCom>
+                <TeleCom>
+                    <TeleAddress V="fax:73524321" />
+                </TeleCom>
+                <TeleCom>
+                    <TeleAddress V="mailto:katskin@noline.no" />
+                </TeleCom>
+                <HealthcareProfessional>
+                    <TypeHealthcareProfessional V="LE" DN="Lege" />
+                    <RoleToPatient V="6" S="2.16.578.1.12.4.1.1.9034" DN="Fastlege" />
+                    <FamilyName>Vits</FamilyName>
+                    <GivenName>Grønn</GivenName>
+                    <Ident>
+                        <Id>565501872</Id>
+                        <TypeId V="HPR" S="2.16.578.1.12.4.1.1.8116" DN="HPR-nummer" />
+                    </Ident>
+                    <Ident>
+                        <Id>8143025</Id>
+                        <TypeId V="HER" S="2.16.578.1.12.4.1.1.8116" DN="HER-id" />
+                    </Ident>
+                </HealthcareProfessional>
+            </Organisation>
+        </Sender>
+        <Receiver>
+            <Organisation>
+                <OrganisationName>KS-DIGITALE FELLESTJENESTER AS</OrganisationName>
+                <Ident>
+                    <Id>8142987</Id>
+                    <TypeId V="HER" S="2.16.578.1.12.4.1.1.9051" DN="HER-id" />
+                </Ident>
+                <Organisation>
+                    <OrganisationName>SvarUt meldingsformidler</OrganisationName>
+                    <Ident>
+                        <Id>8143060</Id>
+                        <TypeId V="HER" S="2.16.578.1.12.4.1.1.9051" DN="HER-id" />
+                    </Ident>
+                </Organisation>
+            </Organisation>
+        </Receiver>
+        <Patient>
+            <FamilyName>BADERING</FamilyName>
+            <GivenName>FATTIG</GivenName>
+            <DateOfBirth>1952-10-21</DateOfBirth>
+            <Ident>
+                <Id>21905297101</Id>
+                <TypeId V="FNR" S="2.16.578.1.12.4.1.1.8116" DN="Fødselsnummer" />
+            </Ident>
+            <Address>
+                <StreetAdr>Hellerudstubben 52 A</StreetAdr>
+                <PostalCode>0671</PostalCode>
+                <City>OSLO</City>
+            </Address>
+        </Patient>
+    </MsgInfo>
+    <Document>
+        <RefDoc>
+            <MsgType V="XML" DN="XML-instans" />
+            <Content>
+                <Dialogmelding xsi:schemaLocation="http://www.kith.no/xmlstds/msghead/2006-10-11 dialogmelding.xsd" xmlns="http://www.kith.no/xmlstds/dialog/2006-10-11">
+                    <Notat>
+                        <TemaKodet V="99" S="2.16.578.1.12.4.1.1.9153" DN="Annen henvendelse" />
+                        <TekstNotatInnhold>Medhjelper svarer på melding. </TekstNotatInnhold>
+                        <DatoNotat>2025-06-10</DatoNotat>
+                    </Notat>
+                </Dialogmelding>
+            </Content>
+        </RefDoc>
+    </Document>
+</MsgHead>

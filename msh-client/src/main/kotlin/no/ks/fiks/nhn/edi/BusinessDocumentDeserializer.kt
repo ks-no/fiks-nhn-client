@@ -8,9 +8,11 @@ import no.kith.xmlstds.msghead._2006_05_24.Ident
 import no.kith.xmlstds.msghead._2006_05_24.MsgHead
 import no.ks.fiks.hdir.*
 import no.ks.fiks.nhn.msh.*
+import org.w3c.dom.Node
 import java.io.ByteArrayInputStream
 import java.io.StringReader
 import java.time.OffsetDateTime
+import javax.xml.datatype.XMLGregorianCalendar
 import javax.xml.stream.XMLInputFactory
 import javax.xml.stream.XMLStreamConstants
 import javax.xml.transform.stream.StreamSource
@@ -33,6 +35,7 @@ object BusinessDocumentDeserializer {
         val msgHead = XmlContext.createUnmarshaller().unmarshal(StreamSource(StringReader(msgHeadXml)), MsgHead::class.java).value
         return IncomingBusinessDocument(
             id = msgHead.msgInfo.msgId,
+            date = msgHead.msgInfo.genDate.toLocalDateTime(),
             type = msgHead.getType(),
             sender = msgHead.getSender(),
             receiver = msgHead.getReceiver(),
@@ -76,15 +79,15 @@ object BusinessDocumentDeserializer {
         with(msgInfo.sender.organisation) {
             Organization(
                 name = organisationName,
-                id = getId(),
+                ids = getId(),
                 childOrganization = organisation?.let { childOrganisation ->
                     with(childOrganisation) {
                         ChildOrganization(
                             name = organisationName,
-                            id = getId(),
+                            ids = getId(),
                         )
                     }
-                } ?: throw IllegalArgumentException("No child organization for ${msgInfo.sender.organisation}")
+                }
             )
         }
 
@@ -92,21 +95,21 @@ object BusinessDocumentDeserializer {
         with(msgInfo.receiver.organisation) {
             Receiver(
                 parent = OrganizationReceiverDetails(
-                    id = ident.getOrganisasjonId(),
+                    ids = ident.getOrganisasjonId(),
                     name = organisationName,
                 ),
                 child = organisation
                     ?.let {
                         with(organisation) {
                             OrganizationReceiverDetails(
-                                id = ident.getOrganisasjonId(),
+                                ids = ident.getOrganisasjonId(),
                                 name = it.organisationName,
                             )
                         }
                     }
                     ?: with(healthcareProfessional) {
                         PersonReceiverDetails(
-                            id = ident.getPersonId(),
+                            ids = ident.getPersonId(),
                             firstName = givenName,
                             middleName = middleName,
                             lastName = familyName,
@@ -119,14 +122,14 @@ object BusinessDocumentDeserializer {
     private fun MsgHead.getPatient() =
         with(msgInfo.patient) {
             Patient(
-                fnr = ident.getPersonId().id,
+                fnr = ident.getPersonId().let { ids -> ids.firstOrNull()?.id ?: throw IllegalArgumentException("Found multiple ids for patient: $ids") },
                 firstName = givenName,
                 middleName = middleName,
                 lastName = familyName,
             )
         }
 
-    private fun MsgHead.getMessage(): IncomingMessage? =
+    private fun MsgHead.getMessage(): Dialogmelding? =
         document.firstOrNull()
             ?.refDoc
             ?.content
@@ -134,36 +137,73 @@ object BusinessDocumentDeserializer {
             ?.singleOrNull()
             ?.let {
                 when (it) {
-                    is NhnDialogmelding1_0 -> it.getContent()
-                    is NhnDialogmelding1_1 -> it.getContent()
+                    is NhnDialogmelding1_0 -> it.convert()
+                    is NhnDialogmelding1_1 -> it.convert()
                     else -> throw RuntimeException("Unsupported message type: $it")
                 }
             }
 
-    private fun NhnDialogmelding1_0.getContent(): IncomingMessage? = getDialogmelding()
+    private fun NhnDialogmelding1_0.convert() = Dialogmelding(
+        foresporsel = readForesporsel(),
+        notat = readNotat(),
+    )
 
-    private fun NhnDialogmelding1_1.getContent(): IncomingMessage? = getHelsefagligDialog()
+    private fun NhnDialogmelding1_1.convert() = Dialogmelding(
+        foresporsel = readForesporsel(),
+        notat = readNotat(),
+    )
 
-    private fun NhnDialogmelding1_0.getDialogmelding(): IncomingMessage? =
+    private fun NhnDialogmelding1_0.readForesporsel(): Foresporsel? =
         foresporsel
             ?.singleOrNull()
             ?.let { foresporsel ->
-                Dialogmelding(
-                    type = TypeOpplysningPasientsamhandling.entries.firstOrNull { it.verdi == foresporsel.typeForesp.v }
+                Foresporsel(
+                    type = TypeOpplysningPasientsamhandlingPleieOgOmsorg.entries.firstOrNull { it.verdi == foresporsel.typeForesp.v }
                         ?: throw IllegalArgumentException("Unknown type for typeForesp: ${foresporsel.typeForesp.v}, ${foresporsel.typeForesp.dn}, ${foresporsel.typeForesp.s}, ${foresporsel.typeForesp.ot}"),
                     sporsmal = foresporsel.sporsmal,
                 )
             }
 
-    private fun NhnDialogmelding1_1.getHelsefagligDialog(): IncomingMessage? =
+    private fun NhnDialogmelding1_0.readNotat(): Notat? =
         notat
             ?.singleOrNull()
             ?.let { notat ->
-                HelsefagligDialog(
-                    tema = TemaForHelsefagligDialog.entries.firstOrNull { it.verdi == notat.temaKodet.v }
-                        ?: throw IllegalArgumentException("Unknown tema: ${notat.temaKodet.v}, ${notat.temaKodet.dn}, ${notat.temaKodet.s}, ${notat.temaKodet.ot}"),
+                Notat(
+                    tema = KodeverkRegister.getKodeverk(notat.temaKodet.s, notat.temaKodet.v),
+                    temaBeskrivelse = notat.tema,
+                    innhold = notat.tekstNotatInnhold.getText(),
+                    dato = notat.datoNotat?.toLocalDate(),
                 )
             }
+
+    private fun NhnDialogmelding1_1.readForesporsel(): Foresporsel? =
+        foresporsel
+            ?.singleOrNull()
+            ?.let { foresporsel ->
+                Foresporsel(
+                    type = TypeOpplysningPasientsamhandlingPleieOgOmsorg.entries.firstOrNull { it.verdi == foresporsel.typeForesp.v }
+                        ?: throw IllegalArgumentException("Unknown type for typeForesp: ${foresporsel.typeForesp.v}, ${foresporsel.typeForesp.dn}, ${foresporsel.typeForesp.s}, ${foresporsel.typeForesp.ot}"),
+                    sporsmal = foresporsel.sporsmal as? String,
+                )
+            }
+
+    private fun NhnDialogmelding1_1.readNotat(): Notat? =
+        notat
+            ?.singleOrNull()
+            ?.let { notat ->
+                Notat(
+                    tema = KodeverkRegister.getKodeverk(notat.temaKodet.s, notat.temaKodet.v),
+                    temaBeskrivelse = notat.tema,
+                    innhold = notat.tekstNotatInnhold.getText(),
+                    dato = notat.datoNotat?.toLocalDate(),
+                )
+            }
+
+    private fun Any?.getText() = (this as? Node)?.firstChild?.nodeValue
+
+    private fun XMLGregorianCalendar?.toLocalDate() = this?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
+
+    private fun XMLGregorianCalendar?.toLocalDateTime() = this?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDateTime()
 
     private fun MsgHead.getVedlegg() =
         document.drop(1).singleOrNull()?.let { doc ->
@@ -184,25 +224,25 @@ object BusinessDocumentDeserializer {
             }
         }
 
-    private fun CS.toMeldingensFunksjon() = MeldingensFunksjon.entries.first { it.verdi == v }
+    private fun CS.toMeldingensFunksjon() = MeldingensFunksjon.entries.firstOrNull { it.verdi == v } ?: throw IllegalArgumentException("Unknown message type: $v, $dn")
 
     private fun CS.toTypeDokumentreferanse() = TypeDokumentreferanse.entries.firstOrNull { it.verdi == v }
 
     private fun NhnOrganisation.getId() = ident.getId()
 
-    private fun List<Ident>.getPersonId() = getId().let {
+    private fun List<Ident>.getPersonId() = getId().map {
         it as? PersonId ?: throw IllegalArgumentException("Expected id with type PersonId, but got $it")
     }
 
-    private fun List<Ident>.getOrganisasjonId() = getId().let {
+    private fun List<Ident>.getOrganisasjonId() = getId().map {
         it as? OrganizationId ?: throw IllegalArgumentException("Expected id with type OrganisasjonId, but got $it")
     }
 
     private fun List<Ident>.getId() =
-        with(single()) {
-            when (val type = typeId.toIdType()) {
-                is PersonIdType -> PersonId(id, type)
-                is OrganizationIdType -> OrganizationId(id, type)
+        map {
+            when (val type = it.typeId.toIdType()) {
+                is PersonIdType -> PersonId(it.id, type)
+                is OrganizationIdType -> OrganizationId(it.id, type)
             }
         }
 

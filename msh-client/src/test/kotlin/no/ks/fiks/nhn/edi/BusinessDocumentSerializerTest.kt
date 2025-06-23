@@ -74,21 +74,21 @@ private fun String.validateGeneratedXmlAgainst(startTime: OffsetDateTime, docume
         OffsetDateTime.parse(xPath.evaluate("/MsgHead/MsgInfo/GenDate", xmlDoc)).shouldBeBetween(startTime, OffsetDateTime.now())
 
         xPath.evaluate("/MsgHead/MsgInfo/Sender/Organisation/OrganisationName", xmlDoc) shouldBe document.sender.name
-        xPath.evaluate("/MsgHead/MsgInfo/Sender/Organisation/Ident/Id", xmlDoc) shouldBe document.sender.id.id
-        xPath.evaluate("/MsgHead/MsgInfo/Sender/Organisation/Ident/TypeId/@V", xmlDoc) shouldBe document.sender.id.type.verdi
-        xPath.evaluate("/MsgHead/MsgInfo/Sender/Organisation/Ident/TypeId/@S", xmlDoc) shouldBe document.sender.id.type.kodeverk
-        xPath.evaluate("/MsgHead/MsgInfo/Sender/Organisation/Ident/TypeId/@DN", xmlDoc) shouldBe document.sender.id.type.navn
+        xPath.evaluate("/MsgHead/MsgInfo/Sender/Organisation/Ident/Id", xmlDoc) shouldBe document.sender.ids.single().id
+        xPath.evaluate("/MsgHead/MsgInfo/Sender/Organisation/Ident/TypeId/@V", xmlDoc) shouldBe document.sender.ids.single().type.verdi
+        xPath.evaluate("/MsgHead/MsgInfo/Sender/Organisation/Ident/TypeId/@S", xmlDoc) shouldBe document.sender.ids.single().type.kodeverk
+        xPath.evaluate("/MsgHead/MsgInfo/Sender/Organisation/Ident/TypeId/@DN", xmlDoc) shouldBe document.sender.ids.single().type.navn
         xPath.evaluate("/MsgHead/MsgInfo/Sender/Organisation/Organisation/OrganisationName", xmlDoc) shouldBe document.sender.childOrganization?.name
-        xPath.evaluate("/MsgHead/MsgInfo/Sender/Organisation/Organisation/Ident/Id", xmlDoc) shouldBe document.sender.childOrganization?.id?.id
-        xPath.evaluate("/MsgHead/MsgInfo/Sender/Organisation/Organisation/Ident/TypeId/@V", xmlDoc) shouldBe document.sender.childOrganization?.id?.type?.verdi
-        xPath.evaluate("/MsgHead/MsgInfo/Sender/Organisation/Organisation/Ident/TypeId/@S", xmlDoc) shouldBe document.sender.childOrganization?.id?.type?.kodeverk
-        xPath.evaluate("/MsgHead/MsgInfo/Sender/Organisation/Organisation/Ident/TypeId/@DN", xmlDoc) shouldBe document.sender.childOrganization?.id?.type?.navn
+        xPath.evaluate("/MsgHead/MsgInfo/Sender/Organisation/Organisation/Ident/Id", xmlDoc) shouldBe document.sender.childOrganization?.ids?.single()?.id
+        xPath.evaluate("/MsgHead/MsgInfo/Sender/Organisation/Organisation/Ident/TypeId/@V", xmlDoc) shouldBe document.sender.childOrganization?.ids?.single()?.type?.verdi
+        xPath.evaluate("/MsgHead/MsgInfo/Sender/Organisation/Organisation/Ident/TypeId/@S", xmlDoc) shouldBe document.sender.childOrganization?.ids?.single()?.type?.kodeverk
+        xPath.evaluate("/MsgHead/MsgInfo/Sender/Organisation/Organisation/Ident/TypeId/@DN", xmlDoc) shouldBe document.sender.childOrganization?.ids?.single()?.type?.navn
 
         xPath.evaluate("/MsgHead/MsgInfo/Receiver/Organisation/OrganisationName", xmlDoc) shouldBe document.receiver.parent.name
-        xPath.evaluate("/MsgHead/MsgInfo/Receiver/Organisation/Ident/Id", xmlDoc) shouldBe document.receiver.parent.id.id
-        xPath.evaluate("/MsgHead/MsgInfo/Receiver/Organisation/Ident/TypeId/@V", xmlDoc) shouldBe document.receiver.parent.id.type.verdi
-        xPath.evaluate("/MsgHead/MsgInfo/Receiver/Organisation/Ident/TypeId/@S", xmlDoc) shouldBe document.receiver.parent.id.type.kodeverk
-        xPath.evaluate("/MsgHead/MsgInfo/Receiver/Organisation/Ident/TypeId/@DN", xmlDoc) shouldBe document.receiver.parent.id.type.navn
+        xPath.evaluate("/MsgHead/MsgInfo/Receiver/Organisation/Ident/Id", xmlDoc) shouldBe document.receiver.parent.ids.single().id
+        xPath.evaluate("/MsgHead/MsgInfo/Receiver/Organisation/Ident/TypeId/@V", xmlDoc) shouldBe document.receiver.parent.ids.single().type.verdi
+        xPath.evaluate("/MsgHead/MsgInfo/Receiver/Organisation/Ident/TypeId/@S", xmlDoc) shouldBe document.receiver.parent.ids.single().type.kodeverk
+        xPath.evaluate("/MsgHead/MsgInfo/Receiver/Organisation/Ident/TypeId/@DN", xmlDoc) shouldBe document.receiver.parent.ids.single().type.navn
 
         when (val receiverChild = document.receiver.child) {
             is PersonReceiverDetails -> {
@@ -96,18 +96,18 @@ private fun String.validateGeneratedXmlAgainst(startTime: OffsetDateTime, docume
                 xPath.evaluate("/MsgHead/MsgInfo/Receiver/Organisation/HealthcareProfessional/MiddleName", xmlDoc) shouldBe receiverChild.middleName
                 xPath.evaluate("/MsgHead/MsgInfo/Receiver/Organisation/HealthcareProfessional/FamilyName", xmlDoc) shouldBe receiverChild.lastName
 
-                xPath.evaluate("/MsgHead/MsgInfo/Receiver/Organisation/HealthcareProfessional/Ident/Id", xmlDoc) shouldBe document.receiver.child.id.id
-                xPath.evaluate("/MsgHead/MsgInfo/Receiver/Organisation/HealthcareProfessional/Ident/TypeId/@V", xmlDoc) shouldBe document.receiver.child.id.type.verdi
-                xPath.evaluate("/MsgHead/MsgInfo/Receiver/Organisation/HealthcareProfessional/Ident/TypeId/@S", xmlDoc) shouldBe document.receiver.child.id.type.kodeverk
-                xPath.evaluate("/MsgHead/MsgInfo/Receiver/Organisation/HealthcareProfessional/Ident/TypeId/@DN", xmlDoc) shouldBe document.receiver.child.id.type.navn
+                xPath.evaluate("/MsgHead/MsgInfo/Receiver/Organisation/HealthcareProfessional/Ident/Id", xmlDoc) shouldBe document.receiver.child.ids.single().id
+                xPath.evaluate("/MsgHead/MsgInfo/Receiver/Organisation/HealthcareProfessional/Ident/TypeId/@V", xmlDoc) shouldBe document.receiver.child.ids.single().type.verdi
+                xPath.evaluate("/MsgHead/MsgInfo/Receiver/Organisation/HealthcareProfessional/Ident/TypeId/@S", xmlDoc) shouldBe document.receiver.child.ids.single().type.kodeverk
+                xPath.evaluate("/MsgHead/MsgInfo/Receiver/Organisation/HealthcareProfessional/Ident/TypeId/@DN", xmlDoc) shouldBe document.receiver.child.ids.single().type.navn
             }
             is OrganizationReceiverDetails -> {
                 xPath.evaluate("/MsgHead/MsgInfo/Receiver/Organisation/Organisation/OrganisationName", xmlDoc) shouldBe receiverChild.name
 
-                xPath.evaluate("/MsgHead/MsgInfo/Receiver/Organisation/Organisation/Ident/Id", xmlDoc) shouldBe document.receiver.child.id.id
-                xPath.evaluate("/MsgHead/MsgInfo/Receiver/Organisation/Organisation/Ident/TypeId/@V", xmlDoc) shouldBe document.receiver.child.id.type.verdi
-                xPath.evaluate("/MsgHead/MsgInfo/Receiver/Organisation/Organisation/Ident/TypeId/@S", xmlDoc) shouldBe document.receiver.child.id.type.kodeverk
-                xPath.evaluate("/MsgHead/MsgInfo/Receiver/Organisation/Organisation/Ident/TypeId/@DN", xmlDoc) shouldBe document.receiver.child.id.type.navn
+                xPath.evaluate("/MsgHead/MsgInfo/Receiver/Organisation/Organisation/Ident/Id", xmlDoc) shouldBe document.receiver.child.ids.single().id
+                xPath.evaluate("/MsgHead/MsgInfo/Receiver/Organisation/Organisation/Ident/TypeId/@V", xmlDoc) shouldBe document.receiver.child.ids.single().type.verdi
+                xPath.evaluate("/MsgHead/MsgInfo/Receiver/Organisation/Organisation/Ident/TypeId/@S", xmlDoc) shouldBe document.receiver.child.ids.single().type.kodeverk
+                xPath.evaluate("/MsgHead/MsgInfo/Receiver/Organisation/Organisation/Ident/TypeId/@DN", xmlDoc) shouldBe document.receiver.child.ids.single().type.navn
             }
         }
 
@@ -124,9 +124,9 @@ private fun String.validateGeneratedXmlAgainst(startTime: OffsetDateTime, docume
 
         when (document.version) {
             DialogmeldingVersion.V1_0 -> {
-                xPath.evaluate("/MsgHead/Document[1]/RefDoc/Content/Dialogmelding/Foresporsel/TypeForesp/@V", xmlDoc) shouldBe TypeOpplysningPasientsamhandling.ANNEN_HENVENDELSE.verdi
-                xPath.evaluate("/MsgHead/Document[1]/RefDoc/Content/Dialogmelding/Foresporsel/TypeForesp/@S", xmlDoc) shouldBe TypeOpplysningPasientsamhandling.ANNEN_HENVENDELSE.kodeverk
-                xPath.evaluate("/MsgHead/Document[1]/RefDoc/Content/Dialogmelding/Foresporsel/TypeForesp/@DN", xmlDoc) shouldBe TypeOpplysningPasientsamhandling.ANNEN_HENVENDELSE.navn
+                xPath.evaluate("/MsgHead/Document[1]/RefDoc/Content/Dialogmelding/Foresporsel/TypeForesp/@V", xmlDoc) shouldBe TypeOpplysningPasientsamhandlingPleieOgOmsorg.ANNEN_HENVENDELSE.verdi
+                xPath.evaluate("/MsgHead/Document[1]/RefDoc/Content/Dialogmelding/Foresporsel/TypeForesp/@S", xmlDoc) shouldBe TypeOpplysningPasientsamhandlingPleieOgOmsorg.ANNEN_HENVENDELSE.kodeverk
+                xPath.evaluate("/MsgHead/Document[1]/RefDoc/Content/Dialogmelding/Foresporsel/TypeForesp/@DN", xmlDoc) shouldBe TypeOpplysningPasientsamhandlingPleieOgOmsorg.ANNEN_HENVENDELSE.navn
                 xPath.evaluate("/MsgHead/Document[1]/RefDoc/Content/Dialogmelding/Foresporsel/Sporsmal", xmlDoc) shouldBe "${document.message.subject}: ${document.message.body}"
                 xPath.evaluate("/MsgHead/Document[1]/RefDoc/Content/Dialogmelding/Foresporsel/RollerRelatertNotat/RoleToPatient/@V", xmlDoc) shouldBe document.message.responsibleHealthcareProfessional.roleToPatient.verdi
                 xPath.evaluate("/MsgHead/Document[1]/RefDoc/Content/Dialogmelding/Foresporsel/RollerRelatertNotat/RoleToPatient/@S", xmlDoc) shouldBe document.message.responsibleHealthcareProfessional.roleToPatient.kodeverk
@@ -174,16 +174,16 @@ private fun randomOutgoingBusinessDocument(
     id = UUID.randomUUID(),
     sender = Organization(
         name = UUID.randomUUID().toString(),
-        id = OrganizationId(UUID.randomUUID().toString(), OrganizationIdType.entries.random()),
+        ids = listOf(OrganizationId(UUID.randomUUID().toString(), OrganizationIdType.entries.random())),
         childOrganization = ChildOrganization(
             name = UUID.randomUUID().toString(),
-            id = OrganizationId(UUID.randomUUID().toString(), OrganizationIdType.entries.random()),
+            ids = listOf(OrganizationId(UUID.randomUUID().toString(), OrganizationIdType.entries.random())),
         )
     ),
     receiver = Receiver(
         parent = OrganizationReceiverDetails(
             name = UUID.randomUUID().toString(),
-            id = OrganizationId(UUID.randomUUID().toString(), OrganizationIdType.entries.random()),
+            ids = listOf(OrganizationId(UUID.randomUUID().toString(), OrganizationIdType.entries.random())),
         ),
         child = receiverChild,
         patient = Patient(
@@ -217,10 +217,10 @@ private fun randomPersonReceiverDetails() = PersonReceiverDetails(
     firstName = UUID.randomUUID().toString(),
     middleName = UUID.randomUUID().toString(),
     lastName = UUID.randomUUID().toString(),
-    id = PersonId(UUID.randomUUID().toString(), PersonIdType.entries.random()),
+    ids = listOf(PersonId(UUID.randomUUID().toString(), PersonIdType.entries.random())),
 )
 
 private fun randomOrganizationReceiverDetails() = OrganizationReceiverDetails(
     name = UUID.randomUUID().toString(),
-    id = OrganizationId(UUID.randomUUID().toString(), OrganizationIdType.entries.random()),
+    ids = listOf(OrganizationId(UUID.randomUUID().toString(), OrganizationIdType.entries.random())),
 )
