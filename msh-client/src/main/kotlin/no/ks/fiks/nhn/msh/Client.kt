@@ -1,19 +1,7 @@
 package no.ks.fiks.nhn.msh
 
-import com.fasterxml.jackson.core.JsonParser
-import com.fasterxml.jackson.databind.DeserializationContext
-import com.fasterxml.jackson.databind.JsonDeserializer
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.module.SimpleModule
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import feign.Feign
-import feign.jackson.JacksonDecoder
-import feign.jackson.JacksonEncoder
 import no.ks.fiks.hdir.FeilmeldingForApplikasjonskvittering
 import no.ks.fiks.hdir.StatusForMottakAvMelding
-import no.ks.fiks.helseid.dpop.Endpoint
-import no.ks.fiks.helseid.dpop.HttpMethod
-import no.ks.fiks.helseid.http.HttpRequestHelper
 import no.ks.fiks.nhn.ar.AdresseregisteretClient
 import no.ks.fiks.nhn.edi.BusinessDocumentDeserializer
 import no.ks.fiks.nhn.edi.BusinessDocumentSerializer
@@ -23,11 +11,7 @@ import no.nhn.msh.v2.model.AppRecError
 import no.nhn.msh.v2.model.AppRecStatus
 import no.nhn.msh.v2.model.PostAppRecRequest
 import no.nhn.msh.v2.model.PostMessageRequest
-import java.time.LocalDateTime
-import java.time.OffsetDateTime
-import java.time.ZoneOffset
 import java.util.*
-import no.ks.fiks.helseid.Configuration as HelseIdConfiguration
 import no.ks.fiks.nhn.ar.Credentials as ArCredentials
 import no.ks.fiks.nhn.flr.Credentials as FlrCredentials
 import no.nhn.msh.v2.model.Message as NhnMessage
@@ -37,23 +21,11 @@ private const val API_VERSION = "2"
 private const val CONTENT_TYPE = "application/xml"
 private const val CONTENT_TRANSFER_ENCODING = "base64"
 
-// Meldingstjener, MSH (Message Service Handler)
 class Client(
     configuration: Configuration,
 ) {
 
-    private val baseUrl = configuration.environments.mshBaseUrl
-
-    private val mapper = ObjectMapper()
-        .registerModule(JavaTimeModule())
-        .registerModule(SimpleModule().apply {
-            addDeserializer(OffsetDateTime::class.java, object : JsonDeserializer<OffsetDateTime>() { // API returns ISO 8601 dates without offset that can't be parsed by the default deserializer
-                override fun deserialize(parser: JsonParser, context: DeserializationContext): OffsetDateTime {
-                    val local = LocalDateTime.parse(parser.text)
-                    return OffsetDateTime.of(local, ZoneOffset.UTC)
-                }
-            })
-        })
+    private val mshClient = MshFeignClientBuilder.build(configuration)
 
     private val flrClient = FastlegeregisteretClient(
         url = configuration.environments.fastlegeregisterUrl,
@@ -75,14 +47,6 @@ class Client(
     )
     private val receiverBuilder = GpForPersonReceiverBuilder(flrClient, arClient)
 
-    private val httpHelper = HttpRequestHelper(
-        HelseIdConfiguration(
-            environment = configuration.environments.helseIdEnvironment,
-            clientId = configuration.helseId.clientId,
-            jwk = configuration.helseId.jwk,
-        )
-    )
-    private val meldingstjenerBaseUrl = configuration.environments.mshBaseUrl
     private val sourceSystem = configuration.sourceSystem
 
     fun sendMessageToGPForPerson(businessDocument: GPForPersonOutgoingBusinessDocument) {
@@ -99,7 +63,7 @@ class Client(
     }
 
     fun sendMessage(businessDocument: OutgoingBusinessDocument) {
-        buildClient(buildPostMessagesEndpoint())
+        mshClient
             .postMessage(
                 API_VERSION, sourceSystem, PostMessageRequest()
                     .contentType(CONTENT_TYPE)
@@ -109,7 +73,7 @@ class Client(
     }
 
     fun getMessages(receiverHerId: Int): List<Message> {
-        return buildClient(buildGetMessagesEndpoint())
+        return mshClient
             .getMessages(
                 API_VERSION, sourceSystem, MessagesControllerApi.GetMessagesQueryParams()
                     .receiverHerIds(setOf(receiverHerId))
@@ -119,7 +83,7 @@ class Client(
     }
 
     fun getMessagesWithMetadata(receiverHerId: Int): List<MessageWithMetadata> {
-        return buildClient(buildGetMessagesEndpoint())
+        return mshClient
             .getMessages(
                 API_VERSION, sourceSystem, MessagesControllerApi.GetMessagesQueryParams()
                     .receiverHerIds(setOf(receiverHerId))
@@ -130,13 +94,13 @@ class Client(
     }
 
     fun getMessage(id: UUID): MessageWithMetadata {
-        return buildClient(buildGetMessageByIdEndpoint(id))
+        return mshClient
             .getMessage(id, API_VERSION, sourceSystem)
             .toMessageInfoWithMetadata()
     }
 
     fun getBusinessDocument(id: UUID): IncomingBusinessDocument {
-        return buildClient(buildGetBusinessDocumentEndpoint(id))
+        return mshClient
             .getBusinessDocument(id, API_VERSION, sourceSystem)
             .let {
                 BusinessDocumentDeserializer.deserializeMsgHead(String(Base64.getDecoder().decode(it.businessDocument)))
@@ -144,7 +108,7 @@ class Client(
     }
 
     fun getApplicationReceipt(id: UUID): IncomingApplicationReceipt {
-        return buildClient(buildGetBusinessDocumentEndpoint(id))
+        return mshClient
             .getBusinessDocument(id, API_VERSION, sourceSystem)
             .let {
                 BusinessDocumentDeserializer.deserializeAppRec(String(Base64.getDecoder().decode(it.businessDocument)))
@@ -155,12 +119,11 @@ class Client(
         if (receipt.status == StatusForMottakAvMelding.OK && !receipt.errors.isNullOrEmpty()) throw IllegalArgumentException("Error messages are not allowed when status is OK")
         if (receipt.status != StatusForMottakAvMelding.OK && receipt.errors.isNullOrEmpty()) throw IllegalArgumentException("Must provide at least one error message if status is not OK")
 
-        buildClient(buildPostAppRecEndpoint(receipt.acknowledgedId, receipt.senderHerId))
-            .postAppRec(
-                receipt.acknowledgedId, receipt.senderHerId, API_VERSION, sourceSystem, PostAppRecRequest()
-                    .appRecStatus(receipt.status.toAppRecStatus())
-                    .appRecErrorList(receipt.errors?.toAppRecErrors())
-            )
+        mshClient.postAppRec(
+            receipt.acknowledgedId, receipt.senderHerId, API_VERSION, sourceSystem, PostAppRecRequest()
+                .appRecStatus(receipt.status.toAppRecStatus())
+                .appRecErrorList(receipt.errors?.toAppRecErrors())
+        )
     }
 
     private fun StatusForMottakAvMelding.toAppRecStatus() = when (this) {
@@ -179,8 +142,7 @@ class Client(
     }
 
     fun markMessageRead(id: UUID, receiverHerId: Int) {
-        buildClient(buildPutMessageReadEndpoint(id, receiverHerId))
-            .markMessageAsRead(id, receiverHerId, API_VERSION, sourceSystem)
+        mshClient.markMessageAsRead(id, receiverHerId, API_VERSION, sourceSystem)
     }
 
     private fun NhnMessage.toMessageInfo() = Message(
@@ -197,22 +159,5 @@ class Client(
         businessDocumentDate = businessDocumentGenDate,
         isAppRec = isAppRec,
     )
-
-    private fun buildClient(endpoint: Endpoint) = Feign.builder()
-        .encoder(JacksonEncoder(mapper))
-        .decoder(JacksonDecoder(mapper))
-        .requestInterceptor {
-            httpHelper.addDpopAuthorizationHeader(endpoint) { name, value ->
-                it.header(name, value)
-            }
-        }
-        .target(MessagesControllerApi::class.java, meldingstjenerBaseUrl)
-
-    private fun buildGetMessagesEndpoint() = Endpoint(HttpMethod.GET, "$baseUrl/Messages")
-    private fun buildPostMessagesEndpoint() = Endpoint(HttpMethod.POST, "$baseUrl/Messages")
-    private fun buildGetMessageByIdEndpoint(id: UUID) = Endpoint(HttpMethod.GET, "$baseUrl/Messages/$id")
-    private fun buildGetBusinessDocumentEndpoint(id: UUID) = Endpoint(HttpMethod.GET, "$baseUrl/Messages/$id/business-document")
-    private fun buildPostAppRecEndpoint(id: UUID, senderHerId: Int) = Endpoint(HttpMethod.POST, "$baseUrl/Messages/$id/apprec/$senderHerId")
-    private fun buildPutMessageReadEndpoint(id: UUID, receiverHerId: Int) = Endpoint(HttpMethod.PUT, "$baseUrl/Messages/$id/read/$receiverHerId")
 
 }
