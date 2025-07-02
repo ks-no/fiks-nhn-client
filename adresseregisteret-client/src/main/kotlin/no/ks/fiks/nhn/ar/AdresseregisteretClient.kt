@@ -1,11 +1,11 @@
 package no.ks.fiks.nhn.ar
 
 import jakarta.xml.bind.JAXBElement
-import jakarta.xml.ws.soap.SOAPBinding
 import mu.KotlinLogging
-import no.nhn.register.communicationparty.*
-import org.apache.cxf.jaxws.JaxWsProxyFactoryBean
-import org.apache.cxf.ws.addressing.WSAddressingFeature
+import no.nhn.register.communicationparty.ICommunicationPartyServiceGetCommunicationPartyDetailsGenericFaultFaultFaultMessage
+import no.nhn.register.communicationparty.Organization
+import no.nhn.register.communicationparty.OrganizationPerson
+import no.nhn.register.communicationparty.Service
 import no.nhn.register.communicationparty.CommunicationParty as NhnCommunicationParty
 
 private val log = KotlinLogging.logger { }
