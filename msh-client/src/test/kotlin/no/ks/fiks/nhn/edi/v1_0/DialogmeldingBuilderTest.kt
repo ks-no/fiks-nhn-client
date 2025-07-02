@@ -10,7 +10,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNot
 import no.ks.fiks.hdir.Helsepersonell
 import no.ks.fiks.hdir.HelsepersonellsFunksjoner
-import no.ks.fiks.hdir.TypeOpplysningPasientsamhandling
+import no.ks.fiks.hdir.TypeOpplysningPasientsamhandlingPleieOgOmsorg
 import no.ks.fiks.nhn.msh.OutgoingMessage
 import no.ks.fiks.nhn.msh.HealthcareProfessional
 import no.ks.fiks.nhn.msh.RecipientContact
@@ -42,9 +42,9 @@ class DialogmeldingBuilderTest : StringSpec({
             it.foresporsel shouldHaveSize 1
             with(it.foresporsel.single()) {
                 typeForesp shouldNot beNull()
-                typeForesp.v shouldBe TypeOpplysningPasientsamhandling.ANNEN_HENVENDELSE.verdi
-                typeForesp.dn shouldBe TypeOpplysningPasientsamhandling.ANNEN_HENVENDELSE.navn
-                typeForesp.s shouldBe TypeOpplysningPasientsamhandling.ANNEN_HENVENDELSE.kodeverk
+                typeForesp.v shouldBe TypeOpplysningPasientsamhandlingPleieOgOmsorg.ANNEN_HENVENDELSE.verdi
+                typeForesp.dn shouldBe TypeOpplysningPasientsamhandlingPleieOgOmsorg.ANNEN_HENVENDELSE.navn
+                typeForesp.s shouldBe TypeOpplysningPasientsamhandlingPleieOgOmsorg.ANNEN_HENVENDELSE.kodeverk
                 typeForesp.ot should beNull()
 
                 sporsmal shouldBe "${message.subject}: ${message.body}"

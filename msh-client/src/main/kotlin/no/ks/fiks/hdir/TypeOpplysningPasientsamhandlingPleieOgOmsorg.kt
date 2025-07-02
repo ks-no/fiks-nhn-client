@@ -2,7 +2,7 @@ package no.ks.fiks.hdir
 
 
 // Kodeverk: 9152 Type opplysning ved pasientsamhandling - fra Pleie- og omsorg
-enum class TypeOpplysningPasientsamhandling(
+enum class TypeOpplysningPasientsamhandlingPleieOgOmsorg(
     override val verdi: String,
     override val navn: String,
 ) : KodeverkVerdi {

@@ -25,6 +25,11 @@ sealed class Id(
         result = 31 * result + type.hashCode()
         return result
     }
+
+    override fun toString(): String {
+        return "${this::class.simpleName}(id='$id', type=$type)"
+    }
+
 }
 
 class PersonId(

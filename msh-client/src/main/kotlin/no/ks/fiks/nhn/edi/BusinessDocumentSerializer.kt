@@ -48,29 +48,23 @@ object BusinessDocumentSerializer {
                 receiver = NhnReceiver().apply {
                     organisation = NhnOrganisation().apply {
                         organisationName = businessDocument.receiver.parent.name
-                        ident = listOf(
-                            toIdent(businessDocument.receiver.parent.id)
-                        )
+                        ident = businessDocument.receiver.parent.ids.map { toIdent(it) }
                         organisation = businessDocument.receiver.child
                             .let { it as? OrganizationReceiverDetails }
-                            ?.let {
+                            ?.let { org ->
                                 NhnOrganisation().apply {
-                                    organisationName = it.name
-                                    ident = listOf(
-                                        toIdent(it.id)
-                                    )
+                                    organisationName = org.name
+                                    ident = org.ids.map { toIdent(it) }
                                 }
                             }
                         healthcareProfessional = businessDocument.receiver.child
                             .let { it as? PersonReceiverDetails }
-                            ?.let {
+                            ?.let { person ->
                                 HealthcareProfessional().apply {
-                                    givenName = it.firstName
-                                    middleName = it.middleName
-                                    familyName = it.lastName
-                                    ident = listOf(
-                                        toIdent(it.id)
-                                    )
+                                    givenName = person.firstName
+                                    middleName = person.middleName
+                                    familyName = person.lastName
+                                    ident = person.ids.map { toIdent(it) }
                                 }
                             }
                     }
@@ -120,17 +114,13 @@ object BusinessDocumentSerializer {
 
     private fun toOrganisation(input: Organization): NhnOrganisation = NhnOrganisation().apply {
         organisationName = input.name
-        ident = listOf(
-            toIdent(input.id),
-        )
-        organisation = toOrganisation(input.childOrganization)
+        ident = input.ids.map { toIdent(it) }
+        organisation = input.childOrganization?.let { toOrganisation(it) }
     }
 
     private fun toOrganisation(input: ChildOrganization): NhnOrganisation = NhnOrganisation().apply {
         organisationName = input.name
-        ident = listOf(
-            toIdent(input.id),
-        )
+        ident = input.ids.map { toIdent(it) }
     }
 
     private fun toIdent(input: Id) = Ident().apply {
