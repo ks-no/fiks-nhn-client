@@ -15,9 +15,9 @@ import javax.xml.namespace.QName
 import kotlin.random.Random.Default.nextInt
 import no.nhn.register.communicationparty.CommunicationParty as NhnCommunicationParty
 
-fun buildClient(service: ICommunicationPartyService) = AdresseregisteretClient("", Credentials("", ""), service)
+fun buildClient(service: AdresseregisteretService) = AdresseregisteretClient(service)
 
-fun setupServiceMock(expected: NhnCommunicationParty?) = mockk<ICommunicationPartyService> {
+fun setupServiceMock(expected: NhnCommunicationParty?) = mockk<AdresseregisteretService> {
     every { getCommunicationPartyDetails(any()) } returns expected
 }
 

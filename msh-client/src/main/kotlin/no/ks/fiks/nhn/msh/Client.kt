@@ -2,7 +2,10 @@ package no.ks.fiks.nhn.msh
 
 import no.ks.fiks.hdir.FeilmeldingForApplikasjonskvittering
 import no.ks.fiks.hdir.StatusForMottakAvMelding
+import no.ks.fiks.helseid.HelseIdClient
+import no.ks.fiks.helseid.dpop.ProofBuilder
 import no.ks.fiks.nhn.ar.AdresseregisteretClient
+import no.ks.fiks.nhn.ar.AdresseregisteretService
 import no.ks.fiks.nhn.edi.BusinessDocumentDeserializer
 import no.ks.fiks.nhn.edi.BusinessDocumentSerializer
 import no.ks.fiks.nhn.flr.FastlegeregisteretClient
@@ -25,7 +28,18 @@ class Client(
     configuration: Configuration,
 ) {
 
-    private val mshClient = MshFeignClientBuilder.build(configuration)
+    private val mshClient = MshFeignClientBuilder.build(
+        mshBaseUrl = configuration.environments.mshBaseUrl,
+        helseIdClient = HelseIdClient(
+            no.ks.fiks.helseid.Configuration(
+                clientId = configuration.helseId.clientId,
+                jwk = configuration.helseId.jwk,
+                environment = configuration.environments.helseIdEnvironment,
+            ),
+        ),
+        proofBuilder = ProofBuilder(configuration.helseId.jwk),
+        tokenParams = configuration.helseId.tokenParams,
+    )
 
     private val flrClient = FastlegeregisteretClient(
         url = configuration.environments.fastlegeregisterUrl,
@@ -37,13 +51,15 @@ class Client(
         },
     )
     private val arClient = AdresseregisteretClient(
-        url = configuration.environments.adresseregisterUrl,
-        credentials = configuration.adresseregisteret.let {
-            ArCredentials(
-                username = it.username,
-                password = it.password,
-            )
-        },
+        AdresseregisteretService(
+            url = configuration.environments.adresseregisterUrl,
+            credentials = configuration.adresseregisteret.let {
+                ArCredentials(
+                    username = it.username,
+                    password = it.password,
+                )
+            },
+        )
     )
     private val receiverBuilder = GpForPersonReceiverBuilder(flrClient, arClient)
 

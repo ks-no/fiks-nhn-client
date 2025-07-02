@@ -38,7 +38,7 @@ class LookupHerIdTest : StringSpec({
         val queryHerId = nextInt(1000, 100000)
         val expected = buildOrganizationPerson()
 
-        AdresseregisteretClient("", Credentials("", ""), setupServiceMock(expected))
+        AdresseregisteretClient(setupServiceMock(expected))
             .lookupHerId(queryHerId)
             .asClue {
                 it.shouldBeInstanceOf<PersonCommunicationParty>()
