@@ -1,5 +1,6 @@
 package no.ks.fiks.nhn.flr
 
+import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.*
 import io.kotest.assertions.asClue
 import io.kotest.assertions.throwables.shouldThrow
@@ -15,25 +16,15 @@ import java.util.*
 class GetPatientGPHttpTest : StringSpec() {
 
     private val wireMock = WireMockContainer("wiremock/wiremock:3.12.1")
-        .also {
-            it.start()
-            configureFor(it.port)
-        }
+        .also { it.start() }
+    private val wireMockClient = WireMock(wireMock.host, wireMock.port)
 
     init {
         "Test lookup for person with GP" {
             val patientId = UUID.randomUUID().toString()
             stubResponse(patientId, "get-patient-gp.xml")
 
-            val client = FastlegeregisteretClient(
-                url = wireMock.baseUrl,
-                credentials = Credentials(
-                    username = UUID.randomUUID().toString(),
-                    password = UUID.randomUUID().toString(),
-                ),
-            )
-
-            client.getPatientGP(patientId)
+            buildClient().getPatientGP(patientId)
                 .asClue {
                     it shouldNot beNull()
                     it!!.patientId shouldBe "12345678999"
@@ -45,15 +36,7 @@ class GetPatientGPHttpTest : StringSpec() {
             val patientId = UUID.randomUUID().toString()
             stubResponse(patientId, "get-patient-gp-not-found.xml")
 
-            val client = FastlegeregisteretClient(
-                url = wireMock.baseUrl,
-                credentials = Credentials(
-                    username = UUID.randomUUID().toString(),
-                    password = UUID.randomUUID().toString(),
-                ),
-            )
-
-            shouldThrow<FastlegeregisteretException> { client.getPatientGP(patientId) }
+            shouldThrow<FastlegeregisteretException> { buildClient().getPatientGP(patientId) }
                 .asClue {
                     it.errorCode shouldBe "Feil"
                     it.faultMessage shouldBe "ArgumentException: Personen er ikke tilknyttet fastlegekontrakt"
@@ -66,11 +49,13 @@ class GetPatientGPHttpTest : StringSpec() {
             stubResponse(patientId, "get-patient-gp-invalid-nin.xml")
 
             val client = FastlegeregisteretClient(
-                url = wireMock.baseUrl,
-                credentials = Credentials(
-                    username = UUID.randomUUID().toString(),
-                    password = UUID.randomUUID().toString(),
-                ),
+                FastlegeregisteretService(
+                    url = wireMock.baseUrl,
+                    credentials = Credentials(
+                        username = UUID.randomUUID().toString(),
+                        password = UUID.randomUUID().toString(),
+                    ),
+                )
             )
 
             shouldThrow<FastlegeregisteretException> { client.getPatientGP(patientId) }
@@ -88,10 +73,10 @@ class GetPatientGPHttpTest : StringSpec() {
             val patientId = UUID.randomUUID().toString()
             stubResponse(patientId, "get-patient-gp.xml")
 
-            FastlegeregisteretClient(wireMock.baseUrl, Credentials(username, password))
+            buildClient(username, password)
                 .getPatientGP(patientId)
 
-            val requests = findAll(
+            val requests = wireMockClient.find(
                 postRequestedFor(urlEqualTo("/"))
                     .withRequestBody(containing(patientId))
             )
@@ -108,47 +93,31 @@ class GetPatientGPHttpTest : StringSpec() {
             }
         }
 
-        "Test that configuration is applied correctly when using builder" {
-            val username = UUID.randomUUID().toString()
-            val password = UUID.randomUUID().toString()
-
-            val patientId = UUID.randomUUID().toString()
-            stubResponse(patientId, "get-patient-gp.xml")
-
-            FastlegeregisteretClientBuilder()
-                .url(wireMock.baseUrl)
-                .credentials(Credentials(username, password))
-                .build()
-                .getPatientGP(patientId)
-
-            val requests = findAll(
-                postRequestedFor(urlEqualTo("/"))
-                    .withRequestBody(containing(patientId))
-            )
-            requests shouldHaveSize 1
-            requests.single().asClue { request ->
-                request.absoluteUrl shouldBe "${wireMock.baseUrl}/"
-                val usernamePassword = Base64.getDecoder()
-                    .decode(
-                        request.header("Authorization").firstValue()
-                            .removePrefix("Basic ")
-                    )
-                    .toString(Charset.defaultCharset())
-                usernamePassword shouldBe "$username:$password"
-            }
-        }
     }
 
-}
-
-private fun stubResponse(patientId: String, fileName: String) {
-    stubFor(
-        post("/")
-            .withRequestBody(containing(patientId))
-            .willReturn(
-                aResponse()
-                    .withHeader("Content-Type", "application/soap+xml; charset=utf-8")
-                    .withBody(ClassLoader.getSystemResource(fileName).readBytes())
-            )
+    private fun buildClient(
+        username: String = UUID.randomUUID().toString(),
+        password: String = UUID.randomUUID().toString(),
+    ) = FastlegeregisteretClient(
+        FastlegeregisteretService(
+            url = wireMock.baseUrl,
+            credentials = Credentials(
+                username = username,
+                password = password,
+            ),
+        )
     )
+
+    private fun stubResponse(patientId: String, fileName: String) {
+        wireMockClient.register(
+            post("/")
+                .withRequestBody(containing(patientId))
+                .willReturn(
+                    aResponse()
+                        .withHeader("Content-Type", "application/soap+xml; charset=utf-8")
+                        .withBody(ClassLoader.getSystemResource(fileName).readBytes())
+                )
+        )
+    }
+
 }
