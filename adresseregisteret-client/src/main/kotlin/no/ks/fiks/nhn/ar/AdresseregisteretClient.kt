@@ -1,19 +1,17 @@
 package no.ks.fiks.nhn.ar
 
 import jakarta.xml.bind.JAXBElement
-import jakarta.xml.ws.soap.SOAPBinding
 import mu.KotlinLogging
-import no.nhn.register.communicationparty.*
-import org.apache.cxf.jaxws.JaxWsProxyFactoryBean
-import org.apache.cxf.ws.addressing.WSAddressingFeature
+import no.nhn.register.communicationparty.ICommunicationPartyServiceGetCommunicationPartyDetailsGenericFaultFaultFaultMessage
+import no.nhn.register.communicationparty.Organization
+import no.nhn.register.communicationparty.OrganizationPerson
+import no.nhn.register.communicationparty.Service
 import no.nhn.register.communicationparty.CommunicationParty as NhnCommunicationParty
 
 private val log = KotlinLogging.logger { }
 
 class AdresseregisteretClient(
-    url: String,
-    credentials: Credentials,
-    private val service: ICommunicationPartyService = buildService(url, credentials),
+    private val service: AdresseregisteretService,
 ) {
 
     fun lookupHerId(herId: Int): CommunicationParty? =
@@ -97,36 +95,3 @@ class AdresseregisteretClient(
 }
 
 private fun JAXBElement<String>.valueNotBlank() = value?.takeIf { it.isNotBlank() }
-
-class AdresseregisteretClientBuilder {
-
-    private var url: String? = null
-    private var credentials: Credentials? = null
-    private var service: ICommunicationPartyService? = null
-
-    fun url(url: String) = apply { this.url = url }
-    fun credentials(credentials: Credentials) = apply { this.credentials = credentials }
-    fun service(service: ICommunicationPartyService) = apply { this.service = service }
-
-    fun build(): AdresseregisteretClient {
-        val url = url ?: throw IllegalStateException("url is required")
-        val credentials = credentials ?: throw IllegalStateException("credentials is required")
-        return AdresseregisteretClient(
-            url = url,
-            credentials = credentials,
-            service = service ?: buildService(url, credentials),
-        )
-    }
-
-}
-
-private fun buildService(url: String, credentials: Credentials): ICommunicationPartyService =
-    JaxWsProxyFactoryBean().apply {
-        address = url
-
-        username = credentials.username
-        password = credentials.password
-
-        features.add(WSAddressingFeature())
-        bindingId = SOAPBinding.SOAP12HTTP_BINDING
-    }.create(ICommunicationPartyService::class.java)

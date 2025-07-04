@@ -12,15 +12,16 @@ import feign.RequestTemplate
 import feign.jackson.JacksonDecoder
 import feign.jackson.JacksonEncoder
 import no.ks.fiks.helseid.AccessTokenRequestBuilder
+import no.ks.fiks.helseid.HelseIdClient
 import no.ks.fiks.helseid.TenancyType
 import no.ks.fiks.helseid.dpop.Endpoint
 import no.ks.fiks.helseid.dpop.HttpMethod
-import no.ks.fiks.helseid.http.HttpRequestHelper
+import no.ks.fiks.helseid.dpop.ProofBuilder
+import no.ks.fiks.helseid.http.DpopHttpRequestHelper
 import no.nhn.msh.v2.api.MessagesControllerApi
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
-import no.ks.fiks.helseid.Configuration as HelseIdConfiguration
 
 // Meldingstjener, MSH (Message Service Handler)
 internal object MshFeignClientBuilder {
@@ -36,63 +37,72 @@ internal object MshFeignClientBuilder {
             })
         })
 
-    fun build(configuration: Configuration): MessagesControllerApi = Feign.builder()
+    fun build(
+        mshBaseUrl: String,
+        helseIdClient: HelseIdClient,
+        proofBuilder: ProofBuilder,
+        tokenParams: HelseIdTokenParameters? = null,
+    ): MessagesControllerApi = build(mshBaseUrl, DpopHttpRequestHelper(helseIdClient, proofBuilder), tokenParams)
+
+    private fun build(
+        mshBaseUrl: String,
+        httpHelper: DpopHttpRequestHelper,
+        tokenParams: HelseIdTokenParameters?
+    ): MessagesControllerApi = Feign.builder()
         .encoder(JacksonEncoder(mapper))
         .decoder(JacksonDecoder(mapper))
-        .requestInterceptor(buildAuthorizationRequestInterceptor(configuration))
-        .target(MessagesControllerApi::class.java, configuration.environments.mshBaseUrl)
+        .requestInterceptor(buildAuthorizationRequestInterceptor(httpHelper, tokenParams))
+        .target(MessagesControllerApi::class.java, mshBaseUrl)
 
-    private fun buildAuthorizationRequestInterceptor(configuration: Configuration) = AuthorizationRequestInterceptor(
-        HttpRequestHelper(
-            HelseIdConfiguration(
-                environment = configuration.environments.helseIdEnvironment,
-                clientId = configuration.helseId.clientId,
-                jwk = configuration.helseId.jwk,
-            )
-        ), buildBaseAccessTokenRequest(configuration)
-    )
-
-    private fun buildBaseAccessTokenRequest(configuration: Configuration) =
-        configuration.helseId.tokenParams?.let { config ->
-            AccessTokenRequestBuilder()
-                .also { builder ->
-                    config.tenant?.apply {
-                        when (this) {
-                            is SingleTenantHelseIdTokenParameters -> builder
-                                .tenancyType(TenancyType.SINGLE)
-                                .childOrganizationNumber(childOrganization)
-
-                            is MultiTenantHelseIdTokenParameters -> builder
-                                .tenancyType(TenancyType.MULTI)
-                                .parentOrganizationNumber(parentOrganization)
-                                .also { if (childOrganization != null) builder.childOrganizationNumber(childOrganization) }
-                        }
-                    }
-                }
-        }
+    private fun buildAuthorizationRequestInterceptor(httpHelper: DpopHttpRequestHelper, tokenParams: HelseIdTokenParameters?) =
+        AuthorizationRequestInterceptor(httpHelper, tokenParams)
 
 }
 
 private class AuthorizationRequestInterceptor(
-    val httpHelper: HttpRequestHelper,
-    val accessTokenRequestBuilder: AccessTokenRequestBuilder? = null,
+    val httpHelper: DpopHttpRequestHelper,
+    val defaultTokenParams: HelseIdTokenParameters?,
 ) : RequestInterceptor {
 
     override fun apply(template: RequestTemplate) {
+        val accessTokenRequestBuilder = buildBaseAccessTokenRequest(defaultTokenParams)
         val endpoint = Endpoint(
             method = HttpMethod.valueOf(template.method()),
             url = template.feignTarget().url() + template.path(),
         )
         if (accessTokenRequestBuilder == null) {
-            httpHelper.addDpopAuthorizationHeader(endpoint) { name, value ->
+            httpHelper.addAuthorizationHeader(endpoint) { name, value ->
                 template.header(name, value)
             }
         } else {
-            httpHelper.addDpopAuthorizationHeader(endpoint, accessTokenRequestBuilder) { name, value ->
+            httpHelper.addAuthorizationHeader(endpoint, accessTokenRequestBuilder) { name, value ->
                 template.header(name, value)
             }
         }
-
     }
 
+    private fun buildBaseAccessTokenRequest(defaultTokenParams: HelseIdTokenParameters?): AccessTokenRequestBuilder? {
+        if (defaultTokenParams == null) return null
+
+        return AccessTokenRequestBuilder()
+            .setTenantParams(defaultTokenParams.tenant)
+    }
+
+    private fun AccessTokenRequestBuilder.setTenantParams(tenantParams: HelseIdTenantParameters?) =
+        apply {
+            tenantParams?.let { tenant ->
+                when (tenant) {
+                    is SingleTenantHelseIdTokenParameters ->
+                        tenancyType(TenancyType.SINGLE)
+                            .childOrganizationNumber(tenant.childOrganization)
+
+                    is MultiTenantHelseIdTokenParameters ->
+                        tenancyType(TenancyType.MULTI)
+                            .parentOrganizationNumber(tenant.parentOrganization)
+                            .also { if (tenant.childOrganization != null) childOrganizationNumber(tenant.childOrganization) }
+                }
+            }
+        }
+
 }
+
