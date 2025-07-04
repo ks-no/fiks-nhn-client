@@ -11,7 +11,6 @@ import io.mockk.every
 import io.mockk.mockk
 import jakarta.xml.bind.JAXBElement
 import no.nhn.common.flr.GenericFault
-import no.nhn.schemas.reg.flr.IFlrReadOperations
 import no.nhn.schemas.reg.flr.IFlrReadOperationsGetPatientGPDetailsGenericFaultFaultFaultMessage
 import no.nhn.schemas.reg.flr.PatientToGPContractAssociation
 import java.util.*
@@ -76,9 +75,9 @@ class GetPatientGPTest : StringSpec({
 
 })
 
-private fun buildClient(service: IFlrReadOperations) = FastlegeregisteretClient("", Credentials("", ""), service)
+private fun buildClient(service: FastlegeregisteretService) = FastlegeregisteretClient(service)
 
-private fun setupServiceMock(expected: PatientToGPContractAssociation?) = mockk<IFlrReadOperations> {
+private fun setupServiceMock(expected: PatientToGPContractAssociation?) = mockk<FastlegeregisteretService> {
     every { getPatientGPDetails(any()) } returns expected
 }
 

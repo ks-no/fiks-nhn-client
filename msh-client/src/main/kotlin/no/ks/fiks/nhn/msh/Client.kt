@@ -9,6 +9,7 @@ import no.ks.fiks.nhn.ar.AdresseregisteretService
 import no.ks.fiks.nhn.edi.BusinessDocumentDeserializer
 import no.ks.fiks.nhn.edi.BusinessDocumentSerializer
 import no.ks.fiks.nhn.flr.FastlegeregisteretClient
+import no.ks.fiks.nhn.flr.FastlegeregisteretService
 import no.nhn.msh.v2.api.MessagesControllerApi
 import no.nhn.msh.v2.model.AppRecError
 import no.nhn.msh.v2.model.AppRecStatus
@@ -42,13 +43,15 @@ class Client(
     )
 
     private val flrClient = FastlegeregisteretClient(
-        url = configuration.environments.fastlegeregisterUrl,
-        credentials = configuration.fastlegeregisteret.let {
-            FlrCredentials(
-                username = it.username,
-                password = it.password,
-            )
-        },
+        FastlegeregisteretService(
+            url = configuration.environments.fastlegeregisterUrl,
+            credentials = configuration.fastlegeregisteret.let {
+                FlrCredentials(
+                    username = it.username,
+                    password = it.password,
+                )
+            },
+        )
     )
     private val arClient = AdresseregisteretClient(
         AdresseregisteretService(
