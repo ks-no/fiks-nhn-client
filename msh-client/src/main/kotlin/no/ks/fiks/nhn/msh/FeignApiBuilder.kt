@@ -24,7 +24,7 @@ import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
 // Meldingstjener, MSH (Message Service Handler)
-internal object MshFeignClientBuilder {
+internal object FeignApiBuilder {
 
     private val mapper = ObjectMapper()
         .registerModule(JavaTimeModule())

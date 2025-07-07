@@ -89,7 +89,7 @@ object BusinessDocumentSerializer {
                 )
             }
         }
-        .also { XmlContext.validate(it) }
+        .also { XmlContext.validateObject(it) }
 
     private fun buildMsgInfoType(version: DialogmeldingVersion) =
         when (version) {

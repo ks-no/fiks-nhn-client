@@ -2,89 +2,26 @@ package no.ks.fiks.nhn.msh
 
 import no.ks.fiks.hdir.FeilmeldingForApplikasjonskvittering
 import no.ks.fiks.hdir.StatusForMottakAvMelding
-import no.ks.fiks.helseid.HelseIdClient
-import no.ks.fiks.helseid.dpop.ProofBuilder
-import no.ks.fiks.nhn.ar.AdresseregisteretClient
-import no.ks.fiks.nhn.ar.AdresseregisteretService
 import no.ks.fiks.nhn.edi.BusinessDocumentDeserializer
 import no.ks.fiks.nhn.edi.BusinessDocumentSerializer
-import no.ks.fiks.nhn.flr.FastlegeregisteretClient
-import no.ks.fiks.nhn.flr.FastlegeregisteretService
-import no.nhn.msh.v2.api.MessagesControllerApi
 import no.nhn.msh.v2.model.AppRecError
 import no.nhn.msh.v2.model.AppRecStatus
 import no.nhn.msh.v2.model.PostAppRecRequest
 import no.nhn.msh.v2.model.PostMessageRequest
 import java.util.*
-import no.ks.fiks.nhn.ar.Credentials as ArCredentials
-import no.ks.fiks.nhn.flr.Credentials as FlrCredentials
 import no.nhn.msh.v2.model.Message as NhnMessage
-
-private const val API_VERSION = "2"
 
 private const val CONTENT_TYPE = "application/xml"
 private const val CONTENT_TRANSFER_ENCODING = "base64"
 
-class Client(
-    configuration: Configuration,
+open class Client(
+    private val apiService: ApiService,
 ) {
 
-    private val mshClient = MshFeignClientBuilder.build(
-        mshBaseUrl = configuration.environments.mshBaseUrl,
-        helseIdClient = HelseIdClient(
-            no.ks.fiks.helseid.Configuration(
-                clientId = configuration.helseId.clientId,
-                jwk = configuration.helseId.jwk,
-                environment = configuration.environments.helseIdEnvironment,
-            ),
-        ),
-        proofBuilder = ProofBuilder(configuration.helseId.jwk),
-        tokenParams = configuration.helseId.tokenParams,
-    )
-
-    private val flrClient = FastlegeregisteretClient(
-        FastlegeregisteretService(
-            url = configuration.environments.fastlegeregisterUrl,
-            credentials = configuration.fastlegeregisteret.let {
-                FlrCredentials(
-                    username = it.username,
-                    password = it.password,
-                )
-            },
-        )
-    )
-    private val arClient = AdresseregisteretClient(
-        AdresseregisteretService(
-            url = configuration.environments.adresseregisterUrl,
-            credentials = configuration.adresseregisteret.let {
-                ArCredentials(
-                    username = it.username,
-                    password = it.password,
-                )
-            },
-        )
-    )
-    private val receiverBuilder = GpForPersonReceiverBuilder(flrClient, arClient)
-
-    private val sourceSystem = configuration.sourceSystem
-
-    fun sendMessageToGPForPerson(businessDocument: GPForPersonOutgoingBusinessDocument) {
-        sendMessage(
-            OutgoingBusinessDocument(
-                id = businessDocument.id,
-                sender = businessDocument.sender,
-                receiver = receiverBuilder.buildGpForPersonReceiver(businessDocument.person),
-                message = businessDocument.message,
-                vedlegg = businessDocument.vedlegg,
-                version = businessDocument.version,
-            )
-        )
-    }
-
     fun sendMessage(businessDocument: OutgoingBusinessDocument) {
-        mshClient
-            .postMessage(
-                API_VERSION, sourceSystem, PostMessageRequest()
+        apiService
+            .sendMessage(
+                PostMessageRequest()
                     .contentType(CONTENT_TYPE)
                     .contentTransferEncoding(CONTENT_TRANSFER_ENCODING)
                     .businessDocument(Base64.getEncoder().encodeToString(BusinessDocumentSerializer.serializeNhnMessage(businessDocument).toByteArray()))
@@ -92,44 +29,41 @@ class Client(
     }
 
     fun getMessages(receiverHerId: Int): List<Message> {
-        return mshClient
-            .getMessages(
-                API_VERSION, sourceSystem, MessagesControllerApi.GetMessagesQueryParams()
-                    .receiverHerIds(setOf(receiverHerId))
-            )
+        return apiService
+            .getMessages(receiverHerId)
             .map { it.toMessageInfo() }
 
     }
 
     fun getMessagesWithMetadata(receiverHerId: Int): List<MessageWithMetadata> {
-        return mshClient
-            .getMessages(
-                API_VERSION, sourceSystem, MessagesControllerApi.GetMessagesQueryParams()
-                    .receiverHerIds(setOf(receiverHerId))
-                    .includeMetadata(true)
-            )
+        return apiService
+            .getMessagesWithMetadata(receiverHerId)
             .map { it.toMessageInfoWithMetadata() }
 
     }
 
     fun getMessage(id: UUID): MessageWithMetadata {
-        return mshClient
-            .getMessage(id, API_VERSION, sourceSystem)
+        return apiService
+            .getMessage(id)
             .toMessageInfoWithMetadata()
     }
 
     fun getBusinessDocument(id: UUID): IncomingBusinessDocument {
-        return mshClient
-            .getBusinessDocument(id, API_VERSION, sourceSystem)
+        return apiService
+            .getBusinessDocument(id)
             .let {
+                if (it.contentTransferEncoding != CONTENT_TRANSFER_ENCODING) throw IllegalArgumentException("'${it.contentTransferEncoding}' is not a supported transfer encoding")
+                if (it.contentType != CONTENT_TYPE) throw IllegalArgumentException("'${it.contentType}' is not a supported content type")
                 BusinessDocumentDeserializer.deserializeMsgHead(String(Base64.getDecoder().decode(it.businessDocument)))
             }
     }
 
     fun getApplicationReceipt(id: UUID): IncomingApplicationReceipt {
-        return mshClient
-            .getBusinessDocument(id, API_VERSION, sourceSystem)
+        return apiService
+            .getBusinessDocument(id)
             .let {
+                if (it.contentTransferEncoding != CONTENT_TRANSFER_ENCODING) throw IllegalArgumentException("'${it.contentTransferEncoding}' is not a supported transfer encoding")
+                if (it.contentType != CONTENT_TYPE) throw IllegalArgumentException("'${it.contentType}' is not a supported content type")
                 BusinessDocumentDeserializer.deserializeAppRec(String(Base64.getDecoder().decode(it.businessDocument)))
             }
     }
@@ -138,8 +72,8 @@ class Client(
         if (receipt.status == StatusForMottakAvMelding.OK && !receipt.errors.isNullOrEmpty()) throw IllegalArgumentException("Error messages are not allowed when status is OK")
         if (receipt.status != StatusForMottakAvMelding.OK && receipt.errors.isNullOrEmpty()) throw IllegalArgumentException("Must provide at least one error message if status is not OK")
 
-        mshClient.postAppRec(
-            receipt.acknowledgedId, receipt.senderHerId, API_VERSION, sourceSystem, PostAppRecRequest()
+        apiService.sendApplicationReceipt(
+            receipt.acknowledgedId, receipt.senderHerId, PostAppRecRequest()
                 .appRecStatus(receipt.status.toAppRecStatus())
                 .appRecErrorList(receipt.errors?.toAppRecErrors())
         )
@@ -161,7 +95,7 @@ class Client(
     }
 
     fun markMessageRead(id: UUID, receiverHerId: Int) {
-        mshClient.markMessageAsRead(id, receiverHerId, API_VERSION, sourceSystem)
+        apiService.markMessageRead(id, receiverHerId)
     }
 
     private fun NhnMessage.toMessageInfo() = Message(
