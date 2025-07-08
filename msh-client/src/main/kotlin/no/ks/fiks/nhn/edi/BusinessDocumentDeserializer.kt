@@ -35,7 +35,7 @@ object BusinessDocumentDeserializer {
     private val factory = XMLInputFactory.newInstance()
 
     fun deserializeMsgHead(msgHeadXml: String): IncomingBusinessDocument {
-        getRootElement(msgHeadXml).also { if (it != MSG_HEAD_ROOT) throw IllegalArgumentException("Expected $MSG_HEAD_ROOT as root element, but found $it") }
+        validateRootElement(msgHeadXml, MSG_HEAD_ROOT)
         XmlContext.validateXml(msgHeadXml)
         val msgHead = XmlContext.createUnmarshaller().unmarshal(StreamSource(StringReader(msgHeadXml)), MsgHead::class.java).value
         if (msgHead.msgInfo == null) throw IllegalArgumentException("Could not find MsgInfo in the provided XML. The message is invalid or of wrong type.")
@@ -51,11 +51,15 @@ object BusinessDocumentDeserializer {
     }
 
     fun deserializeAppRec(appRecXml: String): IncomingApplicationReceipt {
-        getRootElement(appRecXml).also { if (it != APP_REC_ROOT) throw IllegalArgumentException("Expected $APP_REC_ROOT as root element, but found $it") }
+        validateRootElement(appRecXml, APP_REC_ROOT)
         return when (getAppRecVersion(appRecXml)) {
             AppRecVersion.V1_0 -> AppRecDeserializer1_0.toApplicationReceipt(appRecXml)
             AppRecVersion.V1_1 -> AppRecDeserializer1_1.toApplicationReceipt(appRecXml)
         }
+    }
+
+    private fun validateRootElement(xml: String, expectedRoot: String) {
+        getRootElement(xml).also { if (it != expectedRoot) throw IllegalArgumentException("Expected $expectedRoot as root element, but found $it") }
     }
 
     private fun getAppRecVersion(appRecXml: String) = getVersion(appRecXml).let { version ->
