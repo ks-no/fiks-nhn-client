@@ -22,8 +22,11 @@ import no.kith.xmlstds.msghead._2006_05_24.Organisation as NhnOrganisation
 import no.ks.fiks.nhn.edi.v1_0.AppRecDeserializer as AppRecDeserializer1_0
 import no.ks.fiks.nhn.edi.v1_1.AppRecDeserializer as AppRecDeserializer1_1
 
-private const val VERSION_1_0 = "1.0 2004-11-21"
-private const val VERSION_1_1 = "v1.1 2012-02-15"
+private const val MSG_HEAD_ROOT = "MsgHead"
+private const val APP_REC_ROOT = "AppRec"
+
+private const val APPREC_VERSION_1_0 = "1.0 2004-11-21"
+private const val APPREC_VERSION_1_1 = "v1.1 2012-02-15"
 
 private val log = KotlinLogging.logger { }
 
@@ -32,7 +35,10 @@ object BusinessDocumentDeserializer {
     private val factory = XMLInputFactory.newInstance()
 
     fun deserializeMsgHead(msgHeadXml: String): IncomingBusinessDocument {
+        validateRootElement(msgHeadXml, MSG_HEAD_ROOT)
+        XmlContext.validateXml(msgHeadXml)
         val msgHead = XmlContext.createUnmarshaller().unmarshal(StreamSource(StringReader(msgHeadXml)), MsgHead::class.java).value
+        if (msgHead.msgInfo == null) throw IllegalArgumentException("Could not find MsgInfo in the provided XML. The message is invalid or of wrong type.")
         return IncomingBusinessDocument(
             id = msgHead.msgInfo.msgId,
             date = msgHead.msgInfo.genDate.toLocalDateTime(),
@@ -44,18 +50,24 @@ object BusinessDocumentDeserializer {
         )
     }
 
-    fun deserializeAppRec(appRecXml: String): IncomingApplicationReceipt =
-        when (getAppRecVersion(appRecXml)) {
+    fun deserializeAppRec(appRecXml: String): IncomingApplicationReceipt {
+        validateRootElement(appRecXml, APP_REC_ROOT)
+        return when (getAppRecVersion(appRecXml)) {
             AppRecVersion.V1_0 -> AppRecDeserializer1_0.toApplicationReceipt(appRecXml)
             AppRecVersion.V1_1 -> AppRecDeserializer1_1.toApplicationReceipt(appRecXml)
         }
+    }
+
+    private fun validateRootElement(xml: String, expectedRoot: String) {
+        getRootElement(xml).also { if (it != expectedRoot) throw IllegalArgumentException("Expected $expectedRoot as root element, but found $it") }
+    }
 
     private fun getAppRecVersion(appRecXml: String) = getVersion(appRecXml).let { version ->
         when (version) {
-            VERSION_1_0 -> AppRecVersion.V1_0
-            VERSION_1_1 -> AppRecVersion.V1_1
-            null -> throw RuntimeException("Could not find MIGversion in XML")
-            else -> throw RuntimeException("Unknown version for AppRec: $version")
+            APPREC_VERSION_1_0 -> AppRecVersion.V1_0
+            APPREC_VERSION_1_1 -> AppRecVersion.V1_1
+            null -> throw IllegalArgumentException("Could not find MIGversion in XML")
+            else -> throw IllegalArgumentException("Unknown version for AppRec: $version")
         }
     }
 
@@ -71,6 +83,16 @@ object BusinessDocumentDeserializer {
             }
         }
         return null
+    }
+
+    private fun getRootElement(xml: String): String? {
+        val reader = factory.createXMLStreamReader(StringReader(xml))
+
+        var iterations = 0
+        while (reader.hasNext() && reader.next() != XMLStreamConstants.START_ELEMENT && iterations < 100) {
+            iterations++
+        }
+        return reader.localName
     }
 
     private fun MsgHead.getType() = msgInfo.type.toMeldingensFunksjon()
@@ -139,7 +161,7 @@ object BusinessDocumentDeserializer {
                 when (it) {
                     is NhnDialogmelding1_0 -> it.convert()
                     is NhnDialogmelding1_1 -> it.convert()
-                    else -> throw RuntimeException("Unsupported message type: $it")
+                    else -> throw IllegalArgumentException("Unsupported message type: $it")
                 }
             }
 

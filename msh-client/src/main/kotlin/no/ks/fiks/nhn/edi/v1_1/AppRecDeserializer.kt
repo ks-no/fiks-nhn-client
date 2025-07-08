@@ -9,18 +9,31 @@ import no.ks.fiks.hdir.FeilmeldingForApplikasjonskvittering
 import no.ks.fiks.hdir.OrganizationIdType
 import no.ks.fiks.hdir.PersonIdType
 import no.ks.fiks.hdir.StatusForMottakAvMelding
+import no.ks.fiks.nhn.edi.v1_0.AppRecDeserializer
 import no.ks.fiks.nhn.msh.*
 import java.io.StringReader
+import javax.xml.XMLConstants
 import javax.xml.transform.stream.StreamSource
+import javax.xml.validation.SchemaFactory
 
 object AppRecDeserializer {
 
     private val context = JAXBContext.newInstance(AppRec::class.java)
+    private val headSchema = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI)
+        .newSchema(
+            arrayOf(
+                StreamSource(ClassLoader.getSystemResourceAsStream("xsd/kith.xsd")),
+                StreamSource(ClassLoader.getSystemResourceAsStream("xsd/apprec-v1.1.xsd")),
+            )
+        )
 
-    fun toApplicationReceipt(appRecXml: String) = context.createUnmarshaller()
-        .unmarshal(StreamSource(StringReader(appRecXml)), AppRec::class.java)
-        .value
-        .toApplicationReceipt()
+    fun toApplicationReceipt(appRecXml: String): IncomingApplicationReceipt {
+        headSchema.newValidator().validate(StreamSource(StringReader(appRecXml)))
+        return context.createUnmarshaller()
+            .unmarshal(StreamSource(StringReader(appRecXml)), AppRec::class.java)
+            .value
+            .toApplicationReceipt()
+    }
 
     private fun AppRec.toApplicationReceipt() = IncomingApplicationReceipt(
         id = id,
