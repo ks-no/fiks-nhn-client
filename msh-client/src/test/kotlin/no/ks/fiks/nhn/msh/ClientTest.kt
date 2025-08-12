@@ -382,7 +382,7 @@ class ClientTest : FreeSpec() {
                     acknowledgedId = UUID.randomUUID(),
                     senderHerId = randomHerId(),
                     status = StatusForMottakAvMelding.OK_FEIL_I_DELMELDING,
-                    errors = List(nextInt(1, 5)) { ApplicationReceiptError(FeilmeldingForApplikasjonskvittering.entries.random(), UUID.randomUUID().toString()) },
+                    errors = List(nextInt(1, 5)) { randomApplicationReceiptError() },
                 )
                 client.sendApplicationReceipt(receipt)
 
@@ -412,7 +412,7 @@ class ClientTest : FreeSpec() {
                     acknowledgedId = UUID.randomUUID(),
                     senderHerId = randomHerId(),
                     status = StatusForMottakAvMelding.AVVIST,
-                    errors = List(nextInt(1, 5)) { ApplicationReceiptError(FeilmeldingForApplikasjonskvittering.entries.random(), UUID.randomUUID().toString()) },
+                    errors = List(nextInt(1, 5)) { randomApplicationReceiptError() },
                 )
                 client.sendApplicationReceipt(receipt)
 
@@ -440,7 +440,7 @@ class ClientTest : FreeSpec() {
                     acknowledgedId = UUID.randomUUID(),
                     senderHerId = randomHerId(),
                     status = StatusForMottakAvMelding.OK,
-                    errors = listOf(ApplicationReceiptError(FeilmeldingForApplikasjonskvittering.entries.random(), UUID.randomUUID().toString())),
+                    errors = listOf(randomApplicationReceiptError()),
                 )
 
                 shouldThrow<IllegalArgumentException> { client.sendApplicationReceipt(receipt) }.asClue {
@@ -619,3 +619,8 @@ private fun randomApiMessageWithMetadata() = no.nhn.msh.v2.model.Message().apply
     businessDocumentGenDate = OffsetDateTime.now()
     isAppRec = nextBoolean()
 }
+
+private fun randomApplicationReceiptError() = ApplicationReceiptError(
+    type = FeilmeldingForApplikasjonskvittering.entries.minus(FeilmeldingForApplikasjonskvittering.UKJENT).random(),
+    details = UUID.randomUUID().toString(),
+)
