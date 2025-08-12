@@ -14,7 +14,15 @@
     <artifactId>nhn-client-parent</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
-    <name>${project.artifactId}</name>
+    <name>${project.groupId}:${project.artifactId}</name>
+    <description>Parent for clients communicating with different NHN services</description>
+    <url>https://github.com/ks-no/fiks-nhn-client</url>
+
+    <scm>
+        <connection>scm:git:git@github.com:ks-no/fiks-nhn-client.git</connection>
+        <developerConnection>scm:git:git@github.com:ks-no/fiks-nhn-client.git</developerConnection>
+        <url>https://github.com/ks-no/fiks-nhn-client</url>
+    </scm>
 
     <modules>
         <module>fastlegeregisteret-client</module>

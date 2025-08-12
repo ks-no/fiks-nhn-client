@@ -11,6 +11,7 @@
     </parent>
 
     <artifactId>msh-client</artifactId>
+    <description>Client for communicating with MSH / EDI 2.0 (NHN)</description>
 
     <properties>
         <jakarta.xml.bind-api.version>4.0.2</jakarta.xml.bind-api.version>
