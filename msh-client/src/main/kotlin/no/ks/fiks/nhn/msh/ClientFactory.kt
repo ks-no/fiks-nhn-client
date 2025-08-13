@@ -12,36 +12,40 @@ object ClientFactory {
 
     fun createClient(configuration: Configuration): Client =
         Client(
-            apiService = buildApiService(configuration),
+            apiService = createApiService(configuration.helseId, configuration.mshBaseUrl, configuration.sourceSystem),
         )
 
-    fun createClientWithFastlegeLookup(configuration: Configuration): ClientWithFastlegeLookup =
+    fun createClientWithFastlegeLookup(configuration: ConfigurationWithFastlegeLookup): ClientWithFastlegeLookup =
         ClientWithFastlegeLookup(
-            apiService = buildApiService(configuration),
-            flrClient = buildFlrClient(configuration),
-            arClient = buildArClient(configuration),
+            apiService = createApiService(configuration.helseId, configuration.mshBaseUrl, configuration.sourceSystem),
+            flrClient = createFlrClient(configuration.fastlegeregister),
+            arClient = createArClient(configuration.adresseregister),
         )
 
-    private fun buildApiService(configuration: Configuration) = ApiService(
-        api = FeignApiBuilder.build(
-            mshBaseUrl = configuration.environments.mshBaseUrl,
+    private fun createApiService(
+        helseIdConfiguration: HelseIdConfiguration,
+        mshBaseUrl: String,
+        sourceSystem: String,
+    ) = ApiService(
+        api = FeignApiFactory.createApi(
+            mshBaseUrl = mshBaseUrl,
             helseIdClient = HelseIdClient(
                 no.ks.fiks.helseid.Configuration(
-                    clientId = configuration.helseId.clientId,
-                    jwk = configuration.helseId.jwk,
-                    environment = configuration.environments.helseIdEnvironment,
+                    clientId = helseIdConfiguration.clientId,
+                    jwk = helseIdConfiguration.jwk,
+                    environment = helseIdConfiguration.environment,
                 ),
             ),
-            proofBuilder = ProofBuilder(configuration.helseId.jwk),
-            tokenParams = configuration.helseId.tokenParams,
+            proofBuilder = ProofBuilder(helseIdConfiguration.jwk),
+            tokenParams = helseIdConfiguration.tokenParams,
         ),
-        sourceSystem = configuration.sourceSystem,
+        sourceSystem = sourceSystem,
     )
 
-    private fun buildFlrClient(configuration: Configuration) = FastlegeregisteretClient(
+    private fun createFlrClient(configuration: FastlegeregisterConfiguration) = FastlegeregisteretClient(
         FastlegeregisteretService(
-            url = configuration.environments.fastlegeregisterUrl,
-            credentials = configuration.fastlegeregisteret.let {
+            url = configuration.url,
+            credentials = configuration.credentials.let {
                 Credentials(
                     username = it.username,
                     password = it.password,
@@ -50,10 +54,10 @@ object ClientFactory {
         )
     )
 
-    private fun buildArClient(configuration: Configuration) = AdresseregisteretClient(
+    private fun createArClient(configuration: AdresseregisterConfiguration) = AdresseregisteretClient(
         AdresseregisteretService(
-            url = configuration.environments.adresseregisterUrl,
-            credentials = configuration.adresseregisteret.let {
+            url = configuration.url,
+            credentials = configuration.credentials.let {
                 no.ks.fiks.nhn.ar.Credentials(
                     username = it.username,
                     password = it.password,
