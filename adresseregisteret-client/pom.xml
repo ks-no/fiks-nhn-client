@@ -10,6 +10,7 @@
     </parent>
 
     <artifactId>adresseregisteret-client</artifactId>
+    <name>${project.groupId}:${project.artifactId}</name>
     <description>Client for communicating with adresseregisteret (NHN)</description>
 
     <properties>

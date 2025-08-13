@@ -10,6 +10,7 @@
     </parent>
 
     <artifactId>fastlegeregisteret-client</artifactId>
+    <name>${project.groupId}:${project.artifactId}</name>
     <description>Client for communicating with fastlegeregisteret (NHN)</description>
 
     <properties>

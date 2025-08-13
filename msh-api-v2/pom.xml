@@ -10,6 +10,8 @@
     </parent>
 
     <artifactId>msh-api-v2</artifactId>
+    <name>${project.groupId}:${project.artifactId}</name>
+    <description>Feign client generated from the MSH API v2 spec</description>
 
     <properties>
         <openapi-spec-name>${project.artifactId}</openapi-spec-name>
