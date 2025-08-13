@@ -24,7 +24,7 @@ import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
 // Meldingstjener, MSH (Message Service Handler)
-internal object FeignApiBuilder {
+internal object FeignApiFactory {
 
     private val mapper = ObjectMapper()
         .registerModule(JavaTimeModule())
@@ -37,14 +37,14 @@ internal object FeignApiBuilder {
             })
         })
 
-    fun build(
+    fun createApi(
         mshBaseUrl: String,
         helseIdClient: HelseIdClient,
         proofBuilder: ProofBuilder,
         tokenParams: HelseIdTokenParameters? = null,
-    ): MessagesControllerApi = build(mshBaseUrl, DpopHttpRequestHelper(helseIdClient, proofBuilder), tokenParams)
+    ): MessagesControllerApi = create(mshBaseUrl, DpopHttpRequestHelper(helseIdClient, proofBuilder), tokenParams)
 
-    private fun build(
+    private fun create(
         mshBaseUrl: String,
         httpHelper: DpopHttpRequestHelper,
         tokenParams: HelseIdTokenParameters?

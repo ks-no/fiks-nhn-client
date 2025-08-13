@@ -33,7 +33,7 @@ class FeignApiBuilderTest : StringSpec() {
             wireMockClient.register(get("/Messages/$id"))
 
             val helseIdClient = mockk<HelseIdClient> { every { getAccessToken(any()) } returns buildTokenResponse("") }
-            FeignApiBuilder.build(
+            FeignApiFactory.createApi(
                 mshBaseUrl = wireMock.baseUrl,
                 helseIdClient = helseIdClient,
                 proofBuilder = mockk { every { buildProof(any(), any(), any()) } returns UUID.randomUUID().toString() },
@@ -52,7 +52,7 @@ class FeignApiBuilderTest : StringSpec() {
             wireMockClient.register(get("/Messages/$id"))
 
             val helseIdClient = mockk<HelseIdClient> { every { getAccessToken(any()) } returns buildTokenResponse("") }
-            FeignApiBuilder.build(
+            FeignApiFactory.createApi(
                 mshBaseUrl = wireMock.baseUrl,
                 helseIdClient = helseIdClient,
                 proofBuilder = mockk { every { buildProof(any(), any(), any()) } returns UUID.randomUUID().toString() },
@@ -76,7 +76,7 @@ class FeignApiBuilderTest : StringSpec() {
             wireMockClient.register(get("/Messages/$id"))
 
             val helseIdClient = mockk<HelseIdClient> { every { getAccessToken(any()) } returns buildTokenResponse("") }
-            FeignApiBuilder.build(
+            FeignApiFactory.createApi(
                 mshBaseUrl = wireMock.baseUrl,
                 helseIdClient = helseIdClient,
                 proofBuilder = mockk { every { buildProof(any(), any(), any()) } returns UUID.randomUUID().toString() },
@@ -100,7 +100,7 @@ class FeignApiBuilderTest : StringSpec() {
             wireMockClient.register(get("/Messages/$id"))
 
             val helseIdClient = mockk<HelseIdClient> { every { getAccessToken(any()) } returns buildTokenResponse("") }
-            FeignApiBuilder.build(
+            FeignApiFactory.createApi(
                 mshBaseUrl = wireMock.baseUrl,
                 helseIdClient = helseIdClient,
                 proofBuilder = mockk { every { buildProof(any(), any(), any()) } returns UUID.randomUUID().toString() },
@@ -130,7 +130,7 @@ class FeignApiBuilderTest : StringSpec() {
 
             val accessToken = UUID.randomUUID().toString()
             val proofBuilder = mockk<ProofBuilder> { every { buildProof(any(), any(), any()) } returns UUID.randomUUID().toString() }
-            val api = FeignApiBuilder.build(
+            val api = FeignApiFactory.createApi(
                 mshBaseUrl = wireMock.baseUrl,
                 helseIdClient = mockk { every { getAccessToken(any()) } returns buildTokenResponse(accessToken) },
                 proofBuilder = proofBuilder,
@@ -154,7 +154,7 @@ class FeignApiBuilderTest : StringSpec() {
 
             wireMockClient.register(get("/Messages/$id"))
 
-            FeignApiBuilder.build(
+            FeignApiFactory.createApi(
                 mshBaseUrl = wireMock.baseUrl,
                 helseIdClient = mockk<HelseIdClient> { every { getAccessToken(any()) } returns buildTokenResponse(accessToken) },
                 proofBuilder = mockk<ProofBuilder> { every { buildProof(any(), any(), any()) } returns dpopProof },

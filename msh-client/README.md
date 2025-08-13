@@ -17,23 +17,53 @@ Prod: TODO: Missing
 ```
 
 ### Setting up the client
+
+#### Without FLR and AR integration
 ```kotlin
-val client = Client(
+val client = ClientFactory.createClient(
     Configuration(
-        environments = Environments.TEST,
-        sourceSystem = "<Name describing the system using the client>",
         helseId = HelseIdConfiguration(
-            clientId = "<helse-id-client-id>",
-            jwk = "<helse-id-jwk-string>",
+            environment = Environment(
+                issuer = "<HelseID issuer/base URL>",
+                audience = "<HelseID audience>",
+            ),
+            clientId = "<HelseID client id>",
+            jwk = "<HelseID JWK string>",
         ),
-        fastlegeregisteret = Credentials(
-            username = "<flr-username>",
-            password = "<flr-password>>",
+        mshBaseUrl = "<MSH base URL>",
+        sourceSystem = "<Name describing the system using the client>",
+    )
+)
+```
+
+#### With GP lookup using FLR and AR
+```kotlin
+val client = ClientFactory.createClientWithFastlegeLookup(
+    ConfigurationWithFastlegeLookup(
+        helseId = HelseIdConfiguration(
+            environment = Environment(
+                issuer = "<HelseID issuer/base URL>",
+                audience = "<HelseID audience>",
+            ),
+            clientId = "<HelseID client id>",
+            jwk = "<HelseID JWK string>",
         ),
-        adresseregisteret = Credentials(
-            username = "<ar-username>>",
-            password = "<ar-password>",
+        adresseregister = AdresseregisterConfiguration(
+            url = "<Adresseregister URL>",
+            credentials = Credentials(
+                username = "<AR username>",
+                password = "<AR password>",
+            ),
         ),
+        fastlegeregister = FastlegeregisterConfiguration(
+            url = "<Fastlegeregister URL>",
+            credentials = Credentials(
+                username = "<FLR username>",
+                password = "<FLR password>",
+            ),
+        ),
+        mshBaseUrl = "<MSH base URL>",
+        sourceSystem = "<Name describing the system using the client>",
     )
 )
 ```
