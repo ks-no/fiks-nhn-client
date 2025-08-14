@@ -65,7 +65,7 @@ private class AuthorizationRequestInterceptor(
 ) : RequestInterceptor {
 
     override fun apply(template: RequestTemplate) {
-        val accessTokenRequestBuilder = buildBaseAccessTokenRequest(defaultTokenParams)
+        val accessTokenRequestBuilder = buildBaseAccessTokenRequest(RequestContextHolder.get(), defaultTokenParams)
         val endpoint = Endpoint(
             method = HttpMethod.valueOf(template.method()),
             url = template.feignTarget().url() + template.path(),
@@ -81,11 +81,11 @@ private class AuthorizationRequestInterceptor(
         }
     }
 
-    private fun buildBaseAccessTokenRequest(defaultTokenParams: HelseIdTokenParameters?): AccessTokenRequestBuilder? {
-        if (defaultTokenParams == null) return null
+    private fun buildBaseAccessTokenRequest(requestParams: RequestParameters?, defaultTokenParams: HelseIdTokenParameters?): AccessTokenRequestBuilder? {
+        if (requestParams == null && defaultTokenParams == null) return null
 
         return AccessTokenRequestBuilder()
-            .setTenantParams(defaultTokenParams.tenant)
+            .setTenantParams(requestParams?.helseId?.tenant ?: defaultTokenParams?.tenant)
     }
 
     private fun AccessTokenRequestBuilder.setTenantParams(tenantParams: HelseIdTenantParameters?) =
