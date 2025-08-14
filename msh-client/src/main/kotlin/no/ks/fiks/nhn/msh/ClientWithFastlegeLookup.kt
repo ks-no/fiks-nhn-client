@@ -11,7 +11,10 @@ class ClientWithFastlegeLookup(
 
     private val receiverBuilder = GpForPersonReceiverBuilder(flrClient, arClient)
 
-    fun sendMessageToGPForPerson(businessDocument: GPForPersonOutgoingBusinessDocument) {
+    fun sendMessageToGPForPerson(
+        businessDocument: GPForPersonOutgoingBusinessDocument,
+        requestParameters: RequestParameters? = null,
+    ) {
         sendMessage(
             OutgoingBusinessDocument(
                 id = businessDocument.id,
@@ -20,7 +23,8 @@ class ClientWithFastlegeLookup(
                 message = businessDocument.message,
                 vedlegg = businessDocument.vedlegg,
                 version = businessDocument.version,
-            )
+            ),
+            requestParameters,
         )
     }
 

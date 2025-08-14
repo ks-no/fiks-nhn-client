@@ -10,29 +10,15 @@ import io.kotest.matchers.nulls.beNull
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.mockk.every
-import io.mockk.just
 import io.mockk.mockk
-import io.mockk.runs
 import io.mockk.slot
 import io.mockk.verifySequence
 import no.ks.fiks.hdir.FeilmeldingForApplikasjonskvittering
 import no.ks.fiks.hdir.Helsepersonell
 import no.ks.fiks.hdir.HelsepersonellsFunksjoner
-import no.ks.fiks.hdir.OrganizationIdType
-import no.ks.fiks.hdir.PersonIdType
 import no.ks.fiks.hdir.StatusForMottakAvMelding
-import no.ks.fiks.nhn.ar.AdresseregisteretClient
-import no.ks.fiks.nhn.ar.CommunicationPartyParent
-import no.ks.fiks.nhn.ar.PersonCommunicationParty
-import no.ks.fiks.nhn.flr.FastlegeregisteretClient
-import no.ks.fiks.nhn.flr.PatientGP
-import no.ks.fiks.nhn.readResourceContent
-import no.ks.fiks.nhn.validateXmlAgainst
-import no.nhn.msh.v2.model.AppRecError
-import no.nhn.msh.v2.model.AppRecStatus
-import no.nhn.msh.v2.model.GetBusinessDocumentResponse
-import no.nhn.msh.v2.model.PostAppRecRequest
-import no.nhn.msh.v2.model.PostMessageRequest
+import no.ks.fiks.nhn.*
+import no.nhn.msh.v2.model.*
 import java.io.ByteArrayInputStream
 import java.time.OffsetDateTime
 import java.time.temporal.ChronoUnit
@@ -44,65 +30,6 @@ import kotlin.random.Random.Default.nextInt
 class ClientTest : FreeSpec() {
 
     init {
-        "Send message to GP for person" - {
-            "The receiver should be looked up using FLR and AR, and the data should be serialized to XML and passed on to the service" {
-                val startTime = OffsetDateTime.now().truncatedTo(ChronoUnit.SECONDS)
-                val vedleggBytes = nextBytes(nextInt(1000, 100000))
-                val businessDocument = randomGPForPersonOutgoingBusinessDocument(vedleggBytes)
-                val patientGP = randomPatientGP()
-                val gpCommunicationParty = randomPersonCommunicationParty()
-
-                val requestSlot = slot<PostMessageRequest>()
-                val apiService = mockk<ApiService> { every { sendMessage(capture(requestSlot)) } returns UUID.randomUUID() }
-                val flrClient = mockk<FastlegeregisteretClient> { every { getPatientGP(any()) } returns patientGP }
-                val arClient = mockk<AdresseregisteretClient> { every { lookupHerId(any()) } returns gpCommunicationParty }
-                val client = ClientWithFastlegeLookup(apiService, flrClient, arClient)
-
-                client.sendMessageToGPForPerson(businessDocument)
-
-                verifySequence {
-                    flrClient.getPatientGP(businessDocument.person.fnr)
-                    arClient.lookupHerId(patientGP.gpHerId!!)
-                    apiService.sendMessage(any())
-                }
-
-                requestSlot.captured.asClue { request ->
-                    request.contentType shouldBe "application/xml"
-                    request.contentTransferEncoding shouldBe "base64"
-
-                    val xml = String(Base64.getDecoder().decode(request.businessDocument))
-                    xml.validateXmlAgainst(
-                        startTime = startTime,
-                        document = OutgoingBusinessDocument(
-                            id = businessDocument.id,
-                            sender = businessDocument.sender,
-                            receiver = Receiver(
-                                parent = OrganizationReceiverDetails(
-                                    ids = listOf(OrganizationId(gpCommunicationParty.parent!!.herId.toString(), OrganizationIdType.HER_ID)),
-                                    name = gpCommunicationParty.parent!!.name
-                                ),
-                                child = PersonReceiverDetails(
-                                    ids = listOf(PersonId(gpCommunicationParty.herId.toString(), PersonIdType.HER_ID)),
-                                    firstName = gpCommunicationParty.firstName,
-                                    middleName = gpCommunicationParty.middleName,
-                                    lastName = gpCommunicationParty.lastName
-                                ),
-                                patient = Patient(
-                                    fnr = businessDocument.person.fnr,
-                                    firstName = businessDocument.person.firstName,
-                                    middleName = businessDocument.person.middleName,
-                                    lastName = businessDocument.person.lastName
-                                ),
-                            ),
-                            message = businessDocument.message,
-                            vedlegg = businessDocument.vedlegg,
-                            version = businessDocument.version,
-                        ),
-                        vedleggBytes = vedleggBytes,
-                    )
-                }
-            }
-        }
 
         "Send message" - {
             "The data should be serialized to XML and passed on to the service" {
@@ -111,7 +38,12 @@ class ClientTest : FreeSpec() {
                 val businessDocument = randomOutgoingBusinessDocument(vedleggBytes)
 
                 val requestSlot = slot<PostMessageRequest>()
-                val apiService = mockk<ApiService> { every { sendMessage(capture(requestSlot)) } returns UUID.randomUUID() }
+                val apiService = mockk<ApiService> {
+                    every { sendMessage(capture(requestSlot)) } answers {
+                        RequestContextHolder.get() should beNull()
+                        UUID.randomUUID()
+                    }
+                }
                 val client = Client(apiService)
 
                 client.sendMessage(businessDocument)
@@ -132,13 +64,34 @@ class ClientTest : FreeSpec() {
                     )
                 }
             }
+
+            "Params should be added to context before call and removed when it completes" {
+                val params = RequestParameters(HelseIdTokenParameters(SingleTenantHelseIdTokenParameters(randomHerId().toString())))
+
+                val apiService = mockk<ApiService> {
+                    every { sendMessage(any()) } answers {
+                        RequestContextHolder.get() shouldBe params
+                        UUID.randomUUID()
+                    }
+                }
+                val client = Client(apiService)
+
+                RequestContextHolder.get() should beNull()
+                client.sendMessage(randomOutgoingBusinessDocument(), params)
+                RequestContextHolder.get() should beNull()
+            }
         }
 
         "Get messages" - {
             "Messages should be retrieved and mapped" {
                 val apiMessages = List(nextInt(0, 10)) { randomApiMessageWithoutMetadata() }
 
-                val apiService = mockk<ApiService> { every { getMessages(any()) } returns apiMessages }
+                val apiService = mockk<ApiService> {
+                    every { getMessages(any()) } answers {
+                        RequestContextHolder.get() should beNull()
+                        apiMessages
+                    }
+                }
                 val client = Client(apiService)
 
                 val receiverHerId = randomHerId()
@@ -153,13 +106,34 @@ class ClientTest : FreeSpec() {
                     apiService.getMessages(receiverHerId)
                 }
             }
+
+            "Params should be added to context before call and removed when it completes" {
+                val params = RequestParameters(HelseIdTokenParameters(SingleTenantHelseIdTokenParameters(randomHerId().toString())))
+
+                val apiService = mockk<ApiService> {
+                    every { getMessages(any()) } answers {
+                        RequestContextHolder.get() shouldBe params
+                        List(nextInt(0, 10)) { randomApiMessageWithoutMetadata() }
+                    }
+                }
+                val client = Client(apiService)
+
+                RequestContextHolder.get() should beNull()
+                client.getMessages(randomHerId(), params)
+                RequestContextHolder.get() should beNull()
+            }
         }
 
         "Get messages with metadata" - {
             "Messages should be retrieved and mapped" {
                 val apiMessages = List(nextInt(0, 10)) { randomApiMessageWithMetadata() }
 
-                val apiService = mockk<ApiService> { every { getMessagesWithMetadata(any()) } returns apiMessages }
+                val apiService = mockk<ApiService> {
+                    every { getMessagesWithMetadata(any()) } answers {
+                        RequestContextHolder.get() should beNull()
+                        apiMessages
+                    }
+                }
                 val client = Client(apiService)
 
                 val receiverHerId = randomHerId()
@@ -179,13 +153,34 @@ class ClientTest : FreeSpec() {
                     apiService.getMessagesWithMetadata(receiverHerId)
                 }
             }
+
+            "Params should be added to context before call and removed when it completes" {
+                val params = RequestParameters(HelseIdTokenParameters(SingleTenantHelseIdTokenParameters(randomHerId().toString())))
+
+                val apiService = mockk<ApiService> {
+                    every { getMessagesWithMetadata(any()) } answers {
+                        RequestContextHolder.get() shouldBe params
+                        List(nextInt(0, 10)) { randomApiMessageWithMetadata() }
+                    }
+                }
+                val client = Client(apiService)
+
+                RequestContextHolder.get() should beNull()
+                client.getMessagesWithMetadata(randomHerId(), params)
+                RequestContextHolder.get() should beNull()
+            }
         }
 
         "Get message" - {
             "Should be retrieved and mapped" {
                 val message = randomApiMessageWithMetadata()
 
-                val apiService = mockk<ApiService> { every { getMessage(any()) } returns message }
+                val apiService = mockk<ApiService> {
+                    every { getMessage(any()) } answers {
+                        RequestContextHolder.get() should beNull()
+                        message
+                    }
+                }
                 val client = Client(apiService)
 
                 val messageId = UUID.randomUUID()
@@ -203,6 +198,22 @@ class ClientTest : FreeSpec() {
                     apiService.getMessage(messageId)
                 }
             }
+
+            "Params should be added to context before call and removed when it completes" {
+                val params = RequestParameters(HelseIdTokenParameters(SingleTenantHelseIdTokenParameters(randomHerId().toString())))
+
+                val apiService = mockk<ApiService> {
+                    every { getMessage(any()) } answers {
+                        RequestContextHolder.get() shouldBe params
+                        randomApiMessageWithMetadata()
+                    }
+                }
+                val client = Client(apiService)
+
+                RequestContextHolder.get() should beNull()
+                client.getMessage(UUID.randomUUID(), params)
+                RequestContextHolder.get() should beNull()
+            }
         }
 
         "Get business document" - {
@@ -213,7 +224,12 @@ class ClientTest : FreeSpec() {
                     contentTransferEncoding = UUID.randomUUID().toString()
                 }
 
-                val apiService = mockk<ApiService> { every { getBusinessDocument(any()) } returns response }
+                val apiService = mockk<ApiService> {
+                    every { getBusinessDocument(any()) } answers {
+                        RequestContextHolder.get() should beNull()
+                        response
+                    }
+                }
                 val client = Client(apiService)
 
                 val id = UUID.randomUUID()
@@ -277,6 +293,26 @@ class ClientTest : FreeSpec() {
                     apiService.getBusinessDocument(id)
                 }
             }
+
+            "Params should be added to context before call and removed when it completes" {
+                val params = RequestParameters(HelseIdTokenParameters(SingleTenantHelseIdTokenParameters(randomHerId().toString())))
+
+                val apiService = mockk<ApiService> {
+                    every { getBusinessDocument(any()) } answers {
+                        RequestContextHolder.get() shouldBe params
+                        GetBusinessDocumentResponse().apply {
+                            businessDocument = Base64.getEncoder().encodeToString(readResourceContent("dialogmelding/1.0/foresporsel-og-svar/dialog-foresporsel-samsvar-test.xml"))
+                            contentType = "application/xml"
+                            contentTransferEncoding = "base64"
+                        }
+                    }
+                }
+                val client = Client(apiService)
+
+                RequestContextHolder.get() should beNull()
+                client.getBusinessDocument(UUID.randomUUID(), params)
+                RequestContextHolder.get() should beNull()
+            }
         }
 
         "Get application receipt" - {
@@ -287,7 +323,12 @@ class ClientTest : FreeSpec() {
                     contentTransferEncoding = UUID.randomUUID().toString()
                 }
 
-                val apiService = mockk<ApiService> { every { getBusinessDocument(any()) } returns response }
+                val apiService = mockk<ApiService> {
+                    every { getBusinessDocument(any()) } answers {
+                        RequestContextHolder.get() should beNull()
+                        response
+                    }
+                }
                 val client = Client(apiService)
 
                 val id = UUID.randomUUID()
@@ -351,12 +392,37 @@ class ClientTest : FreeSpec() {
                     apiService.getBusinessDocument(id)
                 }
             }
+
+            "Params should be added to context before call and removed when it completes" {
+                val params = RequestParameters(HelseIdTokenParameters(SingleTenantHelseIdTokenParameters(randomHerId().toString())))
+
+                val apiService = mockk<ApiService> {
+                    every { getBusinessDocument(any()) } answers {
+                        RequestContextHolder.get() shouldBe params
+                        GetBusinessDocumentResponse().apply {
+                            businessDocument = Base64.getEncoder().encodeToString(readResourceContent("app-rec/1.0/all-data.xml"))
+                            contentType = "application/xml"
+                            contentTransferEncoding = "base64"
+                        }
+                    }
+                }
+                val client = Client(apiService)
+
+                RequestContextHolder.get() should beNull()
+                client.getApplicationReceipt(UUID.randomUUID(), params)
+                RequestContextHolder.get() should beNull()
+            }
         }
 
         "Send application receipt" - {
             "Should be able to send OK receipt without errors" {
                 val requestSlot = slot<PostAppRecRequest>()
-                val apiService = mockk<ApiService> { every { sendApplicationReceipt(any(), any(), capture(requestSlot)) } returns UUID.randomUUID() }
+                val apiService = mockk<ApiService> {
+                    every { sendApplicationReceipt(any(), any(), capture(requestSlot)) } answers {
+                        RequestContextHolder.get() should beNull()
+                        UUID.randomUUID()
+                    }
+                }
                 val client = Client(apiService)
 
                 val receipt = OutgoingApplicationReceipt(UUID.randomUUID(), randomHerId(), StatusForMottakAvMelding.OK, emptyList())
@@ -477,11 +543,38 @@ class ClientTest : FreeSpec() {
                     it.message shouldBe "Must provide at least one error message if status is not OK"
                 }
             }
+
+            "Params should be added to context before call and removed when it completes" {
+                val params = RequestParameters(HelseIdTokenParameters(SingleTenantHelseIdTokenParameters(randomHerId().toString())))
+
+                val apiService = mockk<ApiService> {
+                    every { sendApplicationReceipt(any(), any(), any()) } answers {
+                        RequestContextHolder.get() shouldBe params
+                        UUID.randomUUID()
+                    }
+                }
+                val client = Client(apiService)
+
+                RequestContextHolder.get() should beNull()
+                client.sendApplicationReceipt(
+                    OutgoingApplicationReceipt(
+                        acknowledgedId = UUID.randomUUID(),
+                        senderHerId = randomHerId(),
+                        status = StatusForMottakAvMelding.OK,
+                        errors = emptyList(),
+                    ), params
+                )
+                RequestContextHolder.get() should beNull()
+            }
         }
 
         "Mark message read" - {
             "The data should be serialized to XML and passed on to the service" {
-                val apiService = mockk<ApiService> { every { markMessageRead(any(), any()) } just runs }
+                val apiService = mockk<ApiService> {
+                    every { markMessageRead(any(), any()) } answers {
+                        RequestContextHolder.get() should beNull()
+                    }
+                }
                 val client = Client(apiService)
 
                 val id = UUID.randomUUID()
@@ -492,55 +585,27 @@ class ClientTest : FreeSpec() {
                     apiService.markMessageRead(id, receiverHerId)
                 }
             }
+
+            "Params should be added to context before call and removed when it completes" {
+                val params = RequestParameters(HelseIdTokenParameters(SingleTenantHelseIdTokenParameters(randomHerId().toString())))
+
+                val apiService = mockk<ApiService> {
+                    every { markMessageRead(any(), any()) } answers {
+                        RequestContextHolder.get() shouldBe params
+                        UUID.randomUUID()
+                    }
+                }
+                val client = Client(apiService)
+
+                RequestContextHolder.get() should beNull()
+                client.markMessageRead(UUID.randomUUID(), randomHerId(), params)
+                RequestContextHolder.get() should beNull()
+            }
         }
 
     }
 
 }
-
-private fun randomHerId(): Int = nextInt(0, 1000000)
-private fun randomString(): String = UUID.randomUUID().toString()
-private fun randomOrganizationHerId(): OrganizationId = OrganizationId(randomString(), OrganizationIdType.HER_ID)
-private fun randomPersonHerId(): PersonId = PersonId(randomString(), PersonIdType.HER_ID)
-private fun randomGPForPersonOutgoingBusinessDocument(
-    vedleggBytes: ByteArray = nextBytes(nextInt(1000, 100000)),
-): GPForPersonOutgoingBusinessDocument = GPForPersonOutgoingBusinessDocument(
-    id = UUID.randomUUID(),
-    sender = Organization(
-        name = randomString(),
-        ids = listOf(randomOrganizationHerId()),
-        childOrganization = ChildOrganization(
-            name = randomString(),
-            ids = listOf(randomOrganizationHerId()),
-        ),
-    ),
-    person = Person(
-        fnr = randomString(),
-        firstName = randomString(),
-        middleName = randomString(),
-        lastName = randomString(),
-    ),
-    message = OutgoingMessage(
-        subject = randomString(),
-        body = randomString(),
-        responsibleHealthcareProfessional = HealthcareProfessional(
-            firstName = randomString(),
-            middleName = randomString(),
-            lastName = randomString(),
-            phoneNumber = randomString(),
-            roleToPatient = HelsepersonellsFunksjoner.entries.random(),
-        ),
-        recipientContact = RecipientContact(
-            type = Helsepersonell.entries.random(),
-        ),
-    ),
-    vedlegg = OutgoingVedlegg(
-        date = OffsetDateTime.now(),
-        description = randomString(),
-        data = ByteArrayInputStream(vedleggBytes),
-    ),
-    version = DialogmeldingVersion.entries.random(),
-)
 
 private fun randomOutgoingBusinessDocument(
     vedleggBytes: ByteArray = nextBytes(nextInt(1000, 100000)),
@@ -594,23 +659,12 @@ private fun randomOutgoingBusinessDocument(
     version = DialogmeldingVersion.entries.random(),
 )
 
-private fun randomPersonCommunicationParty(): PersonCommunicationParty = PersonCommunicationParty(
-    herId = randomHerId(),
-    name = randomString(),
-    parent = CommunicationPartyParent(randomHerId(), randomString()),
-    physicalAddresses = listOf(),
-    firstName = randomString(),
-    middleName = randomString(),
-    lastName = randomString()
-)
-
-private fun randomPatientGP(): PatientGP = PatientGP(randomString(), randomHerId())
-private fun randomApiMessageWithoutMetadata() = no.nhn.msh.v2.model.Message().apply {
+private fun randomApiMessageWithoutMetadata() = Message().apply {
     id = UUID.randomUUID()
     receiverHerId = randomHerId()
 }
 
-private fun randomApiMessageWithMetadata() = no.nhn.msh.v2.model.Message().apply {
+private fun randomApiMessageWithMetadata() = Message().apply {
     id = UUID.randomUUID()
     contentType = UUID.randomUUID().toString()
     receiverHerId = randomHerId()

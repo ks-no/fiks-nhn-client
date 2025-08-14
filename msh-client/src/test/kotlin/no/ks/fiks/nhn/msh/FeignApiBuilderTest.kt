@@ -3,7 +3,9 @@ package no.ks.fiks.nhn.msh
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.*
 import io.kotest.assertions.asClue
+import io.kotest.assertions.nondeterministic.eventually
 import io.kotest.core.spec.style.StringSpec
+import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.mockk.every
@@ -17,6 +19,7 @@ import no.nhn.msh.v2.model.PostAppRecRequest
 import org.wiremock.integrations.testcontainers.WireMockContainer
 import java.util.*
 import kotlin.random.Random.Default.nextInt
+import kotlin.time.Duration.Companion.seconds
 
 class FeignApiBuilderTest : StringSpec() {
 
@@ -27,7 +30,7 @@ class FeignApiBuilderTest : StringSpec() {
 
     init {
 
-        "If no token params are passed, should get token with standard token request" {
+        "If no token params are passed, should get token with standard DPoP token request" {
             val id = UUID.randomUUID()
 
             wireMockClient.register(get("/Messages/$id"))
@@ -116,6 +119,63 @@ class FeignApiBuilderTest : StringSpec() {
             }
         }
 
+        "Should support requesting single tenant access tokens using thread local configuration which overrides static configuration" {
+            val id = UUID.randomUUID()
+            val configuredClientChildOrganization = randomOrganizationNumber()
+            val requestChildOrganization = randomOrganizationNumber()
+
+            wireMockClient.register(get("/Messages/$id"))
+
+            val helseIdClient = mockk<HelseIdClient> { every { getAccessToken(any()) } returns TokenResponse(UUID.randomUUID().toString(), 0, "", "") }
+            val client = FeignApiFactory.createApi(
+                mshBaseUrl = wireMock.baseUrl,
+                helseIdClient = helseIdClient,
+                proofBuilder = mockk { every { buildProof(any(), any(), any()) } returns UUID.randomUUID().toString() },
+                tokenParams = HelseIdTokenParameters(
+                    tenant = SingleTenantHelseIdTokenParameters(
+                        childOrganization = configuredClientChildOrganization,
+                    )
+                ),
+            )
+            RequestContextHolder.with(RequestParameters(HelseIdTokenParameters(SingleTenantHelseIdTokenParameters(requestChildOrganization)))).use {
+                client.getMessage(id, UUID.randomUUID().toString(), UUID.randomUUID().toString())
+            }
+
+            verifySequence {
+                helseIdClient.getAccessToken(SingleTenantAccessTokenRequest(requestChildOrganization, TokenType.DPOP))
+            }
+        }
+
+        "Should support requesting multi tenant access tokens using thread local configuration which overrides static configuration" {
+            val id = UUID.randomUUID()
+            val configuredClientParentOrganization = randomOrganizationNumber()
+            val configuredClientChildOrganization = randomOrganizationNumber()
+            val requestParentOrganization = randomOrganizationNumber()
+            val requestChildOrganization = randomOrganizationNumber()
+
+            wireMockClient.register(get("/Messages/$id"))
+
+            val helseIdClient = mockk<HelseIdClient> { every { getAccessToken(any()) } returns TokenResponse(UUID.randomUUID().toString(), 0, "", "") }
+            val client = FeignApiFactory.createApi(
+                mshBaseUrl = wireMock.baseUrl,
+                helseIdClient = helseIdClient,
+                proofBuilder = mockk { every { buildProof(any(), any(), any()) } returns UUID.randomUUID().toString() },
+                tokenParams = HelseIdTokenParameters(
+                    tenant = MultiTenantHelseIdTokenParameters(
+                        parentOrganization = configuredClientParentOrganization,
+                        childOrganization = configuredClientChildOrganization,
+                    )
+                ),
+            )
+            RequestContextHolder.with(RequestParameters(HelseIdTokenParameters(MultiTenantHelseIdTokenParameters(requestParentOrganization, requestChildOrganization)))).use {
+                client.getMessage(id, UUID.randomUUID().toString(), UUID.randomUUID().toString())
+            }
+
+            verifySequence {
+                helseIdClient.getAccessToken(MultiTenantAccessTokenRequest(requestParentOrganization, requestChildOrganization, TokenType.DPOP))
+            }
+        }
+
         "Should call proof builder with correct endpoint and access token" {
             val getMessageId = UUID.randomUUID()
             wireMockClient.register(get("/Messages/$getMessageId"))
@@ -179,10 +239,58 @@ class FeignApiBuilderTest : StringSpec() {
             }
         }
 
+        "Should handle requests from many parallel threads with different configurations" {
+            val staticParams = MultiTenantHelseIdTokenParameters(
+                parentOrganization = randomOrganizationNumber(),
+                childOrganization = randomOrganizationNumber(),
+            )
+            val requestParameters = List(nextInt(50, 100)) {
+                when (nextInt(0, 3)) {
+                    0 -> SingleTenantHelseIdTokenParameters(randomOrganizationNumber())
+                    1 -> MultiTenantHelseIdTokenParameters(randomOrganizationNumber(), randomOrganizationNumber())
+                    else -> null
+                }
+            }
+            val requestIds = List(requestParameters.size) { UUID.randomUUID() }.onEach {
+                wireMockClient.register(get("/Messages/$it"))
+            }
+
+            val capturedTokenRequests = mutableListOf<AccessTokenRequest>()
+            val helseIdClient = mockk<HelseIdClient> { every { getAccessToken(capture(capturedTokenRequests)) } returns TokenResponse(UUID.randomUUID().toString(), 0, "", "") }
+            val client = FeignApiFactory.createApi(
+                mshBaseUrl = wireMock.baseUrl,
+                helseIdClient = helseIdClient,
+                proofBuilder = mockk { every { buildProof(any(), any(), any()) } returns UUID.randomUUID().toString() },
+                tokenParams = HelseIdTokenParameters(
+                    tenant = staticParams,
+                ),
+            )
+            requestParameters.forEachIndexed { i, params ->
+                Thread {
+                    RequestContextHolder.with(RequestParameters(HelseIdTokenParameters(params))).use {
+                        client.getMessage(requestIds[i], UUID.randomUUID().toString(), UUID.randomUUID().toString())
+                    }
+                }.start()
+            }
+
+            eventually(3.seconds) {
+                capturedTokenRequests.size shouldBe requestParameters.size
+            }
+
+            requestParameters.forEach {
+                val expected = when (it) {
+                    null -> MultiTenantAccessTokenRequest(staticParams.parentOrganization, staticParams.childOrganization, TokenType.DPOP)
+                    is SingleTenantHelseIdTokenParameters -> SingleTenantAccessTokenRequest(it.childOrganization, TokenType.DPOP)
+                    is MultiTenantHelseIdTokenParameters -> MultiTenantAccessTokenRequest(it.parentOrganization, it.childOrganization, TokenType.DPOP)
+                }
+                capturedTokenRequests shouldContain expected
+            }
+            capturedTokenRequests.count { it == MultiTenantAccessTokenRequest(staticParams.parentOrganization, staticParams.childOrganization, TokenType.DPOP) } shouldBe requestParameters.count { it == null }
+        }
     }
 
-    private fun buildTokenResponse(accessToken: String) = TokenResponse(accessToken, 0, UUID.randomUUID().toString(), UUID.randomUUID().toString())
-
 }
+
+private fun buildTokenResponse(accessToken: String) = TokenResponse(accessToken, 0, UUID.randomUUID().toString(), UUID.randomUUID().toString())
 
 private fun randomOrganizationNumber() = nextInt(100000000, 1000000000).toString()
