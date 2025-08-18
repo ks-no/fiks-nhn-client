@@ -7,7 +7,7 @@ open class AsyncClient( private val apiService: ApiService,) {
 
     suspend fun getMessages( receiverHerId: Int,
                                   requestParameters: RequestParameters? = null,): List<Message> =
-        withCoroutine(requestParameters) {
+        withRequestParams(requestParameters) {
             apiService.getMessages(receiverHerId).map {
                 it.toMessageInfo() }
         }

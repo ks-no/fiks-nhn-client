@@ -23,7 +23,7 @@ open class Client(
         businessDocument: OutgoingBusinessDocument,
         requestParameters: RequestParameters? = null,
     ) =
-        withBlocking(requestParameters) {
+        withRequestParamsBlocking(requestParameters) {
             apiService
                 .sendMessage(
                     PostMessageRequest()
