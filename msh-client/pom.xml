@@ -34,6 +34,12 @@
             <artifactId>fastlegeregisteret-client</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.jetbrains.kotlinx</groupId>
+            <artifactId>kotlinx-coroutines-core</artifactId>
+            <version>1.10.2</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
             <groupId>no.ks.fiks</groupId>
             <artifactId>adresseregisteret-client</artifactId>
         </dependency>

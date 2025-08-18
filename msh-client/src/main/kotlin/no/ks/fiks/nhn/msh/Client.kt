@@ -22,8 +22,8 @@ open class Client(
     fun sendMessage(
         businessDocument: OutgoingBusinessDocument,
         requestParameters: RequestParameters? = null,
-    ) {
-        RequestContextHolder.with(requestParameters).use {
+    ) =
+        withBlocking(requestParameters) {
             apiService
                 .sendMessage(
                     PostMessageRequest()
@@ -32,19 +32,20 @@ open class Client(
                         .businessDocument(Base64.getEncoder().encodeToString(BusinessDocumentSerializer.serializeNhnMessage(businessDocument).toByteArray()))
                 )
         }
-    }
+
 
     @JvmOverloads
     fun getMessages(
         receiverHerId: Int,
         requestParameters: RequestParameters? = null,
-    ): List<Message> {
-        RequestContextHolder.with(requestParameters).use {
-            return apiService
-                .getMessages(receiverHerId)
-                .map { it.toMessageInfo() }
-        }
+    ): List<Message>  = withBlocking(requestParameters) {
+        apiService
+            .getMessages(receiverHerId)
+            .map {
+                it.toMessageInfo() }
     }
+
+
 
     @JvmOverloads
     fun getMessagesWithMetadata(
@@ -145,19 +146,21 @@ open class Client(
         }
     }
 
-    private fun NhnMessage.toMessageInfo() = Message(
-        id = id,
-        receiverHerId = receiverHerId,
-    )
 
-    private fun NhnMessage.toMessageInfoWithMetadata() = MessageWithMetadata(
-        id = id,
-        contentType = contentType,
-        receiverHerId = receiverHerId,
-        senderHerId = senderHerId,
-        businessDocumentId = businessDocumentId,
-        businessDocumentDate = businessDocumentGenDate,
-        isAppRec = isAppRec,
-    )
 
 }
+
+internal fun NhnMessage.toMessageInfo() = Message(
+    id = id,
+    receiverHerId = receiverHerId,
+)
+
+internal fun NhnMessage.toMessageInfoWithMetadata() = MessageWithMetadata(
+    id = id,
+    contentType = contentType,
+    receiverHerId = receiverHerId,
+    senderHerId = senderHerId,
+    businessDocumentId = businessDocumentId,
+    businessDocumentDate = businessDocumentGenDate,
+    isAppRec = isAppRec,
+)
