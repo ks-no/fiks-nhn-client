@@ -1,6 +1,9 @@
 package no.ks.fiks.nhn.edi
 
+import io.kotest.assertions.asClue
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.StringSpec
+import io.kotest.matchers.shouldBe
 import no.ks.fiks.hdir.Helsepersonell
 import no.ks.fiks.hdir.HelsepersonellsFunksjoner
 import no.ks.fiks.hdir.OrganizationIdType
@@ -49,6 +52,22 @@ class BusinessDocumentSerializerTest : StringSpec({
 
         BusinessDocumentSerializer.serializeNhnMessage(document)
             .validateXmlAgainst(start, document, vedleggBytes)
+    }
+
+    "A vedlegg of size 18 MB should be accepted" {
+        val vedleggBytes = nextBytes(18000000)
+        val document = randomOutgoingBusinessDocument(DialogmeldingVersion.V1_1, vedleggBytes, randomOrganizationReceiverDetails())
+
+        BusinessDocumentSerializer.serializeNhnMessage(document)
+    }
+
+    "If vedlegg has size greater than 18 MB, an exception should be thrown" {
+        val vedleggBytes = nextBytes(18000001)
+        val document = randomOutgoingBusinessDocument(DialogmeldingVersion.V1_1, vedleggBytes, randomOrganizationReceiverDetails())
+
+        shouldThrow<VedleggSizeException> {  BusinessDocumentSerializer.serializeNhnMessage(document) }.asClue {
+            it.message shouldBe "The size of vedlegg exceeds the max size of 18000000 bytes"
+        }
     }
 
 })

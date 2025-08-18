@@ -17,6 +17,8 @@ import no.kith.xmlstds.msghead._2006_05_24.Receiver as NhnReceiver
 import no.ks.fiks.nhn.edi.v1_0.DialogmeldingBuilder as DialogmeldingBuilder1_0
 import no.ks.fiks.nhn.edi.v1_1.DialogmeldingBuilder as DialogmeldingBuilder1_1
 
+private const val VEDLEGG_MAX_BYTES = 18 * 1000 * 1000
+
 private const val MSG_HEAD_VERSION = "v1.2 2006-05-24"
 
 private const val MIME_TYPE_PDF = "application/pdf"
@@ -28,7 +30,7 @@ object BusinessDocumentSerializer {
             .apply {
                 document = listOfNotNull(
                     buildDialogmeldingDocument(businessDocument),
-                    buildVedleggDocument(businessDocument.vedlegg), // TODO: Limit vedlegg size to ~18 MB
+                    buildVedleggDocument(businessDocument.vedlegg),
                 )
             }
 
@@ -167,7 +169,9 @@ object BusinessDocumentSerializer {
 
     private fun buildContainer(data: InputStream) =
         Base64Container().apply {
-            value = data.readAllBytes()
+            value = data.readNBytes(VEDLEGG_MAX_BYTES).also {
+                if (it.size == VEDLEGG_MAX_BYTES && data.read() != -1) throw VedleggSizeException("The size of vedlegg exceeds the max size of $VEDLEGG_MAX_BYTES bytes")
+            }
         }
 
 }
