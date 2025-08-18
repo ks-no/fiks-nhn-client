@@ -38,7 +38,7 @@ open class Client(
     fun getMessages(
         receiverHerId: Int,
         requestParameters: RequestParameters? = null,
-    ): List<Message>  = withBlocking(requestParameters) {
+    ): List<Message>  = withRequestParamsBlocking(requestParameters) {
         apiService
             .getMessages(receiverHerId)
             .map {
