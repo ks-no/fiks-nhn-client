@@ -15,108 +15,106 @@ private const val CONTENT_TYPE = "application/xml"
 private const val CONTENT_TRANSFER_ENCODING = "base64"
 
 open class Client(
-    private val apiService: ApiService,
+    private val internalClient: MshInternalClient,
 ) {
 
     @JvmOverloads
-    fun sendMessage(
+    suspend fun sendMessage(
         businessDocument: OutgoingBusinessDocument,
         requestParameters: RequestParameters? = null,
     ) {
-        RequestContextHolder.with(requestParameters).use {
-            apiService
-                .sendMessage(
-                    PostMessageRequest()
-                        .contentType(CONTENT_TYPE)
-                        .contentTransferEncoding(CONTENT_TRANSFER_ENCODING)
-                        .businessDocument(Base64.getEncoder().encodeToString(BusinessDocumentSerializer.serializeNhnMessage(businessDocument).toByteArray()))
-                )
-        }
+        internalClient
+            .postMessage(
+                request = PostMessageRequest()
+                    .contentType(CONTENT_TYPE)
+                    .contentTransferEncoding(CONTENT_TRANSFER_ENCODING)
+                    .businessDocument(Base64.getEncoder().encodeToString(BusinessDocumentSerializer.serializeNhnMessage(businessDocument).toByteArray())),
+                requestParams = requestParameters,
+            )
     }
 
     @JvmOverloads
-    fun getMessages(
+    suspend fun getMessages(
         receiverHerId: Int,
         requestParameters: RequestParameters? = null,
     ): List<Message> {
-        RequestContextHolder.with(requestParameters).use {
-            return apiService
-                .getMessages(receiverHerId)
-                .map { it.toMessageInfo() }
-        }
+        return internalClient
+            .getMessages(
+                receiverHerId = receiverHerId,
+                includeMetadata = false,
+                requestParams = requestParameters,
+            )
+            .map { it.toMessageInfo() }
     }
 
     @JvmOverloads
-    fun getMessagesWithMetadata(
+    suspend fun getMessagesWithMetadata(
         receiverHerId: Int,
         requestParameters: RequestParameters? = null,
     ): List<MessageWithMetadata> {
-        RequestContextHolder.with(requestParameters).use {
-            return apiService
-                .getMessagesWithMetadata(receiverHerId)
-                .map { it.toMessageInfoWithMetadata() }
-        }
+        return internalClient
+            .getMessages(
+                receiverHerId = receiverHerId,
+                includeMetadata = true,
+                requestParams = requestParameters,
+            )
+            .map { it.toMessageInfoWithMetadata() }
     }
 
     @JvmOverloads
-    fun getMessage(
+    suspend fun getMessage(
         id: UUID,
         requestParameters: RequestParameters? = null,
     ): MessageWithMetadata {
-        RequestContextHolder.with(requestParameters).use {
-            return apiService
-                .getMessage(id)
-                .toMessageInfoWithMetadata()
-        }
+        return internalClient
+            .getMessage(id, requestParameters)
+            .toMessageInfoWithMetadata()
     }
 
     @JvmOverloads
-    fun getBusinessDocument(
+    suspend fun getBusinessDocument(
         id: UUID,
         requestParameters: RequestParameters? = null,
     ): IncomingBusinessDocument {
-        RequestContextHolder.with(requestParameters).use {
-            return apiService
-                .getBusinessDocument(id)
-                .let {
-                    if (it.contentTransferEncoding != CONTENT_TRANSFER_ENCODING) throw IllegalArgumentException("'${it.contentTransferEncoding}' is not a supported transfer encoding")
-                    if (it.contentType != CONTENT_TYPE) throw IllegalArgumentException("'${it.contentType}' is not a supported content type")
-                    BusinessDocumentDeserializer.deserializeMsgHead(String(Base64.getDecoder().decode(it.businessDocument)))
-                }
-        }
+        return internalClient
+            .getBusinessDocument(id, requestParameters)
+            .let {
+                if (it.contentTransferEncoding != CONTENT_TRANSFER_ENCODING) throw IllegalArgumentException("'${it.contentTransferEncoding}' is not a supported transfer encoding")
+                if (it.contentType != CONTENT_TYPE) throw IllegalArgumentException("'${it.contentType}' is not a supported content type")
+                BusinessDocumentDeserializer.deserializeMsgHead(String(Base64.getDecoder().decode(it.businessDocument)))
+            }
     }
 
     @JvmOverloads
-    fun getApplicationReceipt(
+    suspend fun getApplicationReceipt(
         id: UUID,
         requestParameters: RequestParameters? = null,
     ): IncomingApplicationReceipt {
-        RequestContextHolder.with(requestParameters).use {
-            return apiService
-                .getBusinessDocument(id)
-                .let {
-                    if (it.contentTransferEncoding != CONTENT_TRANSFER_ENCODING) throw IllegalArgumentException("'${it.contentTransferEncoding}' is not a supported transfer encoding")
-                    if (it.contentType != CONTENT_TYPE) throw IllegalArgumentException("'${it.contentType}' is not a supported content type")
-                    BusinessDocumentDeserializer.deserializeAppRec(String(Base64.getDecoder().decode(it.businessDocument)))
-                }
-        }
+        return internalClient
+            .getBusinessDocument(id, requestParameters)
+            .let {
+                if (it.contentTransferEncoding != CONTENT_TRANSFER_ENCODING) throw IllegalArgumentException("'${it.contentTransferEncoding}' is not a supported transfer encoding")
+                if (it.contentType != CONTENT_TYPE) throw IllegalArgumentException("'${it.contentType}' is not a supported content type")
+                BusinessDocumentDeserializer.deserializeAppRec(String(Base64.getDecoder().decode(it.businessDocument)))
+            }
     }
 
     @JvmOverloads
-    fun sendApplicationReceipt(
+    suspend fun sendApplicationReceipt(
         receipt: OutgoingApplicationReceipt,
         requestParameters: RequestParameters? = null,
     ) {
         if (receipt.status == StatusForMottakAvMelding.OK && !receipt.errors.isNullOrEmpty()) throw IllegalArgumentException("Error messages are not allowed when status is OK")
         if (receipt.status != StatusForMottakAvMelding.OK && receipt.errors.isNullOrEmpty()) throw IllegalArgumentException("Must provide at least one error message if status is not OK")
 
-        RequestContextHolder.with(requestParameters).use {
-            apiService.sendApplicationReceipt(
-                receipt.acknowledgedId, receipt.senderHerId, PostAppRecRequest()
-                    .appRecStatus(receipt.status.toAppRecStatus())
-                    .appRecErrorList(receipt.errors?.toAppRecErrors())
-            )
-        }
+        internalClient.postAppRec(
+            id = receipt.acknowledgedId,
+            senderHerId = receipt.senderHerId,
+            request = PostAppRecRequest()
+                .appRecStatus(receipt.status.toAppRecStatus())
+                .appRecErrorList(receipt.errors?.toAppRecErrors()),
+            requestParams = requestParameters,
+        )
     }
 
     private fun StatusForMottakAvMelding.toAppRecStatus() = when (this) {
@@ -135,14 +133,16 @@ open class Client(
     }
 
     @JvmOverloads
-    fun markMessageRead(
+    suspend fun markMessageRead(
         id: UUID,
         receiverHerId: Int,
         requestParameters: RequestParameters? = null,
     ) {
-        RequestContextHolder.with(requestParameters).use {
-            apiService.markMessageRead(id, receiverHerId)
-        }
+        internalClient.markMessageRead(
+            id = id,
+            senderHerId = receiverHerId,
+            requestParams = requestParameters,
+        )
     }
 
     private fun NhnMessage.toMessageInfo() = Message(
