@@ -22,7 +22,7 @@ open class Client(
     suspend fun sendMessage(
         businessDocument: OutgoingBusinessDocument,
         requestParameters: RequestParameters? = null,
-    ) {
+    ): UUID =
         internalClient
             .postMessage(
                 request = PostMessageRequest()
@@ -31,7 +31,6 @@ open class Client(
                     .businessDocument(Base64.getEncoder().encodeToString(BusinessDocumentSerializer.serializeNhnMessage(businessDocument).toByteArray())),
                 requestParams = requestParameters,
             )
-    }
 
     @JvmOverloads
     suspend fun getMessages(
