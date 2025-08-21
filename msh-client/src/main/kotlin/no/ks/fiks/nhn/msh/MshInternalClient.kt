@@ -51,41 +51,65 @@ class MshInternalClient(
     suspend fun getAppRecInfo(
         id: UUID,
         requestParams: RequestParameters? = null,
-    ): List<ApprecInfo> = client.getWithParams("$baseUrl/Messages/$id/apprec", requestParams).body()
+    ): List<ApprecInfo> =
+        client.getWithParams("$baseUrl/Messages/$id/apprec", requestParams).let {
+            if (it.status != HttpStatusCode.OK) throw HttpException(it.status.value, it.bodyAsText())
+            it.body()
+        }
 
     @JvmOverloads
     suspend fun getMessages(
         receiverHerId: Int,
         includeMetadata: Boolean = false,
         requestParams: RequestParameters? = null,
-    ): List<Message> = client.getWithParams("$baseUrl/Messages", requestParams) {
-        parameter(RECEIVER_HER_ID_PARAM, receiverHerId)
-        parameter(INCLUDE_METADATA_PARAM, includeMetadata)
-    }.body()
+    ): List<Message> =
+        client.getWithParams("$baseUrl/Messages", requestParams) {
+            parameter(RECEIVER_HER_ID_PARAM, receiverHerId)
+            parameter(INCLUDE_METADATA_PARAM, includeMetadata)
+        }.let {
+            if (it.status != HttpStatusCode.OK) throw HttpException(it.status.value, it.bodyAsText())
+            it.body()
+        }
 
     @JvmOverloads
     suspend fun postMessage(
         request: PostMessageRequest,
         requestParams: RequestParameters? = null,
-    ): UUID = UUID.fromString(client.postWithParams("$baseUrl/Messages", request, requestParams).bodyAsText())
+    ): UUID =
+        client.postWithParams("$baseUrl/Messages", request, requestParams).let {
+            if (it.status != HttpStatusCode.Created) throw HttpException(it.status.value, it.bodyAsText())
+            it.bodyAsText().toUuid()
+        }
 
     @JvmOverloads
     suspend fun getMessage(
         id: UUID,
         requestParams: RequestParameters? = null,
-    ): Message = client.getWithParams("$baseUrl/Messages/$id", requestParams).body()
+    ): Message =
+        client.getWithParams("$baseUrl/Messages/$id", requestParams).let {
+            if (it.status != HttpStatusCode.OK) throw HttpException(it.status.value, it.bodyAsText())
+            it.body()
+        }
 
     @JvmOverloads
     suspend fun getBusinessDocument(
         id: UUID,
         requestParams: RequestParameters? = null,
-    ): GetBusinessDocumentResponse = client.getWithParams("$baseUrl/Messages/$id/business-document", requestParams).body()
+    ): GetBusinessDocumentResponse =
+        client.getWithParams("$baseUrl/Messages/$id/business-document", requestParams).let {
+            if (it.status != HttpStatusCode.OK) throw HttpException(it.status.value, it.bodyAsText())
+            it.body()
+        }
 
     @JvmOverloads
     suspend fun getStatus(
         id: UUID,
         requestParams: RequestParameters? = null,
-    ): List<StatusInfo> = client.getWithParams("$baseUrl/Messages/$id/status", requestParams).body()
+    ): List<StatusInfo> =
+        client.getWithParams("$baseUrl/Messages/$id/status", requestParams).let {
+            if (it.status != HttpStatusCode.OK) throw HttpException(it.status.value, it.bodyAsText())
+            it.body()
+        }
 
     @JvmOverloads
     suspend fun postAppRec(
@@ -93,7 +117,11 @@ class MshInternalClient(
         senderHerId: Int,
         request: PostAppRecRequest,
         requestParams: RequestParameters? = null,
-    ): UUID = UUID.fromString(client.postWithParams("$baseUrl/Messages/$id/apprec/$senderHerId", request, requestParams).bodyAsText())
+    ): UUID =
+        client.postWithParams("$baseUrl/Messages/$id/apprec/$senderHerId", request, requestParams).let {
+            if (it.status != HttpStatusCode.Created) throw HttpException(it.status.value, it.bodyAsText())
+            it.bodyAsText().toUuid()
+        }
 
     @JvmOverloads
     suspend fun markMessageRead(
@@ -101,7 +129,9 @@ class MshInternalClient(
         senderHerId: Int,
         requestParams: RequestParameters? = null,
     ) {
-        client.putWithParams("$baseUrl/Messages/$id/read/$senderHerId", requestParams)
+        client.putWithParams("$baseUrl/Messages/$id/read/$senderHerId", requestParams).also {
+            if (it.status != HttpStatusCode.NoContent) throw HttpException(it.status.value, it.bodyAsText())
+        }
     }
 
     private fun HeadersBuilder.set(endpoint: Endpoint, requestParams: RequestParameters?) {
@@ -175,11 +205,14 @@ class MshInternalClient(
         url: String,
         requestParams: RequestParameters? = null,
         customConfig: HttpRequestBuilder.() -> Unit = {}
-    ): HttpResponse = post(url) {
+    ): HttpResponse = put(url) {
         headers.set(Endpoint(HttpMethod.PUT, url), requestParams)
         contentType(ContentType.Application.Json)
         customConfig()
     }
+
+    // Replaces leading and/or trailing quote
+    private suspend fun String.toUuid() = UUID.fromString(replace(Regex("^\"|\"$"), ""))
 
 }
 
