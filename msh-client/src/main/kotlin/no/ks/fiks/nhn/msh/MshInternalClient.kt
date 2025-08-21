@@ -10,6 +10,7 @@ import io.ktor.client.call.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
+import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.*
 import io.ktor.serialization.jackson.*
@@ -32,6 +33,9 @@ private const val API_VERSION = "2"
 
 private const val SOURCE_SYSTEM_HEADER = "nhn-source-system"
 
+private const val RECEIVER_HER_ID_PARAM = "receiverHerIds"
+private const val INCLUDE_METADATA_PARAM = "includeMetadata"
+
 class MshInternalClient(
     private val baseUrl: String,
     private val sourceSystem: String,
@@ -47,73 +51,41 @@ class MshInternalClient(
     suspend fun getAppRecInfo(
         id: UUID,
         requestParams: RequestParameters? = null,
-    ): List<ApprecInfo> {
-        val endpoint = Endpoint(HttpMethod.GET, "$baseUrl/Messages/$id/apprec")
-        return client.get(endpoint.url) {
-            headers.set(endpoint, requestParams)
-        }.body()
-    }
+    ): List<ApprecInfo> = client.getWithParams("$baseUrl/Messages/$id/apprec", requestParams).body()
 
     @JvmOverloads
     suspend fun getMessages(
         receiverHerId: Int,
         includeMetadata: Boolean = false,
         requestParams: RequestParameters? = null,
-    ): List<Message> {
-        val endpoint = Endpoint(HttpMethod.GET, "$baseUrl/Messages")
-        return client.get(endpoint.url) {
-            headers.set(endpoint, requestParams)
-            parameter("receiverHerIds", receiverHerId)
-        }.body()
-    }
+    ): List<Message> = client.getWithParams("$baseUrl/Messages", requestParams) {
+        parameter(RECEIVER_HER_ID_PARAM, receiverHerId)
+        parameter(INCLUDE_METADATA_PARAM, includeMetadata)
+    }.body()
 
     @JvmOverloads
     suspend fun postMessage(
         request: PostMessageRequest,
         requestParams: RequestParameters? = null,
-    ): UUID {
-        val endpoint = Endpoint(HttpMethod.POST, "$baseUrl/Messages")
-        return UUID.fromString(
-            client.post(endpoint.url) {
-                headers.set(endpoint, requestParams)
-                contentType(ContentType.Application.Json)
-                setBody(request)
-            }.body()
-        )
-    }
+    ): UUID = UUID.fromString(client.postWithParams("$baseUrl/Messages", request, requestParams).bodyAsText())
 
     @JvmOverloads
     suspend fun getMessage(
         id: UUID,
         requestParams: RequestParameters? = null,
-    ): Message {
-        val endpoint = Endpoint(HttpMethod.GET, "$baseUrl/Messages/$id")
-        return client.get(endpoint.url) {
-            headers.set(endpoint, requestParams)
-        }.body()
-    }
+    ): Message = client.getWithParams("$baseUrl/Messages/$id", requestParams).body()
 
     @JvmOverloads
     suspend fun getBusinessDocument(
         id: UUID,
         requestParams: RequestParameters? = null,
-    ): GetBusinessDocumentResponse {
-        val endpoint = Endpoint(HttpMethod.GET, "$baseUrl/Messages/$id/business-document")
-        return client.get(endpoint.url) {
-            headers.set(endpoint, requestParams)
-        }.body()
-    }
+    ): GetBusinessDocumentResponse = client.getWithParams("$baseUrl/Messages/$id/business-document", requestParams).body()
 
     @JvmOverloads
     suspend fun getStatus(
         id: UUID,
         requestParams: RequestParameters? = null,
-    ): List<StatusInfo> {
-        val endpoint = Endpoint(HttpMethod.GET, "$baseUrl/Messages/$id/status")
-        return client.get(endpoint.url) {
-            headers.set(endpoint, requestParams)
-        }.body()
-    }
+    ): List<StatusInfo> = client.getWithParams("$baseUrl/Messages/$id/status", requestParams).body()
 
     @JvmOverloads
     suspend fun postAppRec(
@@ -121,17 +93,7 @@ class MshInternalClient(
         senderHerId: Int,
         request: PostAppRecRequest,
         requestParams: RequestParameters? = null,
-    ): UUID {
-        val endpoint = Endpoint(HttpMethod.POST, "$baseUrl/Messages/$id/apprec/$senderHerId")
-        return UUID.fromString(
-            client.post(endpoint.url) {
-                headers.set(endpoint, requestParams)
-                contentType(ContentType.Application.Json)
-                accept(ContentType.Text.Plain)
-                setBody(request)
-            }.bodyAsText()
-        )
-    }
+    ): UUID = UUID.fromString(client.postWithParams("$baseUrl/Messages/$id/apprec/$senderHerId", request, requestParams).bodyAsText())
 
     @JvmOverloads
     suspend fun markMessageRead(
@@ -139,10 +101,7 @@ class MshInternalClient(
         senderHerId: Int,
         requestParams: RequestParameters? = null,
     ) {
-        val endpoint = Endpoint(HttpMethod.PUT, "$baseUrl/Messages/$id/read/$senderHerId")
-        client.put(endpoint.url) {
-            headers.set(endpoint, requestParams)
-        }
+        client.putWithParams("$baseUrl/Messages/$id/read/$senderHerId", requestParams)
     }
 
     private fun HeadersBuilder.set(endpoint: Endpoint, requestParams: RequestParameters?) {
@@ -190,6 +149,37 @@ class MshInternalClient(
                 }
             }
         }
+
+    private suspend fun HttpClient.getWithParams(
+        url: String,
+        requestParams: RequestParameters? = null,
+        customConfig: HttpRequestBuilder.() -> Unit = {}
+    ): HttpResponse = get(url) {
+        headers.set(Endpoint(HttpMethod.GET, url), requestParams)
+        customConfig()
+    }
+
+    private suspend fun HttpClient.postWithParams(
+        url: String,
+        body: Any,
+        requestParams: RequestParameters? = null,
+        customConfig: HttpRequestBuilder.() -> Unit = {}
+    ): HttpResponse = post(url) {
+        headers.set(Endpoint(HttpMethod.POST, url), requestParams)
+        contentType(ContentType.Application.Json)
+        setBody(body)
+        customConfig()
+    }
+
+    private suspend fun HttpClient.putWithParams(
+        url: String,
+        requestParams: RequestParameters? = null,
+        customConfig: HttpRequestBuilder.() -> Unit = {}
+    ): HttpResponse = post(url) {
+        headers.set(Endpoint(HttpMethod.PUT, url), requestParams)
+        contentType(ContentType.Application.Json)
+        customConfig()
+    }
 
 }
 
