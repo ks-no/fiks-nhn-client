@@ -22,7 +22,7 @@ object ClientFactory {
             arClient = createArClient(configuration.adresseregister),
         )
 
-    private fun createApiService(
+    fun createApiService(
         helseIdConfiguration: HelseIdConfiguration,
         mshBaseUrl: String,
         sourceSystem: String,
@@ -42,7 +42,7 @@ object ClientFactory {
         sourceSystem = sourceSystem,
     )
 
-    private fun createFlrClient(configuration: FastlegeregisterConfiguration) = FastlegeregisteretClient(
+    fun createFlrClient(configuration: FastlegeregisterConfiguration) = FastlegeregisteretClient(
         FastlegeregisteretService(
             url = configuration.url,
             credentials = configuration.credentials.let {
@@ -54,7 +54,7 @@ object ClientFactory {
         )
     )
 
-    private fun createArClient(configuration: AdresseregisterConfiguration) = AdresseregisteretClient(
+    fun createArClient(configuration: AdresseregisterConfiguration) = AdresseregisteretClient(
         AdresseregisteretService(
             url = configuration.url,
             credentials = configuration.credentials.let {
