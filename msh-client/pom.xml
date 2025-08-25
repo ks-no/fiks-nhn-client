@@ -55,6 +55,22 @@
             <artifactId>jaxb-impl</artifactId>
             <version>${jaxb-impl.version}</version>
         </dependency>
+        <dependency>
+            <groupId>io.ktor</groupId>
+            <artifactId>ktor-client-core-jvm</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.ktor</groupId>
+            <artifactId>ktor-client-cio-jvm</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.ktor</groupId>
+            <artifactId>ktor-serialization-jackson-jvm</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.ktor</groupId>
+            <artifactId>ktor-client-content-negotiation-jvm</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>io.kotest</groupId>

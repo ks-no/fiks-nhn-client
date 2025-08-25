@@ -9,10 +9,12 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.nulls.beNull
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
-import io.mockk.every
+import io.mockk.coEvery
+import io.mockk.coVerifySequence
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.runs
 import io.mockk.slot
-import io.mockk.verifySequence
 import no.ks.fiks.hdir.FeilmeldingForApplikasjonskvittering
 import no.ks.fiks.hdir.Helsepersonell
 import no.ks.fiks.hdir.HelsepersonellsFunksjoner
@@ -38,18 +40,15 @@ class ClientTest : FreeSpec() {
                 val businessDocument = randomOutgoingBusinessDocument(vedleggBytes)
 
                 val requestSlot = slot<PostMessageRequest>()
-                val apiService = mockk<ApiService> {
-                    every { sendMessage(capture(requestSlot)) } answers {
-                        RequestContextHolder.get() should beNull()
-                        UUID.randomUUID()
-                    }
+                val internalClient = mockk<MshInternalClient> {
+                    coEvery { postMessage(capture(requestSlot), any()) } returns UUID.randomUUID()
                 }
-                val client = Client(apiService)
+                val client = Client(internalClient)
 
                 client.sendMessage(businessDocument)
 
-                verifySequence {
-                    apiService.sendMessage(any())
+                coVerifySequence {
+                    internalClient.postMessage(any(), any())
                 }
 
                 requestSlot.captured.asClue { request ->
@@ -65,20 +64,18 @@ class ClientTest : FreeSpec() {
                 }
             }
 
-            "Params should be added to context before call and removed when it completes" {
+            "Params should be passed on" {
                 val params = RequestParameters(HelseIdTokenParameters(SingleTenantHelseIdTokenParameters(randomHerId().toString())))
 
-                val apiService = mockk<ApiService> {
-                    every { sendMessage(any()) } answers {
-                        RequestContextHolder.get() shouldBe params
-                        UUID.randomUUID()
-                    }
+                val internalClient = mockk<MshInternalClient> {
+                    coEvery { postMessage(any(), any()) } returns UUID.randomUUID()
                 }
-                val client = Client(apiService)
+                val client = Client(internalClient)
 
-                RequestContextHolder.get() should beNull()
                 client.sendMessage(randomOutgoingBusinessDocument(), params)
-                RequestContextHolder.get() should beNull()
+                coVerifySequence {
+                    internalClient.postMessage(any(), params)
+                }
             }
         }
 
@@ -86,13 +83,10 @@ class ClientTest : FreeSpec() {
             "Messages should be retrieved and mapped" {
                 val apiMessages = List(nextInt(0, 10)) { randomApiMessageWithoutMetadata() }
 
-                val apiService = mockk<ApiService> {
-                    every { getMessages(any()) } answers {
-                        RequestContextHolder.get() should beNull()
-                        apiMessages
-                    }
+                val internalClient = mockk<MshInternalClient> {
+                    coEvery { getMessages(any(), any()) } returns apiMessages
                 }
-                val client = Client(apiService)
+                val client = Client(internalClient)
 
                 val receiverHerId = randomHerId()
                 client.getMessages(receiverHerId).asClue {
@@ -102,25 +96,24 @@ class ClientTest : FreeSpec() {
                     }
                 }
 
-                verifySequence {
-                    apiService.getMessages(receiverHerId)
+                coVerifySequence {
+                    internalClient.getMessages(receiverHerId, false)
                 }
             }
 
-            "Params should be added to context before call and removed when it completes" {
+            "Params should be passed on" {
                 val params = RequestParameters(HelseIdTokenParameters(SingleTenantHelseIdTokenParameters(randomHerId().toString())))
 
-                val apiService = mockk<ApiService> {
-                    every { getMessages(any()) } answers {
-                        RequestContextHolder.get() shouldBe params
-                        List(nextInt(0, 10)) { randomApiMessageWithoutMetadata() }
-                    }
+                val internalClient = mockk<MshInternalClient> {
+                    coEvery { getMessages(any(), any(), any()) } returns List(nextInt(0, 10)) { randomApiMessageWithoutMetadata() }
                 }
-                val client = Client(apiService)
+                val client = Client(internalClient)
 
-                RequestContextHolder.get() should beNull()
-                client.getMessages(randomHerId(), params)
-                RequestContextHolder.get() should beNull()
+                val receiverHerId = randomHerId()
+                client.getMessages(receiverHerId, params)
+                coVerifySequence {
+                    internalClient.getMessages(receiverHerId, false, params)
+                }
             }
         }
 
@@ -128,13 +121,10 @@ class ClientTest : FreeSpec() {
             "Messages should be retrieved and mapped" {
                 val apiMessages = List(nextInt(0, 10)) { randomApiMessageWithMetadata() }
 
-                val apiService = mockk<ApiService> {
-                    every { getMessagesWithMetadata(any()) } answers {
-                        RequestContextHolder.get() should beNull()
-                        apiMessages
-                    }
+                val internalClient = mockk<MshInternalClient> {
+                    coEvery { getMessages(any(), any(), any()) } returns apiMessages
                 }
-                val client = Client(apiService)
+                val client = Client(internalClient)
 
                 val receiverHerId = randomHerId()
                 client.getMessagesWithMetadata(receiverHerId).asClue {
@@ -149,25 +139,24 @@ class ClientTest : FreeSpec() {
                     }
                 }
 
-                verifySequence {
-                    apiService.getMessagesWithMetadata(receiverHerId)
+                coVerifySequence {
+                    internalClient.getMessages(receiverHerId, true)
                 }
             }
 
-            "Params should be added to context before call and removed when it completes" {
+            "Params should be passed on" {
                 val params = RequestParameters(HelseIdTokenParameters(SingleTenantHelseIdTokenParameters(randomHerId().toString())))
 
-                val apiService = mockk<ApiService> {
-                    every { getMessagesWithMetadata(any()) } answers {
-                        RequestContextHolder.get() shouldBe params
-                        List(nextInt(0, 10)) { randomApiMessageWithMetadata() }
-                    }
+                val internalClient = mockk<MshInternalClient> {
+                    coEvery { getMessages(any(), any(), any()) } returns List(nextInt(0, 10)) { randomApiMessageWithMetadata() }
                 }
-                val client = Client(apiService)
+                val client = Client(internalClient)
 
-                RequestContextHolder.get() should beNull()
-                client.getMessagesWithMetadata(randomHerId(), params)
-                RequestContextHolder.get() should beNull()
+                val receiverHerId = randomHerId()
+                client.getMessagesWithMetadata(receiverHerId, params)
+                coVerifySequence {
+                    internalClient.getMessages(receiverHerId, true, params)
+                }
             }
         }
 
@@ -175,13 +164,10 @@ class ClientTest : FreeSpec() {
             "Should be retrieved and mapped" {
                 val message = randomApiMessageWithMetadata()
 
-                val apiService = mockk<ApiService> {
-                    every { getMessage(any()) } answers {
-                        RequestContextHolder.get() should beNull()
-                        message
-                    }
+                val internalClient = mockk<MshInternalClient> {
+                    coEvery { getMessage(any(), any()) } returns message
                 }
-                val client = Client(apiService)
+                val client = Client(internalClient)
 
                 val messageId = UUID.randomUUID()
                 client.getMessage(messageId).asClue {
@@ -194,25 +180,23 @@ class ClientTest : FreeSpec() {
                     it.isAppRec shouldBe message.isAppRec
                 }
 
-                verifySequence {
-                    apiService.getMessage(messageId)
+                coVerifySequence {
+                    internalClient.getMessage(messageId)
                 }
             }
 
-            "Params should be added to context before call and removed when it completes" {
+            "Params should be passed on" {
                 val params = RequestParameters(HelseIdTokenParameters(SingleTenantHelseIdTokenParameters(randomHerId().toString())))
 
-                val apiService = mockk<ApiService> {
-                    every { getMessage(any()) } answers {
-                        RequestContextHolder.get() shouldBe params
-                        randomApiMessageWithMetadata()
-                    }
+                val internalClient = mockk<MshInternalClient> {
+                    coEvery { getMessage(any(), any()) } returns randomApiMessageWithMetadata()
                 }
-                val client = Client(apiService)
+                val client = Client(internalClient)
 
-                RequestContextHolder.get() should beNull()
                 client.getMessage(UUID.randomUUID(), params)
-                RequestContextHolder.get() should beNull()
+                coVerifySequence {
+                    internalClient.getMessage(any(), params)
+                }
             }
         }
 
@@ -224,13 +208,10 @@ class ClientTest : FreeSpec() {
                     contentTransferEncoding = UUID.randomUUID().toString()
                 }
 
-                val apiService = mockk<ApiService> {
-                    every { getBusinessDocument(any()) } answers {
-                        RequestContextHolder.get() should beNull()
-                        response
-                    }
+                val internalClient = mockk<MshInternalClient> {
+                    coEvery { getBusinessDocument(any(), any()) } returns response
                 }
-                val client = Client(apiService)
+                val client = Client(internalClient)
 
                 val id = UUID.randomUUID()
                 shouldThrow<IllegalArgumentException> { client.getBusinessDocument(id) }.asClue {
@@ -245,8 +226,10 @@ class ClientTest : FreeSpec() {
                     contentTransferEncoding = "base64"
                 }
 
-                val apiService = mockk<ApiService> { every { getBusinessDocument(any()) } returns response }
-                val client = Client(apiService)
+                val internalClient = mockk<MshInternalClient> {
+                    coEvery { getBusinessDocument(any(), any()) } returns response
+                }
+                val client = Client(internalClient)
 
                 val id = UUID.randomUUID()
                 shouldThrow<IllegalArgumentException> { client.getBusinessDocument(id) }.asClue {
@@ -261,16 +244,18 @@ class ClientTest : FreeSpec() {
                     contentTransferEncoding = "base64"
                 }
 
-                val apiService = mockk<ApiService> { every { getBusinessDocument(any()) } returns response }
-                val client = Client(apiService)
+                val internalClient = mockk<MshInternalClient> {
+                    coEvery { getBusinessDocument(any(), any()) } returns response
+                }
+                val client = Client(internalClient)
 
                 val id = UUID.randomUUID()
                 client.getBusinessDocument(id).asClue {
                     it.id shouldBe "6ddb98ed-9e34-4efa-9163-62e4ea0cbf43"
                 }
 
-                verifySequence {
-                    apiService.getBusinessDocument(id)
+                coVerifySequence {
+                    internalClient.getBusinessDocument(id)
                 }
             }
 
@@ -281,37 +266,37 @@ class ClientTest : FreeSpec() {
                     contentTransferEncoding = "base64"
                 }
 
-                val apiService = mockk<ApiService> { every { getBusinessDocument(any()) } returns response }
-                val client = Client(apiService)
+                val internalClient = mockk<MshInternalClient> {
+                    coEvery { getBusinessDocument(any(), any()) } returns response
+                }
+                val client = Client(internalClient)
 
                 val id = UUID.randomUUID()
                 shouldThrow<IllegalArgumentException> { client.getBusinessDocument(id) }.asClue {
                     it.message shouldBe "Expected MsgHead as root element, but found AppRec"
                 }
 
-                verifySequence {
-                    apiService.getBusinessDocument(id)
+                coVerifySequence {
+                    internalClient.getBusinessDocument(id)
                 }
             }
 
-            "Params should be added to context before call and removed when it completes" {
+            "Params should be passed on" {
                 val params = RequestParameters(HelseIdTokenParameters(SingleTenantHelseIdTokenParameters(randomHerId().toString())))
 
-                val apiService = mockk<ApiService> {
-                    every { getBusinessDocument(any()) } answers {
-                        RequestContextHolder.get() shouldBe params
-                        GetBusinessDocumentResponse().apply {
-                            businessDocument = Base64.getEncoder().encodeToString(readResourceContent("dialogmelding/1.0/foresporsel-og-svar/dialog-foresporsel-samsvar-test.xml"))
-                            contentType = "application/xml"
-                            contentTransferEncoding = "base64"
-                        }
+                val internalClient = mockk<MshInternalClient> {
+                    coEvery { getBusinessDocument(any(), any()) } returns GetBusinessDocumentResponse().apply {
+                        businessDocument = Base64.getEncoder().encodeToString(readResourceContent("dialogmelding/1.0/foresporsel-og-svar/dialog-foresporsel-samsvar-test.xml"))
+                        contentType = "application/xml"
+                        contentTransferEncoding = "base64"
                     }
                 }
-                val client = Client(apiService)
+                val client = Client(internalClient)
 
-                RequestContextHolder.get() should beNull()
                 client.getBusinessDocument(UUID.randomUUID(), params)
-                RequestContextHolder.get() should beNull()
+                coVerifySequence {
+                    internalClient.getBusinessDocument(any(), params)
+                }
             }
         }
 
@@ -323,13 +308,10 @@ class ClientTest : FreeSpec() {
                     contentTransferEncoding = UUID.randomUUID().toString()
                 }
 
-                val apiService = mockk<ApiService> {
-                    every { getBusinessDocument(any()) } answers {
-                        RequestContextHolder.get() should beNull()
-                        response
-                    }
+                val internalClient = mockk<MshInternalClient> {
+                    coEvery { getBusinessDocument(any(), any()) } returns response
                 }
-                val client = Client(apiService)
+                val client = Client(internalClient)
 
                 val id = UUID.randomUUID()
                 shouldThrow<IllegalArgumentException> { client.getApplicationReceipt(id) }.asClue {
@@ -344,8 +326,10 @@ class ClientTest : FreeSpec() {
                     contentTransferEncoding = "base64"
                 }
 
-                val apiService = mockk<ApiService> { every { getBusinessDocument(any()) } returns response }
-                val client = Client(apiService)
+                val internalClient = mockk<MshInternalClient> {
+                    coEvery { getBusinessDocument(any(), any()) } returns response
+                }
+                val client = Client(internalClient)
 
                 val id = UUID.randomUUID()
                 shouldThrow<IllegalArgumentException> { client.getApplicationReceipt(id) }.asClue {
@@ -360,16 +344,18 @@ class ClientTest : FreeSpec() {
                     contentTransferEncoding = "base64"
                 }
 
-                val apiService = mockk<ApiService> { every { getBusinessDocument(any()) } returns response }
-                val client = Client(apiService)
+                val internalClient = mockk<MshInternalClient> {
+                    coEvery { getBusinessDocument(any(), any()) } returns response
+                }
+                val client = Client(internalClient)
 
                 val id = UUID.randomUUID()
                 client.getApplicationReceipt(id).asClue {
                     it.id shouldBe "a761e9b9-3495-4f5a-a964-c13d544d2ceb"
                 }
 
-                verifySequence {
-                    apiService.getBusinessDocument(id)
+                coVerifySequence {
+                    internalClient.getBusinessDocument(id)
                 }
             }
 
@@ -379,57 +365,53 @@ class ClientTest : FreeSpec() {
                     contentType = "application/xml"
                     contentTransferEncoding = "base64"
                 }
-
-                val apiService = mockk<ApiService> { every { getBusinessDocument(any()) } returns response }
-                val client = Client(apiService)
+                val internalClient = mockk<MshInternalClient> {
+                    coEvery { getBusinessDocument(any(), any()) } returns response
+                }
+                val client = Client(internalClient)
 
                 val id = UUID.randomUUID()
                 shouldThrow<IllegalArgumentException> { client.getApplicationReceipt(id) }.asClue {
                     it.message shouldBe "Expected AppRec as root element, but found MsgHead"
                 }
 
-                verifySequence {
-                    apiService.getBusinessDocument(id)
+                coVerifySequence {
+                    internalClient.getBusinessDocument(id)
                 }
             }
 
-            "Params should be added to context before call and removed when it completes" {
+            "Params should be passed on" {
                 val params = RequestParameters(HelseIdTokenParameters(SingleTenantHelseIdTokenParameters(randomHerId().toString())))
 
-                val apiService = mockk<ApiService> {
-                    every { getBusinessDocument(any()) } answers {
-                        RequestContextHolder.get() shouldBe params
-                        GetBusinessDocumentResponse().apply {
-                            businessDocument = Base64.getEncoder().encodeToString(readResourceContent("app-rec/1.0/all-data.xml"))
-                            contentType = "application/xml"
-                            contentTransferEncoding = "base64"
-                        }
+                val internalClient = mockk<MshInternalClient> {
+                    coEvery { getBusinessDocument(any(), any()) } returns GetBusinessDocumentResponse().apply {
+                        businessDocument = Base64.getEncoder().encodeToString(readResourceContent("app-rec/1.0/all-data.xml"))
+                        contentType = "application/xml"
+                        contentTransferEncoding = "base64"
                     }
                 }
-                val client = Client(apiService)
+                val client = Client(internalClient)
 
-                RequestContextHolder.get() should beNull()
                 client.getApplicationReceipt(UUID.randomUUID(), params)
-                RequestContextHolder.get() should beNull()
+                coVerifySequence {
+                    internalClient.getBusinessDocument(any(), params)
+                }
             }
         }
 
         "Send application receipt" - {
             "Should be able to send OK receipt without errors" {
                 val requestSlot = slot<PostAppRecRequest>()
-                val apiService = mockk<ApiService> {
-                    every { sendApplicationReceipt(any(), any(), capture(requestSlot)) } answers {
-                        RequestContextHolder.get() should beNull()
-                        UUID.randomUUID()
-                    }
+                val internalClient = mockk<MshInternalClient> {
+                    coEvery { postAppRec(any(), any(), capture(requestSlot), any()) } returns UUID.randomUUID()
                 }
-                val client = Client(apiService)
+                val client = Client(internalClient)
 
                 val receipt = OutgoingApplicationReceipt(UUID.randomUUID(), randomHerId(), StatusForMottakAvMelding.OK, emptyList())
                 client.sendApplicationReceipt(receipt)
 
-                verifySequence {
-                    apiService.sendApplicationReceipt(receipt.acknowledgedId, receipt.senderHerId, any())
+                coVerifySequence {
+                    internalClient.postAppRec(receipt.acknowledgedId, receipt.senderHerId, any())
                 }
 
                 requestSlot.captured.asClue { request ->
@@ -441,8 +423,8 @@ class ClientTest : FreeSpec() {
 
             "Should be able to send OK_FEIL_I_DELMELDING with errors" {
                 val requestSlot = slot<PostAppRecRequest>()
-                val apiService = mockk<ApiService> { every { sendApplicationReceipt(any(), any(), capture(requestSlot)) } returns UUID.randomUUID() }
-                val client = Client(apiService)
+                val internalClient = mockk<MshInternalClient> { coEvery { postAppRec(any(), any(), capture(requestSlot), any()) } returns UUID.randomUUID() }
+                val client = Client(internalClient)
 
                 val receipt = OutgoingApplicationReceipt(
                     acknowledgedId = UUID.randomUUID(),
@@ -452,8 +434,8 @@ class ClientTest : FreeSpec() {
                 )
                 client.sendApplicationReceipt(receipt)
 
-                verifySequence {
-                    apiService.sendApplicationReceipt(receipt.acknowledgedId, receipt.senderHerId, any())
+                coVerifySequence {
+                    internalClient.postAppRec(receipt.acknowledgedId, receipt.senderHerId, any())
                 }
 
                 requestSlot.captured.asClue { request ->
@@ -471,8 +453,8 @@ class ClientTest : FreeSpec() {
 
             "Should be able to send AVVIST with errors" {
                 val requestSlot = slot<PostAppRecRequest>()
-                val apiService = mockk<ApiService> { every { sendApplicationReceipt(any(), any(), capture(requestSlot)) } returns UUID.randomUUID() }
-                val client = Client(apiService)
+                val internalClient = mockk<MshInternalClient> { coEvery { postAppRec(any(), any(), capture(requestSlot), any()) } returns UUID.randomUUID() }
+                val client = Client(internalClient)
 
                 val receipt = OutgoingApplicationReceipt(
                     acknowledgedId = UUID.randomUUID(),
@@ -482,8 +464,8 @@ class ClientTest : FreeSpec() {
                 )
                 client.sendApplicationReceipt(receipt)
 
-                verifySequence {
-                    apiService.sendApplicationReceipt(receipt.acknowledgedId, receipt.senderHerId, any())
+                coVerifySequence {
+                    internalClient.postAppRec(receipt.acknowledgedId, receipt.senderHerId, any())
                 }
 
                 requestSlot.captured.asClue { request ->
@@ -500,7 +482,7 @@ class ClientTest : FreeSpec() {
             }
 
             "Trying to send an OK receipt with errors should cause an exception to be thrown" {
-                val client = Client(mockk<ApiService> { every { sendApplicationReceipt(any(), any(), any()) } returns UUID.randomUUID() })
+                val client = Client(mockk<MshInternalClient> { coEvery { postAppRec(any(), any(), any(), any()) } returns UUID.randomUUID() })
 
                 val receipt = OutgoingApplicationReceipt(
                     acknowledgedId = UUID.randomUUID(),
@@ -515,7 +497,7 @@ class ClientTest : FreeSpec() {
             }
 
             "Trying to send an OK_FEIL_I_DELMELDING receipt without errors should cause an exception to be thrown" {
-                val client = Client(mockk<ApiService> { every { sendApplicationReceipt(any(), any(), any()) } returns UUID.randomUUID() })
+                val client = Client(mockk<MshInternalClient> { coEvery { postAppRec(any(), any(), any(), any()) } returns UUID.randomUUID() })
 
                 val receipt = OutgoingApplicationReceipt(
                     acknowledgedId = UUID.randomUUID(),
@@ -530,7 +512,7 @@ class ClientTest : FreeSpec() {
             }
 
             "Trying to send an AVVIST receipt without errors should cause an exception to be thrown" {
-                val client = Client(mockk<ApiService> { every { sendApplicationReceipt(any(), any(), any()) } returns UUID.randomUUID() })
+                val client = Client(mockk<MshInternalClient> { coEvery { postAppRec(any(), any(), any(), any()) } returns UUID.randomUUID() })
 
                 val receipt = OutgoingApplicationReceipt(
                     acknowledgedId = UUID.randomUUID(),
@@ -544,18 +526,14 @@ class ClientTest : FreeSpec() {
                 }
             }
 
-            "Params should be added to context before call and removed when it completes" {
+            "Params should be passed on" {
                 val params = RequestParameters(HelseIdTokenParameters(SingleTenantHelseIdTokenParameters(randomHerId().toString())))
 
-                val apiService = mockk<ApiService> {
-                    every { sendApplicationReceipt(any(), any(), any()) } answers {
-                        RequestContextHolder.get() shouldBe params
-                        UUID.randomUUID()
-                    }
+                val internalClient = mockk<MshInternalClient> {
+                    coEvery { postAppRec(any(), any(), any(), any()) } returns UUID.randomUUID()
                 }
-                val client = Client(apiService)
+                val client = Client(internalClient)
 
-                RequestContextHolder.get() should beNull()
                 client.sendApplicationReceipt(
                     OutgoingApplicationReceipt(
                         acknowledgedId = UUID.randomUUID(),
@@ -564,42 +542,40 @@ class ClientTest : FreeSpec() {
                         errors = emptyList(),
                     ), params
                 )
-                RequestContextHolder.get() should beNull()
+                coVerifySequence {
+                    internalClient.postAppRec(any(), any(), any(), params)
+                }
             }
         }
 
         "Mark message read" - {
             "The data should be serialized to XML and passed on to the service" {
-                val apiService = mockk<ApiService> {
-                    every { markMessageRead(any(), any()) } answers {
-                        RequestContextHolder.get() should beNull()
-                    }
+                val internalClient = mockk<MshInternalClient> {
+                    coEvery { markMessageRead(any(), any(), any()) } just runs
                 }
-                val client = Client(apiService)
+                val client = Client(internalClient)
 
                 val id = UUID.randomUUID()
                 val receiverHerId = randomHerId()
                 client.markMessageRead(id, receiverHerId)
 
-                verifySequence {
-                    apiService.markMessageRead(id, receiverHerId)
+                coVerifySequence {
+                    internalClient.markMessageRead(id, receiverHerId)
                 }
             }
 
-            "Params should be added to context before call and removed when it completes" {
+            "Params should be passed on" {
                 val params = RequestParameters(HelseIdTokenParameters(SingleTenantHelseIdTokenParameters(randomHerId().toString())))
 
-                val apiService = mockk<ApiService> {
-                    every { markMessageRead(any(), any()) } answers {
-                        RequestContextHolder.get() shouldBe params
-                        UUID.randomUUID()
-                    }
+                val internalClient = mockk<MshInternalClient> {
+                    coEvery { markMessageRead(any(), any(), any()) } just runs
                 }
-                val client = Client(apiService)
+                val client = Client(internalClient)
 
-                RequestContextHolder.get() should beNull()
                 client.markMessageRead(UUID.randomUUID(), randomHerId(), params)
-                RequestContextHolder.get() should beNull()
+                coVerifySequence {
+                    internalClient.markMessageRead(any(), any(), params)
+                }
             }
         }
 

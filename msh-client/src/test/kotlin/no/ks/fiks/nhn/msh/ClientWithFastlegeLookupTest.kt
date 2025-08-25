@@ -2,13 +2,8 @@ package no.ks.fiks.nhn.msh
 
 import io.kotest.assertions.asClue
 import io.kotest.core.spec.style.FreeSpec
-import io.kotest.matchers.nulls.beNull
-import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.slot
-import io.mockk.verifySequence
+import io.mockk.*
 import no.ks.fiks.hdir.Helsepersonell
 import no.ks.fiks.hdir.HelsepersonellsFunksjoner
 import no.ks.fiks.hdir.OrganizationIdType
@@ -42,17 +37,17 @@ class ClientWithFastlegeLookupTest : FreeSpec() {
                 val gpCommunicationParty = randomPersonCommunicationParty()
 
                 val requestSlot = slot<PostMessageRequest>()
-                val apiService = mockk<ApiService> { every { sendMessage(capture(requestSlot)) } returns UUID.randomUUID() }
+                val apiService = mockk<MshInternalClient> { coEvery { postMessage(capture(requestSlot), any()) } returns UUID.randomUUID() }
                 val flrClient = mockk<FastlegeregisteretClient> { every { getPatientGP(any()) } returns patientGP }
                 val arClient = mockk<AdresseregisteretClient> { every { lookupHerId(any()) } returns gpCommunicationParty }
                 val client = ClientWithFastlegeLookup(apiService, flrClient, arClient)
 
                 client.sendMessageToGPForPerson(businessDocument)
 
-                verifySequence {
+                coVerifySequence {
                     flrClient.getPatientGP(businessDocument.person.fnr)
                     arClient.lookupHerId(patientGP.gpHerId!!)
-                    apiService.sendMessage(any())
+                    apiService.postMessage(any(), any())
                 }
 
                 requestSlot.captured.asClue { request ->
@@ -93,22 +88,20 @@ class ClientWithFastlegeLookupTest : FreeSpec() {
             }
         }
 
-        "Params should be added to context before call and removed when it completes" {
+        "Params should be passed on" {
             val params = RequestParameters(HelseIdTokenParameters(SingleTenantHelseIdTokenParameters(randomHerId().toString())))
 
-            val apiService = mockk<ApiService> {
-                every { sendMessage(any()) } answers {
-                    RequestContextHolder.get() shouldBe params
-                    UUID.randomUUID()
-                }
+            val internalClient = mockk<MshInternalClient> {
+                coEvery { postMessage(any(), any()) } returns UUID.randomUUID()
             }
             val flrClient = mockk<FastlegeregisteretClient> { every { getPatientGP(any()) } returns randomPatientGP() }
             val arClient = mockk<AdresseregisteretClient> { every { lookupHerId(any()) } returns randomPersonCommunicationParty() }
-            val client = ClientWithFastlegeLookup(apiService, flrClient, arClient)
+            val client = ClientWithFastlegeLookup(internalClient, flrClient, arClient)
 
-            RequestContextHolder.get() should beNull()
             client.sendMessageToGPForPerson(randomGPForPersonOutgoingBusinessDocument(), params)
-            RequestContextHolder.get() should beNull()
+            coVerifySequence {
+                internalClient.postMessage(any(), params)
+            }
         }
     }
 }
