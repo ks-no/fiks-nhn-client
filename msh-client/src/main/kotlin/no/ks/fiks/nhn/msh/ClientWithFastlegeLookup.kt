@@ -2,19 +2,20 @@ package no.ks.fiks.nhn.msh
 
 import no.ks.fiks.nhn.ar.AdresseregisteretClient
 import no.ks.fiks.nhn.flr.FastlegeregisteretClient
+import java.util.UUID
 
 class ClientWithFastlegeLookup(
-    apiService: ApiService,
+    internalClient: MshInternalClient,
     flrClient: FastlegeregisteretClient,
     arClient: AdresseregisteretClient,
-) : Client(apiService) {
+) : Client(internalClient) {
 
     private val receiverBuilder = GpForPersonReceiverBuilder(flrClient, arClient)
 
-    fun sendMessageToGPForPerson(
+    suspend fun sendMessageToGPForPerson(
         businessDocument: GPForPersonOutgoingBusinessDocument,
         requestParameters: RequestParameters? = null,
-    ) {
+    ): UUID =
         sendMessage(
             OutgoingBusinessDocument(
                 id = businessDocument.id,
@@ -26,6 +27,5 @@ class ClientWithFastlegeLookup(
             ),
             requestParameters,
         )
-    }
 
 }
