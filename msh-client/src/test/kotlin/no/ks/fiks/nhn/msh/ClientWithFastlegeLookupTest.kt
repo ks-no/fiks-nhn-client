@@ -148,7 +148,7 @@ private fun randomGPForPersonOutgoingBusinessDocument(
 private fun randomPersonCommunicationParty(): PersonCommunicationParty = PersonCommunicationParty(
     herId = randomHerId(),
     name = randomString(),
-    parent = CommunicationPartyParent(randomHerId(), randomString()),
+    parent = CommunicationPartyParent(randomHerId(), randomString(), randomString()),
     physicalAddresses = listOf(),
     firstName = randomString(),
     middleName = randomString(),

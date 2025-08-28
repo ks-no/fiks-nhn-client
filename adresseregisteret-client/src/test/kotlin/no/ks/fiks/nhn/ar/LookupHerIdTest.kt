@@ -234,6 +234,7 @@ private infix fun CommunicationParty.shouldHaveSameValuesAs(expected: NhnCommuni
     parent shouldNot beNull()
     parent!!.herId shouldBe expected.parentHerId
     parent.name shouldBe expected.parentName.value
+    parent.organizationNumber shouldBe expected.parentOrganizationNumber.toString()
     physicalAddresses shouldHaveSize expected.physicalAddresses.value.physicalAddress.size
     physicalAddresses.zip(expected.physicalAddresses.value.physicalAddress).forEach { (actual, expected) ->
         actual.type!!.code shouldBe expected.type.value.codeValue.value
