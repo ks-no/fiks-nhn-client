@@ -76,7 +76,7 @@ class AdresseregisteretClient(
                 CommunicationPartyParent(
                     herId = parentHerId,
                     name = parentName.value ?: "",
-                    organizationNumber = "$parentOrganizationNumber"
+                    organizationNumber = "$parentOrganizationNumber",
                 )
             }
 
