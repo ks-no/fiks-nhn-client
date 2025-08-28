@@ -50,6 +50,7 @@ class ServiceCommunicationParty(
 data class CommunicationPartyParent(
     val herId: Int,
     val name: String,
+    val organizationNumber: String
 )
 
 data class PhysicalAddress(
