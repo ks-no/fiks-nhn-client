@@ -4,13 +4,16 @@ import io.mockk.every
 import io.mockk.mockk
 import jakarta.xml.bind.JAXBElement
 import no.nhn.common.ar.Code
+import no.nhn.common.ar.ElectronicAddress
 import no.nhn.common.ar.PhysicalAddress
-import no.nhn.register.communicationparty.ICommunicationPartyService
 import no.nhn.register.communicationparty.Organization
 import no.nhn.register.communicationparty.OrganizationPerson
 import no.nhn.register.communicationparty.Service
 import no.nhn.register.hpr.Person
+import java.time.OffsetDateTime
+import java.util.GregorianCalendar
 import java.util.UUID
+import javax.xml.datatype.DatatypeFactory
 import javax.xml.namespace.QName
 import kotlin.random.Random.Default.nextInt
 import no.nhn.register.communicationparty.CommunicationParty as NhnCommunicationParty
@@ -26,7 +29,8 @@ fun buildOrganization(
     name: String = buildRandomString(),
     parentHerId: Int = nextInt(1000, 100000),
     parentName: String = buildRandomString(),
-    addresses: List<PhysicalAddress> = List(nextInt(1, 5)) { buildPhysicalAddress() },
+    physicalAddresses: List<PhysicalAddress> = List(nextInt(1, 5)) { buildPhysicalAddress() },
+    electronicAddresses: List<ElectronicAddress> = List(nextInt(1, 5)) { buildElectronicAddress() },
     organizationNumber: Int = nextInt(100000000, 1000000000),
     parentOrganizationNumber: Int = nextInt(100000000, 1000000000),
 ) = Organization().apply {
@@ -35,7 +39,8 @@ fun buildOrganization(
     this.parentHerId = parentHerId
     this.parentName = buildJAXBElement(parentName)
     this.parentOrganizationNumber = parentOrganizationNumber
-    this.physicalAddresses = buildJAXBElement(mockk { every { physicalAddress } returns addresses })
+    this.physicalAddresses = buildJAXBElement(mockk { every { physicalAddress } returns physicalAddresses })
+    this.electronicAddresses = buildJAXBElement(mockk { every { electronicAddress } returns electronicAddresses })
     this.organizationNumber = organizationNumber
 }
 
@@ -48,7 +53,8 @@ fun buildOrganizationPerson(
     firstName: String = buildRandomString(),
     middleName: String? = buildRandomString(),
     lastName: String = buildRandomString(),
-    addresses: List<PhysicalAddress> = List(nextInt(1, 5)) { buildPhysicalAddress() },
+    physicalAddresses: List<PhysicalAddress> = List(nextInt(1, 5)) { buildPhysicalAddress() },
+    electronicAddresses: List<ElectronicAddress> = List(nextInt(1, 5)) { buildElectronicAddress() },
 ) = OrganizationPerson().apply {
     this.herId = herId
     this.name = buildJAXBElement(name)
@@ -60,7 +66,8 @@ fun buildOrganizationPerson(
         this.middleName = buildJAXBElement(middleName)
         this.lastName = buildJAXBElement(lastName)
     })
-    this.physicalAddresses = buildJAXBElement(mockk { every { physicalAddress } returns addresses })
+    this.physicalAddresses = buildJAXBElement(mockk { every { physicalAddress } returns physicalAddresses })
+    this.electronicAddresses = buildJAXBElement(mockk { every { electronicAddress } returns electronicAddresses })
 }
 
 fun buildService(
@@ -69,18 +76,20 @@ fun buildService(
     parentHerId: Int = nextInt(1000, 100000),
     parentName: String = buildRandomString(),
     parentOrganizationNumber: Int = nextInt(100000000, 1000000000),
-    addresses: List<PhysicalAddress> = List(nextInt(1, 5)) { buildPhysicalAddress() },
+    physicalAddresses: List<PhysicalAddress> = List(nextInt(1, 5)) { buildPhysicalAddress() },
+    electronicAddresses: List<ElectronicAddress> = List(nextInt(1, 5)) { buildElectronicAddress() },
 ) = Service().apply {
     this.herId = herId
     this.name = buildJAXBElement(name)
     this.parentHerId = parentHerId
     this.parentName = buildJAXBElement(parentName)
     this.parentOrganizationNumber = parentOrganizationNumber
-    this.physicalAddresses = buildJAXBElement(mockk { every { physicalAddress } returns addresses })
+    this.physicalAddresses = buildJAXBElement(mockk { every { physicalAddress } returns physicalAddresses })
+    this.electronicAddresses = buildJAXBElement(mockk { every { electronicAddress } returns electronicAddresses })
 }
 
 fun buildPhysicalAddress(
-    type: String? = AddressType.entries.random().code,
+    type: String? = PostalAddressType.entries.random().code,
     streetAddress: String? = buildRandomString(),
     postbox: String? = UUID.randomUUID().toString(),
     postalCode: Int? = nextInt(0, 10000),
@@ -93,6 +102,16 @@ fun buildPhysicalAddress(
     this.postalCode = postalCode
     this.city = buildJAXBElement(city)
     this.country = buildJAXBElement(Code().apply { codeText = buildJAXBElement(country) })
+}
+
+fun buildElectronicAddress(
+    type: String? = AddressComponent.entries.random().code,
+    address: String? = buildRandomString(),
+    lastChanged: OffsetDateTime? = OffsetDateTime.now(),
+) = ElectronicAddress().apply {
+    this.typeCodeValue = buildJAXBElement(type)
+    this.address = buildJAXBElement(address)
+    this.lastChanged = lastChanged?.let { DatatypeFactory.newInstance().newXMLGregorianCalendar(GregorianCalendar.from(it.toZonedDateTime())) }
 }
 
 fun buildRandomString() = List(nextInt(1, 3)) { UUID.randomUUID().toString().take(nextInt(3, 20)) }.joinToString(" ")

@@ -83,7 +83,7 @@ class LookupHerIdTest : StringSpec({
         buildClient(
             setupServiceMock(
                 buildOrganization(
-                    addresses = listOf(
+                    physicalAddresses = listOf(
                         buildPhysicalAddress(postalCode = postalCode1),
                         buildPhysicalAddress(postalCode = postalCode2),
                         buildPhysicalAddress(postalCode = postalCode3),
@@ -102,14 +102,14 @@ class LookupHerIdTest : StringSpec({
             }
     }
 
-    "Unknown address type should map to null" {
-        val type1 = AddressType.entries.random()
-        val type2 = AddressType.entries.random()
+    "Unknown physical address type should map to null" {
+        val type1 = PostalAddressType.entries.random()
+        val type2 = PostalAddressType.entries.random()
 
         buildClient(
             setupServiceMock(
                 buildOrganization(
-                    addresses = listOf(
+                    physicalAddresses = listOf(
                         buildPhysicalAddress(type = type1.code),
                         buildPhysicalAddress(type = UUID.randomUUID().toString()),
                         buildPhysicalAddress(type = type2.code),
@@ -126,11 +126,35 @@ class LookupHerIdTest : StringSpec({
             }
     }
 
-    "Should handle null values in address" {
+    "Unknown electronic address type should map to null" {
+        val type1 = AddressComponent.entries.random()
+        val type2 = AddressComponent.entries.random()
+
         buildClient(
             setupServiceMock(
                 buildOrganization(
-                    addresses = listOf(
+                    electronicAddresses = listOf(
+                        buildElectronicAddress(type = type1.code),
+                        buildElectronicAddress(type = UUID.randomUUID().toString()),
+                        buildElectronicAddress(type = type2.code),
+                    )
+                )
+            )
+        )
+            .lookupHerId(nextInt(1000, 100000))
+            .asClue {
+                it.shouldBeInstanceOf<OrganizationCommunicationParty>()
+                it.electronicAddresses[0].type shouldBe type1
+                it.electronicAddresses[1].type should beNull()
+                it.electronicAddresses[2].type shouldBe type2
+            }
+    }
+
+    "Should handle null values in physical address" {
+        buildClient(
+            setupServiceMock(
+                buildOrganization(
+                    physicalAddresses = listOf(
                         buildPhysicalAddress(
                             type = null,
                             streetAddress = null,
@@ -158,11 +182,37 @@ class LookupHerIdTest : StringSpec({
             }
     }
 
+    "Should handle null values in electronic address" {
+        buildClient(
+            setupServiceMock(
+                buildOrganization(
+                    electronicAddresses = listOf(
+                        buildElectronicAddress(
+                            type = null,
+                            address = null,
+                            lastChanged = null,
+                        ),
+                    )
+                )
+            )
+        )
+            .lookupHerId(nextInt(1000, 100000))
+            .asClue {
+                it.shouldBeInstanceOf<OrganizationCommunicationParty>()
+                it.electronicAddresses shouldHaveSize 1
+                with(it.electronicAddresses.single()) {
+                    type shouldBe null
+                    address shouldBe null
+                    lastChanged shouldBe null
+                }
+            }
+    }
+
     "Should handle empty values in address" {
         buildClient(
             setupServiceMock(
                 buildOrganization(
-                    addresses = listOf(
+                    physicalAddresses = listOf(
                         buildPhysicalAddress(
                             type = "",
                             streetAddress = " ",

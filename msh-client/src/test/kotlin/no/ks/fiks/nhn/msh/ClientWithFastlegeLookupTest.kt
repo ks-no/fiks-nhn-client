@@ -150,6 +150,7 @@ private fun randomPersonCommunicationParty(): PersonCommunicationParty = PersonC
     name = randomString(),
     parent = CommunicationPartyParent(randomHerId(), randomString(), randomString()),
     physicalAddresses = listOf(),
+    electronicAddresses = listOf(),
     firstName = randomString(),
     middleName = randomString(),
     lastName = randomString()
