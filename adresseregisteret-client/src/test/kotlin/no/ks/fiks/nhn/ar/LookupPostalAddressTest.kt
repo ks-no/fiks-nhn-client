@@ -20,7 +20,7 @@ class LookupPostalAddressTest : FreeSpec(){
       }
 
       "Verify that communicationparty with no physicalAddress throws AddressNotFoundException" {
-          val organizationPerson = buildOrganizationPerson(addresses = emptyList())
+          val organizationPerson = buildOrganizationPerson(physicalAddresses = emptyList())
           assertThrows<AddressNotFoundException> {
               buildClient(setupServiceMock(organizationPerson))
                   .lookupPostalAddress(nextInt(1000, 100000))
@@ -30,21 +30,21 @@ class LookupPostalAddressTest : FreeSpec(){
       }
 
       "Verify that postadresse is primarily chosen if many physicalAddresses are present" {
-          val postalAddress = buildPhysicalAddress(type = AddressType.POSTADRESSE.code)
+          val postalAddress = buildPhysicalAddress(type = PostalAddressType.POSTADRESSE.code)
           val name = UUID.randomUUID().toString()
           val organizationPerson =
               buildOrganizationPerson(
                   name = name,
-                  addresses =
+                  physicalAddresses =
                       listOf(
-                          buildPhysicalAddress(type = AddressType.BESOKSADRESSE.code),
+                          buildPhysicalAddress(type = PostalAddressType.BESOKSADRESSE.code),
                           postalAddress,
-                          buildPhysicalAddress(type = AddressType.BESOKSADRESSE.code),
+                          buildPhysicalAddress(type = PostalAddressType.BESOKSADRESSE.code),
                       )
               )
           buildClient(setupServiceMock(organizationPerson))
               .lookupPostalAddress(nextInt(1000, 100000)).asClue {
-                  it!!.name shouldBe name
+                  it.name shouldBe name
                   it.streetAddress shouldBe postalAddress.streetAddress.value
                   it.postalCode shouldBe postalAddress.postalCode.toString().padStart(4, '0')
                   it.postbox shouldBe postalAddress.postbox.value
@@ -55,20 +55,20 @@ class LookupPostalAddressTest : FreeSpec(){
       }
 
       "Verify that first instance of besoksadresse is chosen if postadresse is not present" {
-          val besoksadresse = buildPhysicalAddress(type = AddressType.BESOKSADRESSE.code)
+          val besoksadresse = buildPhysicalAddress(type = PostalAddressType.BESOKSADRESSE.code)
           val name = UUID.randomUUID().toString()
           val organizationPerson =
               buildOrganizationPerson(
                   name = name,
-                  addresses =
+                  physicalAddresses =
                       listOf(
                           besoksadresse,
-                          buildPhysicalAddress(type = AddressType.BESOKSADRESSE.code),
+                          buildPhysicalAddress(type = PostalAddressType.BESOKSADRESSE.code),
                       )
               )
           buildClient(setupServiceMock(organizationPerson))
               .lookupPostalAddress(nextInt(1000, 100000)).asClue {
-                  it!!.name shouldBe name
+                  it.name shouldBe name
                   it.streetAddress shouldBe besoksadresse.streetAddress.value
                   it.postalCode shouldBe besoksadresse.postalCode.toString().padStart(4, '0')
                   it.postbox shouldBe besoksadresse.postbox.value

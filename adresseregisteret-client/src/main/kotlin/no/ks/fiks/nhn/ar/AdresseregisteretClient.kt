@@ -6,6 +6,8 @@ import no.nhn.register.communicationparty.ICommunicationPartyServiceGetCommunica
 import no.nhn.register.communicationparty.Organization
 import no.nhn.register.communicationparty.OrganizationPerson
 import no.nhn.register.communicationparty.Service
+import java.time.OffsetDateTime
+import java.time.ZoneId
 import no.nhn.register.communicationparty.CommunicationParty as NhnCommunicationParty
 
 private val log = KotlinLogging.logger { }
@@ -30,14 +32,14 @@ class AdresseregisteretClient(
             throw AdresseregisteretApiException(e.faultInfo?.errorCode?.value, e.faultInfo?.message?.value, e.message)
         }
 
-    fun lookupPostalAddress(herId: Int): PostalAddress? =
+    fun lookupPostalAddress(herId: Int): PostalAddress =
         lookupHerId(herId)?.let { communicationParty ->
             if (communicationParty.physicalAddresses.isEmpty()) {
                 throw AddressNotFoundException("Could not find any physicalAdresses related to herId")
             }
             log.debug("Found ${communicationParty.physicalAddresses.size} addresses for $herId")
 
-            val addressPriority = listOf(AddressType.POSTADRESSE, AddressType.BESOKSADRESSE)
+            val addressPriority = listOf(PostalAddressType.POSTADRESSE, PostalAddressType.BESOKSADRESSE)
 
             addressPriority.firstNotNullOfOrNull { type -> communicationParty.physicalAddresses.firstOrNull { it.type == type } }
                 ?.toPostalAddress(communicationParty.name)
@@ -50,6 +52,7 @@ class AdresseregisteretClient(
         name = name.value,
         parent = convertParent(),
         physicalAddresses = convertPhysicalAddresses(),
+        electronicAddresses = convertElectronicAddresses(),
         organizationNumber = organizationNumber?.toString()?.padStart(9, '0'),
     )
 
@@ -58,6 +61,7 @@ class AdresseregisteretClient(
         name = name.value,
         parent = convertParent(),
         physicalAddresses = convertPhysicalAddresses(),
+        electronicAddresses = convertElectronicAddresses(),
         firstName = person.value.firstName.value,
         middleName = person.value?.middleName?.value,
         lastName = person.value.lastName.value,
@@ -68,6 +72,7 @@ class AdresseregisteretClient(
         name = name.value,
         parent = convertParent(),
         physicalAddresses = convertPhysicalAddresses(),
+        electronicAddresses = convertElectronicAddresses(),
     )
 
     private fun NhnCommunicationParty.convertParent() =
@@ -83,12 +88,22 @@ class AdresseregisteretClient(
     private fun NhnCommunicationParty.convertPhysicalAddresses() = physicalAddresses.value?.physicalAddress
         ?.map { address ->
             PhysicalAddress(
-                type = AddressType.fromCode(address.type.value?.codeValue?.value),
+                type = PostalAddressType.fromCode(address.type.value?.codeValue?.value),
                 streetAddress = address.streetAddress.valueNotBlank(),
                 postbox = address.postbox.valueNotBlank(),
                 postalCode = address.postalCode?.toString()?.padStart(4, '0'),
                 city = address.city.valueNotBlank(),
                 country = address.country.value?.codeText?.valueNotBlank(),
+            )
+        }
+        ?: emptyList()
+
+    private fun NhnCommunicationParty.convertElectronicAddresses() = electronicAddresses?.value?.electronicAddress
+        ?.map { address ->
+            ElectronicAddress(
+                type = AddressComponent.fromCode(address.typeCodeValue?.value),
+                address = address.address.value,
+                lastChanged = address.lastChanged?.toOffsetDateTime(),
             )
         }
         ?: emptyList()
