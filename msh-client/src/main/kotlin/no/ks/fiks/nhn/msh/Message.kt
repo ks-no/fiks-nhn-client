@@ -14,6 +14,6 @@ data class MessageWithMetadata(
     val receiverHerId: Int,
     val senderHerId: Int,
     val businessDocumentId: String,
-    val businessDocumentDate: OffsetDateTime,
+    val businessDocumentDate: OffsetDateTime?,
     val isAppRec: Boolean,
 )

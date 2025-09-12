@@ -5,11 +5,13 @@ import no.ks.fiks.hdir.StatusForMottakAvMelding
 import no.ks.fiks.nhn.edi.BusinessDocumentDeserializer
 import no.ks.fiks.nhn.edi.BusinessDocumentSerializer
 import no.nhn.msh.v2.model.AppRecError
-import no.nhn.msh.v2.model.AppRecStatus
 import no.nhn.msh.v2.model.PostAppRecRequest
 import no.nhn.msh.v2.model.PostMessageRequest
 import java.util.*
 import no.nhn.msh.v2.model.Message as NhnMessage
+import no.nhn.msh.v2.model.StatusInfo as NhnStatusInfo
+import no.nhn.msh.v2.model.DeliveryState as NhnDeliveryState
+import no.nhn.msh.v2.model.AppRecStatus as NhnAppRecStatus
 
 private const val CONTENT_TYPE = "application/xml"
 private const val CONTENT_TRANSFER_ENCODING = "base64"
@@ -117,9 +119,9 @@ open class Client(
     }
 
     private fun StatusForMottakAvMelding.toAppRecStatus() = when (this) {
-        StatusForMottakAvMelding.OK -> AppRecStatus.OK
-        StatusForMottakAvMelding.OK_FEIL_I_DELMELDING -> AppRecStatus.OK_ERROR_IN_MESSAGE_PART
-        StatusForMottakAvMelding.AVVIST -> AppRecStatus.REJECTED
+        StatusForMottakAvMelding.OK -> NhnAppRecStatus.OK
+        StatusForMottakAvMelding.OK_FEIL_I_DELMELDING -> NhnAppRecStatus.OK_ERROR_IN_MESSAGE_PART
+        StatusForMottakAvMelding.AVVIST -> NhnAppRecStatus.REJECTED
     }
 
     private fun List<ApplicationReceiptError>.toAppRecErrors() = map { it.toAppRecError() }
@@ -144,6 +146,16 @@ open class Client(
         )
     }
 
+    @JvmOverloads
+    suspend fun getStatus(
+        id: UUID,
+        requestParameters: RequestParameters? = null,
+    ): List<StatusInfo> =
+        internalClient.getStatus(
+            id = id,
+            requestParams = requestParameters
+        ).map { it.toStatusInfo() }
+
     private fun NhnMessage.toMessageInfo() = Message(
         id = id,
         receiverHerId = receiverHerId,
@@ -158,5 +170,24 @@ open class Client(
         businessDocumentDate = businessDocumentGenDate,
         isAppRec = isAppRec,
     )
+
+    private fun NhnStatusInfo.toStatusInfo() = StatusInfo(
+        receiverHerId = receiverHerId,
+        deliveryState = transportDeliveryState.toDeliveryState(),
+        appRecStatus = appRecStatus?.toAppRecStatus(),
+    )
+
+    private fun NhnDeliveryState.toDeliveryState() = when (this) {
+        NhnDeliveryState.UNCONFIRMED -> DeliveryState.UNCONFIRMED
+        NhnDeliveryState.ACKNOWLEDGED -> DeliveryState.ACKNOWLEDGED
+        NhnDeliveryState.REJECTED -> DeliveryState.REJECTED
+    }
+
+    private fun NhnAppRecStatus.toAppRecStatus() = when (this) {
+        NhnAppRecStatus.OK -> AppRecStatus.OK
+        NhnAppRecStatus.REJECTED -> AppRecStatus.REJECTED
+        NhnAppRecStatus.OK_ERROR_IN_MESSAGE_PART -> AppRecStatus.OK_ERROR_IN_MESSAGE_PART
+    }
+
 
 }

@@ -10,10 +10,10 @@ import io.ktor.client.call.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
-import io.ktor.client.statement.HttpResponse
-import io.ktor.client.statement.bodyAsText
+import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.serialization.jackson.*
+import mu.KotlinLogging
 import no.ks.fiks.helseid.AccessTokenRequestBuilder
 import no.ks.fiks.helseid.HelseIdClient
 import no.ks.fiks.helseid.TenancyType
@@ -23,9 +23,11 @@ import no.ks.fiks.helseid.dpop.ProofBuilder
 import no.ks.fiks.helseid.http.DpopHttpRequestHelper
 import no.nhn.msh.v2.model.*
 import no.nhn.msh.v2.model.Message
+import no.nhn.msh.v2.model.StatusInfo
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
+import java.time.format.DateTimeParseException
 import java.util.*
 
 private const val API_VERSION_HEADER = "api-version"
@@ -35,6 +37,8 @@ private const val SOURCE_SYSTEM_HEADER = "nhn-source-system"
 
 private const val RECEIVER_HER_ID_PARAM = "receiverHerIds"
 private const val INCLUDE_METADATA_PARAM = "includeMetadata"
+
+private val log = KotlinLogging.logger { }
 
 class MshInternalClient(
     private val baseUrl: String,
@@ -212,7 +216,7 @@ class MshInternalClient(
     }
 
     // Replaces leading and/or trailing quote
-    private suspend fun String.toUuid() = UUID.fromString(replace(Regex("^\"|\"$"), ""))
+    private fun String.toUuid() = UUID.fromString(replace(Regex("^\"|\"$"), ""))
 
 }
 
@@ -222,17 +226,28 @@ private fun buildDefaultClient() =
             jackson {
                 registerModule(JavaTimeModule())
                 registerModule(SimpleModule().apply {
-                    // API returns ISO 8601 dates without offset that can't be parsed by the default deserializer
-                    addDeserializer(OffsetDateTime::class.java, object : JsonDeserializer<OffsetDateTime>() {
+                    addDeserializer(OffsetDateTime::class.java, object : JsonDeserializer<OffsetDateTime?>() {
                         override fun deserialize(
                             parser: JsonParser,
                             context: DeserializationContext
-                        ): OffsetDateTime {
-                            val local = LocalDateTime.parse(parser.text)
-                            return OffsetDateTime.of(local, ZoneOffset.UTC)
-                        }
+                        ): OffsetDateTime? = parser.text.tryParseOffsetDateTime()
                     })
                 })
             }
         }
     }
+
+private fun String.tryParseOffsetDateTime()  = try {
+    OffsetDateTime.parse(this)
+} catch (_: DateTimeParseException) {
+    tryParseOffsetDateTimeWithoutZone()
+}
+
+private fun String.tryParseOffsetDateTimeWithoutZone() = try {
+    val local = LocalDateTime.parse(this)
+    OffsetDateTime.of(local, ZoneOffset.UTC)
+} catch (_: DateTimeParseException) {
+    log.error { "Unable to parse date: $this" }
+    null
+}
+
