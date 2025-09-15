@@ -10,6 +10,7 @@ import no.nhn.msh.v2.model.PostAppRecRequest
 import no.nhn.msh.v2.model.PostMessageRequest
 import java.util.*
 import no.nhn.msh.v2.model.Message as NhnMessage
+import no.nhn.msh.v2.model.StatusInfo
 
 private const val CONTENT_TYPE = "application/xml"
 private const val CONTENT_TRANSFER_ENCODING = "base64"
@@ -97,6 +98,13 @@ open class Client(
                 BusinessDocumentDeserializer.deserializeAppRec(String(Base64.getDecoder().decode(it.businessDocument)))
             }
     }
+
+    @JvmOverloads
+    suspend fun getApprecInfo(id: UUID,requestParams: RequestParameters?=null) = internalClient.getAppRecInfo(id,requestParams)
+
+    @JvmOverloads
+    suspend fun messageStatus(messageId: UUID,requestParameters: RequestParameters? = null) : List<StatusInfo>  =
+        internalClient.getStatus(messageId,requestParameters)
 
     @JvmOverloads
     suspend fun sendApplicationReceipt(
