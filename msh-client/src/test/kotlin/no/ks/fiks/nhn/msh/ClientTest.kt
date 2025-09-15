@@ -401,14 +401,17 @@ class ClientTest : FreeSpec() {
 
         "Send application receipt" - {
             "Should be able to send OK receipt without errors" {
+                val returnedId = UUID.randomUUID()
                 val requestSlot = slot<PostAppRecRequest>()
                 val internalClient = mockk<MshInternalClient> {
-                    coEvery { postAppRec(any(), any(), capture(requestSlot), any()) } returns UUID.randomUUID()
+                    coEvery { postAppRec(any(), any(), capture(requestSlot), any()) } returns returnedId
                 }
                 val client = Client(internalClient)
 
                 val receipt = OutgoingApplicationReceipt(UUID.randomUUID(), randomHerId(), StatusForMottakAvMelding.OK, emptyList())
-                client.sendApplicationReceipt(receipt)
+                client.sendApplicationReceipt(receipt).asClue {
+                    it shouldBe returnedId
+                }
 
                 coVerifySequence {
                     internalClient.postAppRec(receipt.acknowledgedId, receipt.senderHerId, any())
