@@ -21,6 +21,9 @@ import no.ks.fiks.hdir.HelsepersonellsFunksjoner
 import no.ks.fiks.hdir.StatusForMottakAvMelding
 import no.ks.fiks.nhn.*
 import no.nhn.msh.v2.model.*
+import no.nhn.msh.v2.model.AppRecStatus
+import no.nhn.msh.v2.model.DeliveryState
+import no.nhn.msh.v2.model.StatusInfo
 import java.io.ByteArrayInputStream
 import java.time.OffsetDateTime
 import java.time.temporal.ChronoUnit
@@ -418,7 +421,7 @@ class ClientTest : FreeSpec() {
                 }
 
                 requestSlot.captured.asClue { request ->
-                    request.appRecStatus shouldBe AppRecStatus.OK
+                    request.appRecStatus shouldBe no.nhn.msh.v2.model.AppRecStatus.OK
                     request.appRecErrorList.shouldBeEmpty()
                     request.ebXmlOverrides should beNull()
                 }
@@ -442,7 +445,7 @@ class ClientTest : FreeSpec() {
                 }
 
                 requestSlot.captured.asClue { request ->
-                    request.appRecStatus shouldBe AppRecStatus.OK_ERROR_IN_MESSAGE_PART
+                    request.appRecStatus shouldBe no.nhn.msh.v2.model.AppRecStatus.OK_ERROR_IN_MESSAGE_PART
                     request.appRecErrorList shouldHaveSize receipt.errors!!.size
                     receipt.errors.forEach {
                         request.appRecErrorList shouldContain AppRecError().apply {
@@ -472,7 +475,7 @@ class ClientTest : FreeSpec() {
                 }
 
                 requestSlot.captured.asClue { request ->
-                    request.appRecStatus shouldBe AppRecStatus.REJECTED
+                    request.appRecStatus shouldBe no.nhn.msh.v2.model.AppRecStatus.REJECTED
                     request.appRecErrorList shouldHaveSize receipt.errors!!.size
                     receipt.errors.forEach {
                         request.appRecErrorList shouldContain AppRecError().apply {
@@ -582,6 +585,44 @@ class ClientTest : FreeSpec() {
             }
         }
 
+        "Get status" - {
+            "Should be able to get status for message" {
+                val statuses = List(nextInt(0, 10)) { randomStatusInfo() }
+
+                val internalClient = mockk<MshInternalClient> {
+                    coEvery { getStatus(any(), any()) } returns statuses
+                }
+                val client = Client(internalClient)
+
+                val id = UUID.randomUUID()
+                client.getStatus(id).asClue {
+                    it.forEachIndexed { i, status ->
+                        status.receiverHerId shouldBe statuses[i].receiverHerId
+                        status.deliveryState.name shouldBe statuses[i].transportDeliveryState.name
+                        status.appRecStatus?.name shouldBe statuses[i].appRecStatus?.name
+                    }
+                }
+
+                coVerifySequence {
+                    internalClient.getStatus(id, null)
+                }
+            }
+
+            "Params should be passed on" {
+                val params = RequestParameters(HelseIdTokenParameters(SingleTenantHelseIdTokenParameters(randomHerId().toString())))
+
+                val internalClient = mockk<MshInternalClient> {
+                    coEvery { getStatus(any(), any()) } returns emptyList()
+                }
+                val client = Client(internalClient)
+
+                client.getStatus(UUID.randomUUID(), params)
+                coVerifySequence {
+                    internalClient.getStatus(any(), params)
+                }
+            }
+        }
+
     }
 
 }
@@ -657,3 +698,9 @@ private fun randomApplicationReceiptError() = ApplicationReceiptError(
     type = FeilmeldingForApplikasjonskvittering.entries.minus(FeilmeldingForApplikasjonskvittering.UKJENT).random(),
     details = UUID.randomUUID().toString(),
 )
+
+private fun randomStatusInfo() = StatusInfo().apply {
+    receiverHerId = randomHerId()
+    transportDeliveryState = DeliveryState.entries.random()
+    appRecStatus = AppRecStatus.entries.plus(null).random()
+}

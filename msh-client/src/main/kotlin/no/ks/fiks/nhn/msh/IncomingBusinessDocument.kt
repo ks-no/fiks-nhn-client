@@ -1,11 +1,11 @@
 package no.ks.fiks.nhn.msh
 
-import no.ks.fiks.hdir.*
+import no.ks.fiks.hdir.KodeverkVerdi
+import no.ks.fiks.hdir.MeldingensFunksjon
 import java.io.InputStream
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
-import java.util.*
 
 data class IncomingBusinessDocument(
     val id: String,
