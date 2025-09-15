@@ -13,6 +13,12 @@ data class IncomingApplicationReceipt(
     val receiver: Institution,
 )
 
+data class ApplicationReceiptInfo(
+    val receiverHerId: Int,
+    val status: StatusForMottakAvMelding?,
+    val errors: List<ApplicationReceiptError>,
+)
+
 data class OutgoingApplicationReceipt(
     val acknowledgedId: UUID,
     val senderHerId: Int,
