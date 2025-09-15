@@ -102,11 +102,11 @@ open class Client(
     suspend fun sendApplicationReceipt(
         receipt: OutgoingApplicationReceipt,
         requestParameters: RequestParameters? = null,
-    ) {
+    ) : UUID {
         if (receipt.status == StatusForMottakAvMelding.OK && !receipt.errors.isNullOrEmpty()) throw IllegalArgumentException("Error messages are not allowed when status is OK")
         if (receipt.status != StatusForMottakAvMelding.OK && receipt.errors.isNullOrEmpty()) throw IllegalArgumentException("Must provide at least one error message if status is not OK")
 
-        internalClient.postAppRec(
+        return internalClient.postAppRec(
             id = receipt.acknowledgedId,
             senderHerId = receipt.senderHerId,
             request = PostAppRecRequest()
