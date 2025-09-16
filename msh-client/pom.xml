@@ -15,7 +15,7 @@
     <description>Client for communicating with MSH / EDI 2.0 (NHN)</description>
 
     <properties>
-        <jakarta.xml.bind-api.version>4.0.2</jakarta.xml.bind-api.version>
+        <jakarta.xml.bind-api.version>4.0.4</jakarta.xml.bind-api.version>
         <jaxb-impl.version>4.0.5</jaxb-impl.version>
 
         <basicjaxb-plugins.version>2.2.1</basicjaxb-plugins.version>
