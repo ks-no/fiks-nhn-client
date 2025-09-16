@@ -111,9 +111,9 @@ open class Client(
                 ApplicationReceiptInfo(
                     receiverHerId = info.receiverHerId,
                     status = when (info.appRecStatus) {
-                        AppRecStatus.OK -> StatusForMottakAvMelding.OK
-                        AppRecStatus.REJECTED -> StatusForMottakAvMelding.AVVIST
-                        AppRecStatus.OK_ERROR_IN_MESSAGE_PART -> StatusForMottakAvMelding.OK_FEIL_I_DELMELDING
+                        NhnAppRecStatus.OK -> StatusForMottakAvMelding.OK
+                        NhnAppRecStatus.REJECTED -> StatusForMottakAvMelding.AVVIST
+                        NhnAppRecStatus.OK_ERROR_IN_MESSAGE_PART -> StatusForMottakAvMelding.OK_FEIL_I_DELMELDING
                         null -> null
                     },
                     errors = info.appRecErrorList?.map { error ->
