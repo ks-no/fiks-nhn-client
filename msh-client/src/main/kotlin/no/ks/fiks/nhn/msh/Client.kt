@@ -101,6 +101,32 @@ open class Client(
     }
 
     @JvmOverloads
+    suspend fun getApplicationReceiptsForMessage(
+        messageId: UUID,
+        requestParameters: RequestParameters? = null,
+    ): List<ApplicationReceiptInfo> {
+        return internalClient
+            .getAppRecInfo(messageId, requestParameters)
+            .map { info ->
+                ApplicationReceiptInfo(
+                    receiverHerId = info.receiverHerId,
+                    status = when (info.appRecStatus) {
+                        NhnAppRecStatus.OK -> StatusForMottakAvMelding.OK
+                        NhnAppRecStatus.REJECTED -> StatusForMottakAvMelding.AVVIST
+                        NhnAppRecStatus.OK_ERROR_IN_MESSAGE_PART -> StatusForMottakAvMelding.OK_FEIL_I_DELMELDING
+                        null -> null
+                    },
+                    errors = info.appRecErrorList?.map { error ->
+                        ApplicationReceiptError(
+                            type = FeilmeldingForApplikasjonskvittering.entries.find { it.verdi == error.errorCode } ?: FeilmeldingForApplikasjonskvittering.UKJENT,
+                            details = error.details,
+                        )
+                    } ?: emptyList()
+                )
+            }
+    }
+
+    @JvmOverloads
     suspend fun sendApplicationReceipt(
         receipt: OutgoingApplicationReceipt,
         requestParameters: RequestParameters? = null,

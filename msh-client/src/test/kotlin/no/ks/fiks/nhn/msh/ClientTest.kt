@@ -9,6 +9,7 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.nulls.beNull
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNot
 import io.mockk.coEvery
 import io.mockk.coVerifySequence
 import io.mockk.just
@@ -398,6 +399,179 @@ class ClientTest : FreeSpec() {
                 client.getApplicationReceipt(UUID.randomUUID(), params)
                 coVerifySequence {
                     internalClient.getBusinessDocument(any(), params)
+                }
+            }
+        }
+
+        "Get application receipts for message" - {
+            "Should be retrieved and mapped" {
+                val appRecInfo = ApprecInfo().apply {
+                    receiverHerId = randomHerId()
+                    appRecStatus = AppRecStatus.OK
+                    appRecErrorList = emptyList()
+                }
+
+                val internalClient = mockk<MshInternalClient> {
+                    coEvery { getAppRecInfo(any(), any()) } returns listOf(appRecInfo)
+                }
+                val client = Client(internalClient)
+
+                val messageId = UUID.randomUUID()
+                client.getApplicationReceiptsForMessage(messageId).asClue {
+                    it shouldHaveSize 1
+                    with(it.single()) {
+                        receiverHerId shouldBe appRecInfo.receiverHerId
+                        status shouldBe StatusForMottakAvMelding.OK
+                        errors.shouldBeEmpty()
+                    }
+                }
+
+                coVerifySequence {
+                    internalClient.getAppRecInfo(messageId, null)
+                }
+            }
+
+            "Should handle rejected with error" {
+                val appRecInfo = ApprecInfo().apply {
+                    receiverHerId = randomHerId()
+                    appRecStatus = AppRecStatus.REJECTED
+                    appRecErrorList = listOf(
+                        AppRecError().apply {
+                            errorCode = "E10"
+                            details = "Ugyldig meldingsidentifikator"
+                        }
+                    )
+                }
+
+                val client = Client(mockk<MshInternalClient> {
+                    coEvery { getAppRecInfo(any(), any()) } returns listOf(appRecInfo)
+                })
+
+                client.getApplicationReceiptsForMessage(UUID.randomUUID()).asClue {
+                    it shouldHaveSize 1
+                    with(it.single()) {
+                        receiverHerId shouldBe appRecInfo.receiverHerId
+                        status shouldBe StatusForMottakAvMelding.AVVIST
+                        errors shouldHaveSize 1
+                        with(errors.single()) {
+                            type shouldBe FeilmeldingForApplikasjonskvittering.UGYLDIG_ID
+                            details shouldBe "Ugyldig meldingsidentifikator"
+                        }
+                    }
+                }
+            }
+
+            "Should handle ok error in message with errors" {
+                val appRecInfo = ApprecInfo().apply {
+                    receiverHerId = randomHerId()
+                    appRecStatus = AppRecStatus.OK_ERROR_IN_MESSAGE_PART
+                    appRecErrorList = listOf(
+                        AppRecError().apply {
+                            errorCode = "E32"
+                            details = "Noe gikk galt"
+                        },
+                        AppRecError().apply {
+                            errorCode = "T02"
+                            details = "Feil i XML"
+                        }
+                    )
+                }
+
+                val client = Client(mockk<MshInternalClient> {
+                    coEvery { getAppRecInfo(any(), any()) } returns listOf(appRecInfo)
+                })
+
+                client.getApplicationReceiptsForMessage(UUID.randomUUID()).asClue {
+                    it shouldHaveSize 1
+                    with(it.single()) {
+                        receiverHerId shouldBe appRecInfo.receiverHerId
+                        status shouldBe StatusForMottakAvMelding.OK_FEIL_I_DELMELDING
+                        errors shouldHaveSize 2
+                        with(errors[0]) {
+                            type shouldBe FeilmeldingForApplikasjonskvittering.PASIENT_MANGLER_NAVN
+                            details shouldBe "Noe gikk galt"
+                        }
+                        with(errors[1]) {
+                            type shouldBe FeilmeldingForApplikasjonskvittering.VALIDERINGSFEIL_XML
+                            details shouldBe "Feil i XML"
+                        }
+                    }
+                }
+            }
+
+            "Missing status should map to null" {
+                val appRecInfo = ApprecInfo().apply {
+                    receiverHerId = randomHerId()
+                    appRecStatus = null
+                    appRecErrorList = emptyList()
+                }
+
+                val client = Client(mockk<MshInternalClient> {
+                    coEvery { getAppRecInfo(any(), any()) } returns listOf(appRecInfo)
+                })
+
+                val messageId = UUID.randomUUID()
+                client.getApplicationReceiptsForMessage(messageId).asClue {
+                    it shouldHaveSize 1
+                    with(it.single()) {
+                        receiverHerId shouldBe appRecInfo.receiverHerId
+                        status should beNull()
+                        errors.shouldBeEmpty()
+                    }
+                }
+            }
+
+            "Unknown error code should be mapped to UKJENT" {
+                val appRecInfo = ApprecInfo().apply {
+                    receiverHerId = randomHerId()
+                    appRecStatus = AppRecStatus.REJECTED
+                    appRecErrorList = listOf(
+                        AppRecError().apply {
+                            errorCode = "A123"
+                            details = "Noe gikk galt"
+                        },
+                    )
+                }
+
+                val client = Client(mockk<MshInternalClient> {
+                    coEvery { getAppRecInfo(any(), any()) } returns listOf(appRecInfo)
+                })
+
+                val messageId = UUID.randomUUID()
+                client.getApplicationReceiptsForMessage(messageId).asClue {
+                    it shouldHaveSize 1
+                    with(it.single()) {
+                        receiverHerId shouldBe appRecInfo.receiverHerId
+                        status shouldBe StatusForMottakAvMelding.AVVIST
+                        errors shouldHaveSize 1
+                        with(errors.single()) {
+                            type shouldBe FeilmeldingForApplikasjonskvittering.UKJENT
+                            details shouldBe "Noe gikk galt"
+                        }
+                    }
+                }
+            }
+
+            "Null errors should be mapped to empty list" {
+                val appRecInfo = ApprecInfo().apply {
+                    receiverHerId = randomHerId()
+                    appRecStatus = AppRecStatus.REJECTED
+                    appRecErrorList = null
+                }
+
+                val client = Client(mockk<MshInternalClient> {
+                    coEvery { getAppRecInfo(any(), any()) } returns listOf(appRecInfo)
+                })
+
+                val messageId = UUID.randomUUID()
+                client.getApplicationReceiptsForMessage(messageId).asClue {
+                    it shouldHaveSize 1
+                    with(it.single()) {
+                        receiverHerId shouldBe appRecInfo.receiverHerId
+                        status shouldBe StatusForMottakAvMelding.AVVIST
+                        errors shouldNot beNull()
+                        errors.shouldBeEmpty()
+                    }
                 }
             }
         }

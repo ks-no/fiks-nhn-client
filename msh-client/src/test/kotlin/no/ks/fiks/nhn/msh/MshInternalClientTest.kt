@@ -6,6 +6,7 @@ import io.kotest.assertions.asClue
 import io.kotest.assertions.nondeterministic.eventually
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FreeSpec
+import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.nulls.beNull
@@ -43,7 +44,7 @@ class MshInternalClientTest : FreeSpec() {
     init {
 
         "Get app rec info" - {
-            "Should make expected calls" {
+            "Should make expected calls and parse response" {
                 val id = UUID.randomUUID()
                 mockGetAppRec(id)
 
@@ -56,6 +57,14 @@ class MshInternalClientTest : FreeSpec() {
                     helseIdClient = helseIdClient,
                     proofBuilder = proofBuilder,
                 ).getAppRecInfo(id)
+                    .asClue {
+                        it shouldHaveSize 1
+                        with(it.single()) {
+                            receiverHerId shouldBe 8094866
+                            appRecStatus shouldBe AppRecStatus.OK
+                            appRecErrorList.shouldBeEmpty()
+                        }
+                    }
 
                 verifySequence {
                     helseIdClient.getAccessToken(StandardAccessTokenRequest(TokenType.DPOP))
@@ -65,6 +74,87 @@ class MshInternalClientTest : FreeSpec() {
                         accessToken
                     )
                 }
+            }
+
+            "Should handle rejected" {
+                val id = UUID.randomUUID()
+                mockGetAppRec(id, body = readResourceContentAsString("msh/get-apprecinfo-rejected.json"))
+
+                MshInternalClient(
+                    baseUrl = wireMock.baseUrl,
+                    sourceSystem = UUID.randomUUID().toString(),
+                    helseIdClient = mockk<HelseIdClient> { every { getAccessToken(any()) } returns buildTokenResponse(UUID.randomUUID().toString()) },
+                    proofBuilder = mockk<ProofBuilder> { every { buildProof(any(), any(), any()) } returns UUID.randomUUID().toString() },
+                ).getAppRecInfo(id)
+                    .asClue {
+                        it shouldHaveSize 1
+                        with(it.single()) {
+                            receiverHerId shouldBe 42
+                            appRecStatus shouldBe AppRecStatus.REJECTED
+                            appRecErrorList shouldHaveSize 1
+                            with(appRecErrorList!!.single()) {
+                                errorCode shouldBe "E10"
+                                details shouldBe "Ugyldig meldingsidentifikator"
+                            }
+                        }
+                    }
+            }
+
+            "Should handle ok error in message part" {
+                val id = UUID.randomUUID()
+                mockGetAppRec(id, body = readResourceContentAsString("msh/get-apprecinfo-okerrorinmessagepart.json"))
+
+                MshInternalClient(
+                    baseUrl = wireMock.baseUrl,
+                    sourceSystem = UUID.randomUUID().toString(),
+                    helseIdClient = mockk<HelseIdClient> { every { getAccessToken(any()) } returns buildTokenResponse(UUID.randomUUID().toString()) },
+                    proofBuilder = mockk<ProofBuilder> { every { buildProof(any(), any(), any()) } returns UUID.randomUUID().toString() },
+                ).getAppRecInfo(id)
+                    .asClue {
+                        it shouldHaveSize 1
+                        with(it.single()) {
+                            receiverHerId shouldBe 123456
+                            appRecStatus shouldBe AppRecStatus.OK_ERROR_IN_MESSAGE_PART
+                            appRecErrorList shouldHaveSize 2
+                            with(appRecErrorList!![0]) {
+                                errorCode shouldBe "E31"
+                                details shouldBe "Pasientens fødselsnummer er feil"
+                            }
+                            with(appRecErrorList!![1]) {
+                                errorCode shouldBe "E20"
+                                details shouldBe "Noe gikk galt"
+                            }
+                        }
+                    }
+            }
+
+            "Should handle multiple apprecs in same response" {
+                val id = UUID.randomUUID()
+                mockGetAppRec(id, body = readResourceContentAsString("msh/get-apprecinfo-multi.json"))
+
+                MshInternalClient(
+                    baseUrl = wireMock.baseUrl,
+                    sourceSystem = UUID.randomUUID().toString(),
+                    helseIdClient = mockk<HelseIdClient> { every { getAccessToken(any()) } returns buildTokenResponse(UUID.randomUUID().toString()) },
+                    proofBuilder = mockk<ProofBuilder> { every { buildProof(any(), any(), any()) } returns UUID.randomUUID().toString() },
+                ).getAppRecInfo(id)
+                    .asClue {
+                        it shouldHaveSize 2
+                        with(it[0]) {
+                            receiverHerId shouldBe 1111
+                            appRecStatus shouldBe AppRecStatus.REJECTED
+                            appRecErrorList shouldHaveSize 1
+                            with(appRecErrorList!!.single()) {
+                                errorCode shouldBe "E10"
+                                details shouldBe "Ugyldig meldingsidentifikator"
+                            }
+                        }
+                        with(it[1]) {
+                            receiverHerId shouldBe 2222
+                            appRecStatus shouldBe AppRecStatus.OK
+                            appRecErrorList shouldHaveSize 0
+                        }
+                    }
             }
 
             "Not OK response should throw exception" {
@@ -797,7 +887,7 @@ class MshInternalClientTest : FreeSpec() {
 
     }
 
-    private fun mockGetAppRec(id: UUID, status: Int = 200, body: String = "[]") {
+    private fun mockGetAppRec(id: UUID, status: Int = 200, body: String = readResourceContentAsString("msh/get-apprecinfo-ok.json")) {
         wireMockClient.register(
             get("/Messages/$id/apprec")
                 .willReturn(
