@@ -114,13 +114,6 @@
                 <groupId>org.patrodyne.jvnet</groupId>
                 <artifactId>hisrc-higherjaxb30-maven-plugin</artifactId>
                 <version>${higherjaxb-maven-plugin.version}</version>
-                <dependencies>
-                    <dependency>
-                        <groupId>com.fasterxml.jackson.core</groupId>
-                        <artifactId>jackson-annotations</artifactId>
-                        <version>${jackson.version}</version>
-                    </dependency>
-                </dependencies>
                 <executions>
                     <execution>
                         <id>xsd-generate</id>
