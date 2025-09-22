@@ -1,5 +1,5 @@
 {
-  "openapi": "3.0.1",
+  "openapi": "3.0.4",
   "info": {
     "title": "MSH API v2",
     "description": "Meldingstjener Rest API. Default API version.",
@@ -52,7 +52,13 @@
                 "schema": {
                   "$ref": "#/components/schemas/ErrorMessage"
                 },
-                "example": {"error":"Request was cancelled","errorCode":0,"validationErrors":null,"stackTrace":"[StackTrace] (not set in Prod)","requestId":"93d1a3d3-4f19-4e38-bc4f-c17fd31da502"}
+                "example": {
+                  "error": "Request was cancelled",
+                  "errorCode": 0,
+                  "validationErrors": null,
+                  "stackTrace": "[StackTrace] (not set in Prod)",
+                  "requestId": "8805ba1c-4ace-4476-94c5-c87f53b697ca"
+                }
               }
             }
           },
@@ -63,7 +69,13 @@
                 "schema": {
                   "$ref": "#/components/schemas/ErrorMessage"
                 },
-                "example": {"error":"Not authorized for HerId(s): 1234","errorCode":0,"validationErrors":null,"stackTrace":"[StackTrace] (not set in Prod)","requestId":"06657fee-6c6b-49a4-8ca8-0f5064a5f1c5"}
+                "example": {
+                  "error": "Not authorized for HerId(s): 1234",
+                  "errorCode": 0,
+                  "validationErrors": null,
+                  "stackTrace": "[StackTrace] (not set in Prod)",
+                  "requestId": "79e34c19-f442-4540-95ca-a69ecc87de48"
+                }
               }
             }
           },
@@ -74,7 +86,13 @@
                 "schema": {
                   "$ref": "#/components/schemas/ErrorMessage"
                 },
-                "example": {"error":"An unknown error occurred","errorCode":0,"validationErrors":null,"stackTrace":"[StackTrace] (not set in Prod)","requestId":"05895e1e-2ad2-4b09-a0ba-c26423f01a2e"}
+                "example": {
+                  "error": "An unknown error occurred",
+                  "errorCode": 0,
+                  "validationErrors": null,
+                  "stackTrace": "[StackTrace] (not set in Prod)",
+                  "requestId": "86d7105f-a71c-47fe-a856-b40bb975a000"
+                }
               }
             }
           },
@@ -88,7 +106,20 @@
                     "$ref": "#/components/schemas/ApprecInfo"
                   }
                 },
-                "example": [{"receiverHerId":42,"appRecStatus":"Rejected","appRecErrorList":[{"errorCode":"E10","details":"Ugyldig meldingsidentifikator"}]}]
+                "example": [
+                  {
+                    "receiverHerId": 42,
+                    "appRecStatus": "Rejected",
+                    "appRecErrorList": [
+                      {
+                        "errorCode": "E10",
+                        "details": "Ugyldig meldingsidentifikator",
+                        "description": null,
+                        "oid": null
+                      }
+                    ]
+                  }
+                ]
               }
             }
           },
@@ -99,7 +130,13 @@
                 "schema": {
                   "$ref": "#/components/schemas/ErrorMessage"
                 },
-                "example": {"error":"Could not find database document","errorCode":0,"validationErrors":null,"stackTrace":"[StackTrace] (not set in Prod)","requestId":"9514c14f-c69e-4ee4-bc91-08b85509f1e1"}
+                "example": {
+                  "error": "Could not find database document",
+                  "errorCode": 0,
+                  "validationErrors": null,
+                  "stackTrace": "[StackTrace] (not set in Prod)",
+                  "requestId": "d4d0118b-a00c-4016-b715-80368b1a4af8"
+                }
               }
             }
           }
@@ -185,7 +222,7 @@
           {
             "name": "OrderBy",
             "in": "query",
-            "description": "How to order results (based on GenDate in business document) (default = 1).\n\r\n- 1 = Ascending\n\r\n- 2 = Descending",
+            "description": "How to order results (based on GenDate in business document) (default = 1).\n\n- 1 = Ascending\n\n- 2 = Descending",
             "schema": {
               "allOf": [
                 {
@@ -224,7 +261,15 @@
                 "schema": {
                   "$ref": "#/components/schemas/ErrorMessage"
                 },
-                "example": {"error":"Model validation error occurred","errorCode":1000,"validationErrors":["Example error"],"stackTrace":"[StackTrace] (not set in Prod)","requestId":"8883a8ff-4d5f-45ca-a3ed-64152052cf08"}
+                "example": {
+                  "error": "Model validation error occurred",
+                  "errorCode": 1000,
+                  "validationErrors": [
+                    "Example error"
+                  ],
+                  "stackTrace": "[StackTrace] (not set in Prod)",
+                  "requestId": "e6098c42-46b5-48c2-8a22-7ea0cd75ebd3"
+                }
               }
             }
           },
@@ -235,7 +280,13 @@
                 "schema": {
                   "$ref": "#/components/schemas/ErrorMessage"
                 },
-                "example": {"error":"Not authorized for HerId(s): 1234","errorCode":0,"validationErrors":null,"stackTrace":"[StackTrace] (not set in Prod)","requestId":"ba346b2f-3d44-49ca-8ed0-ad77b30d3113"}
+                "example": {
+                  "error": "Not authorized for HerId(s): 1234",
+                  "errorCode": 0,
+                  "validationErrors": null,
+                  "stackTrace": "[StackTrace] (not set in Prod)",
+                  "requestId": "1131f226-9bab-4604-a373-bb0ce145ba8c"
+                }
               }
             }
           },
@@ -246,7 +297,13 @@
                 "schema": {
                   "$ref": "#/components/schemas/ErrorMessage"
                 },
-                "example": {"error":"An unknown error occurred","errorCode":0,"validationErrors":null,"stackTrace":"[StackTrace] (not set in Prod)","requestId":"7537a370-0735-45eb-9655-04a5cf0e5ef0"}
+                "example": {
+                  "error": "An unknown error occurred",
+                  "errorCode": 0,
+                  "validationErrors": null,
+                  "stackTrace": "[StackTrace] (not set in Prod)",
+                  "requestId": "9b202395-ceea-4187-ba31-8bd6b6851b71"
+                }
               }
             }
           },
@@ -260,7 +317,24 @@
                     "$ref": "#/components/schemas/Message"
                   }
                 },
-                "example": [{"id":"b1801fe4-2469-44bf-9049-d21f14d21a83","receiverHerId":42,"senderHerId":1111,"businessDocumentId":"80ee5e2e-04bd-4ada-a50e-70444810d89c","businessDocumentGenDate":"2025-04-22T07:32:46.5329813+00:00","isAppRec":false},{"id":"6f829431-2a29-4c1e-9b76-abef085137d3","receiverHerId":1337,"senderHerId":2222,"businessDocumentId":"bf2d317f-490a-45ac-9a94-510c72ac90bc","businessDocumentGenDate":"2025-04-22T07:32:46.5329903+00:00","isAppRec":false}]
+                "example": [
+                  {
+                    "id": "e8ea3e89-4ee4-4d28-9b4a-246495a97834",
+                    "receiverHerId": 42,
+                    "senderHerId": 1111,
+                    "businessDocumentId": "d1594ad1-2826-462a-a1ed-43b4276387d4",
+                    "businessDocumentGenDate": "2025-09-22T05:56:36.3095151+00:00",
+                    "isAppRec": false
+                  },
+                  {
+                    "id": "d005d2d3-0eea-4d3a-bb98-ce2456e2a165",
+                    "receiverHerId": 1337,
+                    "senderHerId": 2222,
+                    "businessDocumentId": "3417f8bb-e839-4774-9d31-c96151c1fceb",
+                    "businessDocumentGenDate": "2025-09-22T05:56:36.3095192+00:00",
+                    "isAppRec": false
+                  }
+                ]
               }
             }
           }
@@ -337,7 +411,15 @@
                 "schema": {
                   "$ref": "#/components/schemas/ErrorMessage"
                 },
-                "example": {"error":"Model validation error occurred","errorCode":1000,"validationErrors":["Example error"],"stackTrace":"[StackTrace] (not set in Prod)","requestId":"2cf4503d-7cab-458b-9719-83abd119b9d6"}
+                "example": {
+                  "error": "Model validation error occurred",
+                  "errorCode": 1000,
+                  "validationErrors": [
+                    "Example error"
+                  ],
+                  "stackTrace": "[StackTrace] (not set in Prod)",
+                  "requestId": "a686f859-1a0a-489a-bd77-41f86d273cd2"
+                }
               }
             }
           },
@@ -348,7 +430,13 @@
                 "schema": {
                   "$ref": "#/components/schemas/ErrorMessage"
                 },
-                "example": {"error":"Not authorized for HerId(s): 1234","errorCode":0,"validationErrors":null,"stackTrace":"[StackTrace] (not set in Prod)","requestId":"19b0a218-16d3-4f61-8291-03e3a7c4e3f7"}
+                "example": {
+                  "error": "Not authorized for HerId(s): 1234",
+                  "errorCode": 0,
+                  "validationErrors": null,
+                  "stackTrace": "[StackTrace] (not set in Prod)",
+                  "requestId": "4555ce9a-1ad9-4c49-b893-47088e8ebb68"
+                }
               }
             }
           },
@@ -359,7 +447,13 @@
                 "schema": {
                   "$ref": "#/components/schemas/ErrorMessage"
                 },
-                "example": {"error":"An unknown error occurred","errorCode":0,"validationErrors":null,"stackTrace":"[StackTrace] (not set in Prod)","requestId":"48b60bc4-77ae-49ef-80c1-94c1fcf301b4"}
+                "example": {
+                  "error": "An unknown error occurred",
+                  "errorCode": 0,
+                  "validationErrors": null,
+                  "stackTrace": "[StackTrace] (not set in Prod)",
+                  "requestId": "0d5b9658-71e8-44a3-b5ad-6505bce42f58"
+                }
               }
             }
           },
@@ -371,7 +465,7 @@
                   "type": "string",
                   "format": "uuid"
                 },
-                "example": "e1d496b1-19d5-4e50-9450-327c57d14d28"
+                "example": "3d924740-9f7b-4c33-93af-ff72e118d1e6"
               }
             }
           }
@@ -424,7 +518,13 @@
                 "schema": {
                   "$ref": "#/components/schemas/ErrorMessage"
                 },
-                "example": {"error":"Request was cancelled","errorCode":0,"validationErrors":null,"stackTrace":"[StackTrace] (not set in Prod)","requestId":"843263c6-2e11-4f62-a6f2-d29a8bd56ad6"}
+                "example": {
+                  "error": "Request was cancelled",
+                  "errorCode": 0,
+                  "validationErrors": null,
+                  "stackTrace": "[StackTrace] (not set in Prod)",
+                  "requestId": "80f89b77-68eb-4e9e-ba43-585a960329e4"
+                }
               }
             }
           },
@@ -435,7 +535,13 @@
                 "schema": {
                   "$ref": "#/components/schemas/ErrorMessage"
                 },
-                "example": {"error":"Not authorized for HerId(s): 1234","errorCode":0,"validationErrors":null,"stackTrace":"[StackTrace] (not set in Prod)","requestId":"e1f0e65c-92dd-4de8-af30-cc2c840789c2"}
+                "example": {
+                  "error": "Not authorized for HerId(s): 1234",
+                  "errorCode": 0,
+                  "validationErrors": null,
+                  "stackTrace": "[StackTrace] (not set in Prod)",
+                  "requestId": "7e86953a-c41c-4427-bf69-ca97b862835c"
+                }
               }
             }
           },
@@ -446,7 +552,13 @@
                 "schema": {
                   "$ref": "#/components/schemas/ErrorMessage"
                 },
-                "example": {"error":"An unknown error occurred","errorCode":0,"validationErrors":null,"stackTrace":"[StackTrace] (not set in Prod)","requestId":"c0c33c83-a541-41d3-9eca-132dc7e9a82f"}
+                "example": {
+                  "error": "An unknown error occurred",
+                  "errorCode": 0,
+                  "validationErrors": null,
+                  "stackTrace": "[StackTrace] (not set in Prod)",
+                  "requestId": "875999bc-d1b7-47f8-9192-541dc98d0fd1"
+                }
               }
             }
           },
@@ -457,7 +569,14 @@
                 "schema": {
                   "$ref": "#/components/schemas/Message"
                 },
-                "example": {"id":"6abc2fcc-a955-4b15-bb36-4f1edc4a5d8d","receiverHerId":42,"senderHerId":1111,"businessDocumentId":"16eb0871-611d-42db-8cfa-b22e0ad342a3","businessDocumentGenDate":"2025-04-22T07:32:46.53693+00:00","isAppRec":false}
+                "example": {
+                  "id": "e3191b0e-6abb-4433-b5a1-b5af2beafe69",
+                  "receiverHerId": 42,
+                  "senderHerId": 1111,
+                  "businessDocumentId": "81b01cb1-c79c-4962-a8d2-41a8320e1a1a",
+                  "businessDocumentGenDate": "2025-09-22T05:56:36.3132829+00:00",
+                  "isAppRec": false
+                }
               }
             }
           },
@@ -468,7 +587,13 @@
                 "schema": {
                   "$ref": "#/components/schemas/ErrorMessage"
                 },
-                "example": {"error":"Could not find database document","errorCode":0,"validationErrors":null,"stackTrace":"[StackTrace] (not set in Prod)","requestId":"73f4ec7f-366c-460d-acdc-827fa31eeb84"}
+                "example": {
+                  "error": "Could not find database document",
+                  "errorCode": 0,
+                  "validationErrors": null,
+                  "stackTrace": "[StackTrace] (not set in Prod)",
+                  "requestId": "fe896e1b-91fe-455f-9173-edf66c7d4c72"
+                }
               }
             }
           }
@@ -521,7 +646,13 @@
                 "schema": {
                   "$ref": "#/components/schemas/ErrorMessage"
                 },
-                "example": {"error":"Request was cancelled","errorCode":0,"validationErrors":null,"stackTrace":"[StackTrace] (not set in Prod)","requestId":"42ba1b52-fa35-4b22-b0f6-dc52882cd80c"}
+                "example": {
+                  "error": "Request was cancelled",
+                  "errorCode": 0,
+                  "validationErrors": null,
+                  "stackTrace": "[StackTrace] (not set in Prod)",
+                  "requestId": "3daef4e0-4d05-457c-8d89-c488f13b331f"
+                }
               }
             }
           },
@@ -532,7 +663,13 @@
                 "schema": {
                   "$ref": "#/components/schemas/ErrorMessage"
                 },
-                "example": {"error":"Not authorized for HerId(s): 1234","errorCode":0,"validationErrors":null,"stackTrace":"[StackTrace] (not set in Prod)","requestId":"12e7bfc7-4f38-4882-b774-64004781cd11"}
+                "example": {
+                  "error": "Not authorized for HerId(s): 1234",
+                  "errorCode": 0,
+                  "validationErrors": null,
+                  "stackTrace": "[StackTrace] (not set in Prod)",
+                  "requestId": "0ce77bb9-5f09-4b69-b7c9-d66eaacd6869"
+                }
               }
             }
           },
@@ -543,7 +680,13 @@
                 "schema": {
                   "$ref": "#/components/schemas/ErrorMessage"
                 },
-                "example": {"error":"An unknown error occurred","errorCode":0,"validationErrors":null,"stackTrace":"[StackTrace] (not set in Prod)","requestId":"1f8f0180-ada6-48bd-b057-4d2b7f0fb543"}
+                "example": {
+                  "error": "An unknown error occurred",
+                  "errorCode": 0,
+                  "validationErrors": null,
+                  "stackTrace": "[StackTrace] (not set in Prod)",
+                  "requestId": "862bfb8a-6ca4-42c9-bff8-7391ad7ca432"
+                }
               }
             }
           },
@@ -554,7 +697,11 @@
                 "schema": {
                   "$ref": "#/components/schemas/GetBusinessDocumentResponse"
                 },
-                "example": {"businessDocument":"\"PD94bWw+[...]\"","contentType":"application/xml","contentTransferEncoding":"base64"}
+                "example": {
+                  "businessDocument": "\"PD94bWw+[...]\"",
+                  "contentType": "application/xml",
+                  "contentTransferEncoding": "base64"
+                }
               }
             }
           },
@@ -565,7 +712,13 @@
                 "schema": {
                   "$ref": "#/components/schemas/ErrorMessage"
                 },
-                "example": {"error":"Could not find database document","errorCode":0,"validationErrors":null,"stackTrace":"[StackTrace] (not set in Prod)","requestId":"916e3bdd-af39-498c-b09e-9544a70825f6"}
+                "example": {
+                  "error": "Could not find database document",
+                  "errorCode": 0,
+                  "validationErrors": null,
+                  "stackTrace": "[StackTrace] (not set in Prod)",
+                  "requestId": "65e82168-20b8-47a9-bd42-34e40e4b8f71"
+                }
               }
             }
           }
@@ -577,7 +730,7 @@
         "tags": [
           "MessagesController"
         ],
-        "summary": "Get message status\r\nTODO Indicate correct use of this endpoint (e.g. \"Get message status of a sent message\")",
+        "summary": "Get message status\nTODO Indicate correct use of this endpoint (e.g. \"Get message status of a sent message\")",
         "description": "When id refers to an application receipt, only StatusInfo.Acknowledged is relevant",
         "operationId": "GetStatus",
         "parameters": [
@@ -619,7 +772,13 @@
                 "schema": {
                   "$ref": "#/components/schemas/ErrorMessage"
                 },
-                "example": {"error":"Request was cancelled","errorCode":0,"validationErrors":null,"stackTrace":"[StackTrace] (not set in Prod)","requestId":"bc312f86-d037-422f-8cec-0ae0f42343a5"}
+                "example": {
+                  "error": "Request was cancelled",
+                  "errorCode": 0,
+                  "validationErrors": null,
+                  "stackTrace": "[StackTrace] (not set in Prod)",
+                  "requestId": "e22723f3-c9e6-48e8-88fa-a67431a3c901"
+                }
               }
             }
           },
@@ -630,7 +789,13 @@
                 "schema": {
                   "$ref": "#/components/schemas/ErrorMessage"
                 },
-                "example": {"error":"Not authorized for HerId(s): 1234","errorCode":0,"validationErrors":null,"stackTrace":"[StackTrace] (not set in Prod)","requestId":"4f7f9e0f-940e-48e6-8281-bc4283b75c45"}
+                "example": {
+                  "error": "Not authorized for HerId(s): 1234",
+                  "errorCode": 0,
+                  "validationErrors": null,
+                  "stackTrace": "[StackTrace] (not set in Prod)",
+                  "requestId": "fb7116c7-3b62-485d-a7d8-ca713ba44d0a"
+                }
               }
             }
           },
@@ -641,7 +806,13 @@
                 "schema": {
                   "$ref": "#/components/schemas/ErrorMessage"
                 },
-                "example": {"error":"An unknown error occurred","errorCode":0,"validationErrors":null,"stackTrace":"[StackTrace] (not set in Prod)","requestId":"a25b7250-685d-4b80-8bf7-79cc234c37de"}
+                "example": {
+                  "error": "An unknown error occurred",
+                  "errorCode": 0,
+                  "validationErrors": null,
+                  "stackTrace": "[StackTrace] (not set in Prod)",
+                  "requestId": "cf7698e5-fe1e-466d-8599-8be3973cdf55"
+                }
               }
             }
           },
@@ -655,7 +826,13 @@
                     "$ref": "#/components/schemas/StatusInfo"
                   }
                 },
-                "example": [{"receiverHerId":42,"transportDeliveryState":"Acknowledged","appRecStatus":"Ok"}]
+                "example": [
+                  {
+                    "receiverHerId": 42,
+                    "transportDeliveryState": "Acknowledged",
+                    "appRecStatus": "Ok"
+                  }
+                ]
               }
             }
           },
@@ -666,7 +843,13 @@
                 "schema": {
                   "$ref": "#/components/schemas/ErrorMessage"
                 },
-                "example": {"error":"Could not find database document","errorCode":0,"validationErrors":null,"stackTrace":"[StackTrace] (not set in Prod)","requestId":"45955682-0a39-4aa0-9691-2dcaff34a85e"}
+                "example": {
+                  "error": "Could not find database document",
+                  "errorCode": 0,
+                  "validationErrors": null,
+                  "stackTrace": "[StackTrace] (not set in Prod)",
+                  "requestId": "37ff5212-4153-4eea-8194-d91e7293dea6"
+                }
               }
             }
           }
@@ -679,7 +862,7 @@
           "MessagesController"
         ],
         "summary": "Send an application receipt for a message",
-        "description": "AppRecStatus must be 1 ('OK'), 2 ('Avvist') or 3 ('Ok, feil i delmelding')\n\r\nAppRecErrorList must be populated if AppRecResult is 'Avvist'\n\r\nAppRecErrorList.Details is optional\n",
+        "description": "AppRecStatus must be 1 ('OK'), 2 ('Avvist') or 3 ('Ok, feil i delmelding')\n\nAppRecErrorList must be populated if AppRecResult is 'Avvist'\n\nAppRecErrorList.Details is optional\n",
         "operationId": "PostAppRec",
         "parameters": [
           {
@@ -767,7 +950,15 @@
                 "schema": {
                   "$ref": "#/components/schemas/ErrorMessage"
                 },
-                "example": {"error":"Model validation error occurred","errorCode":1000,"validationErrors":["Example error"],"stackTrace":"[StackTrace] (not set in Prod)","requestId":"25b2bae7-2571-4dd9-94f9-90b55bc176c6"}
+                "example": {
+                  "error": "Model validation error occurred",
+                  "errorCode": 1000,
+                  "validationErrors": [
+                    "Example error"
+                  ],
+                  "stackTrace": "[StackTrace] (not set in Prod)",
+                  "requestId": "e0f6c4cf-f181-44bc-b295-832d11e6335b"
+                }
               }
             }
           },
@@ -778,7 +969,13 @@
                 "schema": {
                   "$ref": "#/components/schemas/ErrorMessage"
                 },
-                "example": {"error":"Not authorized for HerId(s): 1234","errorCode":0,"validationErrors":null,"stackTrace":"[StackTrace] (not set in Prod)","requestId":"04158eab-51d5-4166-bf68-63b730cf25b6"}
+                "example": {
+                  "error": "Not authorized for HerId(s): 1234",
+                  "errorCode": 0,
+                  "validationErrors": null,
+                  "stackTrace": "[StackTrace] (not set in Prod)",
+                  "requestId": "1d1685cc-0b0c-4301-96fb-7280a8a05b58"
+                }
               }
             }
           },
@@ -789,7 +986,13 @@
                 "schema": {
                   "$ref": "#/components/schemas/ErrorMessage"
                 },
-                "example": {"error":"An unknown error occurred","errorCode":0,"validationErrors":null,"stackTrace":"[StackTrace] (not set in Prod)","requestId":"5b99c7e8-1bec-4aaa-8bc5-8d2cc4dd71e4"}
+                "example": {
+                  "error": "An unknown error occurred",
+                  "errorCode": 0,
+                  "validationErrors": null,
+                  "stackTrace": "[StackTrace] (not set in Prod)",
+                  "requestId": "c5530c03-c7f5-4899-b0ee-a2034cf55009"
+                }
               }
             }
           },
@@ -801,7 +1004,7 @@
                   "type": "string",
                   "format": "uuid"
                 },
-                "example": "3d518803-e519-457a-9bcf-7f7ed3922acd"
+                "example": "5fb9867a-3ce7-431a-8ea5-b7e5aa620d30"
               }
             }
           },
@@ -812,7 +1015,13 @@
                 "schema": {
                   "$ref": "#/components/schemas/ErrorMessage"
                 },
-                "example": {"error":"Could not find database document","errorCode":0,"validationErrors":null,"stackTrace":"[StackTrace] (not set in Prod)","requestId":"4a95762a-5f4f-4d3c-8819-a7a1dcb289c6"}
+                "example": {
+                  "error": "Could not find database document",
+                  "errorCode": 0,
+                  "validationErrors": null,
+                  "stackTrace": "[StackTrace] (not set in Prod)",
+                  "requestId": "a7b76b43-9087-4c2b-a321-1ab6f67bb34c"
+                }
               }
             }
           }
@@ -877,7 +1086,15 @@
                 "schema": {
                   "$ref": "#/components/schemas/ErrorMessage"
                 },
-                "example": {"error":"Model validation error occurred","errorCode":1000,"validationErrors":["Example error"],"stackTrace":"[StackTrace] (not set in Prod)","requestId":"f20bcee1-13a4-4100-b684-35f1e8eb7228"}
+                "example": {
+                  "error": "Model validation error occurred",
+                  "errorCode": 1000,
+                  "validationErrors": [
+                    "Example error"
+                  ],
+                  "stackTrace": "[StackTrace] (not set in Prod)",
+                  "requestId": "71829606-7ad6-4d50-91d3-778c067374f8"
+                }
               }
             }
           },
@@ -888,7 +1105,13 @@
                 "schema": {
                   "$ref": "#/components/schemas/ErrorMessage"
                 },
-                "example": {"error":"Not authorized for HerId(s): 1234","errorCode":0,"validationErrors":null,"stackTrace":"[StackTrace] (not set in Prod)","requestId":"07ae7023-c32d-4a4a-8442-41de268aca32"}
+                "example": {
+                  "error": "Not authorized for HerId(s): 1234",
+                  "errorCode": 0,
+                  "validationErrors": null,
+                  "stackTrace": "[StackTrace] (not set in Prod)",
+                  "requestId": "20a098e0-5551-43b4-a317-c51abaf73023"
+                }
               }
             }
           },
@@ -899,7 +1122,13 @@
                 "schema": {
                   "$ref": "#/components/schemas/ErrorMessage"
                 },
-                "example": {"error":"An unknown error occurred","errorCode":0,"validationErrors":null,"stackTrace":"[StackTrace] (not set in Prod)","requestId":"68c25267-139e-415d-a286-119c9331c4ec"}
+                "example": {
+                  "error": "An unknown error occurred",
+                  "errorCode": 0,
+                  "validationErrors": null,
+                  "stackTrace": "[StackTrace] (not set in Prod)",
+                  "requestId": "a83e57cc-d449-467c-a22b-95694dd88a00"
+                }
               }
             }
           },
@@ -913,7 +1142,13 @@
                 "schema": {
                   "$ref": "#/components/schemas/ErrorMessage"
                 },
-                "example": {"error":"Request was cancelled","errorCode":0,"validationErrors":null,"stackTrace":"[StackTrace] (not set in Prod)","requestId":"45aed666-cdab-489e-8b1e-bb7f65633943"}
+                "example": {
+                  "error": "Request was cancelled",
+                  "errorCode": 0,
+                  "validationErrors": null,
+                  "stackTrace": "[StackTrace] (not set in Prod)",
+                  "requestId": "2ec33026-f03e-4ff3-bd04-e2ef4b317adc"
+                }
               }
             }
           }
@@ -941,6 +1176,14 @@
             "description": "Details about the error.",
             "nullable": true,
             "example": ""
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "oid": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false,
@@ -953,7 +1196,7 @@
           "OkErrorInMessagePart"
         ],
         "type": "string",
-        "description": "Application receipt status\n\r\n- Ok = \"Ok\"\n\r\n- Rejected = \"Avvist\"\n\r\n- OkErrorInMessagePart = \"Ok, feil i delmelding\" NB! Not supported as of this writing.\n"
+        "description": "Application receipt status\n\n- Ok = \"Ok\"\n\n- Rejected = \"Avvist\"\n\n- OkErrorInMessagePart = \"Ok, feil i delmelding\" NB! Not supported as of this writing.\n"
       },
       "ApprecInfo": {
         "required": [
@@ -1027,6 +1270,11 @@
             "description": "If not set, value according to HIS 1209:2018 will be generated.",
             "nullable": true
           },
+          "useSenderLevel1HerId": {
+            "type": "boolean",
+            "description": "If set to 'true', then HerId from the organisation-level (level1) will be used as sender",
+            "nullable": true
+          },
           "receiverRole": {
             "type": "string",
             "description": "If not set, value according to HIS 1209:2018 will be generated.",
@@ -1052,6 +1300,11 @@
           "middlewareVersion": {
             "type": "string",
             "description": "Some systems use a middleware between application and messagehandler. Version can be provided here. HIS 1210:2018",
+            "nullable": true
+          },
+          "compressPayload": {
+            "type": "boolean",
+            "description": "Some systems expect the businessdocument to be compressed before encrypted and added to Ebxml.\nWhen set to 'true' the payload will be compressed using the Gzip algorithm",
             "nullable": true
           }
         },
@@ -1106,19 +1359,19 @@
           "businessDocument": {
             "minLength": 1,
             "type": "string",
-            "description": "The business document - Payload.\n\r\nThe BusinessDocument is the raw bytes of the payload encoded with ContentTransferEncoding",
+            "description": "The business document - Payload.\n\nThe BusinessDocument is the raw bytes of the payload encoded with ContentTransferEncoding",
             "example": "\"PD94bWw+[...]\""
           },
           "contentType": {
             "minLength": 1,
             "type": "string",
-            "description": "Content type for the business document.\n\r\nMost payloads should be xml",
+            "description": "Content type for the business document.\n\nMost payloads should be xml",
             "example": "\"application/xml\""
           },
           "contentTransferEncoding": {
             "minLength": 1,
             "type": "string",
-            "description": "Content transfer encoding for the business document.\n\r\nPayload is always base64-encoded.",
+            "description": "Content transfer encoding for the business document.\n\nPayload is always base64-encoded.",
             "example": "\"base64\""
           }
         },
@@ -1130,7 +1383,7 @@
         "properties": {
           "id": {
             "type": "string",
-            "description": "Internal id of message. To be used when using messages/{id}/*-endpoints.\n\r\nWill always be a valid Guid",
+            "description": "Internal id of message. To be used when using messages/{id}/*-endpoints.\n\nWill always be a valid Guid",
             "format": "uuid",
             "nullable": true,
             "example": "5f5e94d5-d908-476b-a172-a241c52eddb6"
@@ -1166,7 +1419,7 @@
             "description": "GenDate in business document (will not be present if includeMetadata = false).",
             "format": "date-time",
             "nullable": true,
-            "example": "2024-09-03T07:55:13.0000000"
+            "example": "2024-09-03T07:55:13"
           },
           "isAppRec": {
             "type": "boolean",
@@ -1197,7 +1450,7 @@
                 "$ref": "#/components/schemas/AppRecStatus"
               }
             ],
-            "description": "The status of the application receipt sent for a received message\r\n\n1 = Ok, 2 = Avvist, 3 = Ok, feil i delmelding",
+            "description": "The status of the application receipt sent for a received message\n\n1 = Ok, 2 = Avvist, 3 = Ok, feil i delmelding",
             "example": "1"
           },
           "appRecErrorList": {
@@ -1214,7 +1467,7 @@
                 "$ref": "#/components/schemas/EbXmlInfo"
               }
             ],
-            "description": "One or more EbXml-properties can be provided if business process has special requirements.\n\r\nFor most business processes the values can and will be resolved from the business document\r\nby the server, and therefore does not have to be applied twice.\r\nCurrent implementation is following 'HIS 1037:2011' and 'HIS 1209:2018'\n",
+            "description": "One or more EbXml-properties can be provided if business process has special requirements.\n\nFor most business processes the values can and will be resolved from the business document\nby the server, and therefore does not have to be applied twice.\nCurrent implementation is following 'HIS 1037:2011' and 'HIS 1209:2018'\n",
             "nullable": true
           }
         },
@@ -1232,19 +1485,19 @@
           "businessDocument": {
             "minLength": 1,
             "type": "string",
-            "description": "The business document - Payload.\n\r\nIt is required that the encoding in the XML-document is UTF-8, and that this is declared in the first line.\r\nExample: `<xml version=\"1.0\" encoding=\"UTF-8\" />`.\n\r\nThe payload must be of type and encoding as specified in ContentType and ContentTransferEncoding, meaning that the\r\npayload should always be an XML-document as a base64-encoded string.",
+            "description": "The business document - Payload.\n\nIt is required that the encoding in the XML-document is UTF-8, and that this is declared in the first line.\nExample: `<xml version=\"1.0\" encoding=\"UTF-8\" />`.\n\nThe payload must be of type and encoding as specified in ContentType and ContentTransferEncoding, meaning that the\npayload should always be an XML-document as a base64-encoded string.",
             "example": "\"PD94bWw+[...]\""
           },
           "contentType": {
             "minLength": 1,
             "type": "string",
-            "description": "Content type for the business document.\n\r\nNB! Payload should always be an XML-document as a base64-encoded string.",
+            "description": "Content type for the business document.\n\nNB! Payload should always be an XML-document as a base64-encoded string.",
             "example": "\"application/xml\""
           },
           "contentTransferEncoding": {
             "minLength": 1,
             "type": "string",
-            "description": "Content transfer encoding for the business document.\n\r\nNB! Payload should always be base64-encoded.",
+            "description": "Content transfer encoding for the business document.\n\nNB! Payload should always be base64-encoded.",
             "example": "\"base64\""
           },
           "ebXmlOverrides": {
@@ -1253,7 +1506,7 @@
                 "$ref": "#/components/schemas/EbXmlInfo"
               }
             ],
-            "description": "One or more EbXml-properties can be provided if business process has special requirements.\n\r\nFor most business processes the values can and will be resolved from the business document\r\nby the server, and therefore does not have to be applied twice.\r\nCurrent implementation is following 'HIS 1037:2011' and 'HIS 1209:2018'\n",
+            "description": "One or more EbXml-properties can be provided if business process has special requirements.\n\nFor most business processes the values can and will be resolved from the business document\nby the server, and therefore does not have to be applied twice.\nCurrent implementation is following 'HIS 1037:2011' and 'HIS 1209:2018'\n",
             "nullable": true
           },
           "receiverHerIdsSubset": {
@@ -1262,7 +1515,7 @@
               "type": "integer",
               "format": "int32"
             },
-            "description": "The Business document might contain many receivers, but only the receivers listed here\r\nshould be handled by Meldingstjener",
+            "description": "The Business document might contain many receivers, but only the receivers listed here\nshould be handled by Meldingstjener",
             "nullable": true
           }
         },
@@ -1314,7 +1567,12 @@
   },
   "security": [
     {
-      "Bearer": [ ]
+      "Bearer": []
+    }
+  ],
+  "servers": [
+    {
+      "url": "https://api.hn-tjener.prod.melding.nhn.no"
     }
   ]
 }

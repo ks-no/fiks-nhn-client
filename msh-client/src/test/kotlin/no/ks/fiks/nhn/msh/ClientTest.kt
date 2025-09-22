@@ -595,7 +595,7 @@ class ClientTest : FreeSpec() {
                 }
 
                 requestSlot.captured.asClue { request ->
-                    request.appRecStatus shouldBe no.nhn.msh.v2.model.AppRecStatus.OK
+                    request.appRecStatus shouldBe AppRecStatus.OK
                     request.appRecErrorList.shouldBeEmpty()
                     request.ebXmlOverrides should beNull()
                 }
@@ -619,12 +619,14 @@ class ClientTest : FreeSpec() {
                 }
 
                 requestSlot.captured.asClue { request ->
-                    request.appRecStatus shouldBe no.nhn.msh.v2.model.AppRecStatus.OK_ERROR_IN_MESSAGE_PART
+                    request.appRecStatus shouldBe AppRecStatus.OK_ERROR_IN_MESSAGE_PART
                     request.appRecErrorList shouldHaveSize receipt.errors!!.size
                     receipt.errors.forEach {
                         request.appRecErrorList shouldContain AppRecError().apply {
                             errorCode = it.type.verdi
                             details = it.details
+                            description = it.description
+                            oid = it.oid
                         }
                     }
                     request.ebXmlOverrides should beNull()
@@ -649,12 +651,14 @@ class ClientTest : FreeSpec() {
                 }
 
                 requestSlot.captured.asClue { request ->
-                    request.appRecStatus shouldBe no.nhn.msh.v2.model.AppRecStatus.REJECTED
+                    request.appRecStatus shouldBe AppRecStatus.REJECTED
                     request.appRecErrorList shouldHaveSize receipt.errors!!.size
                     receipt.errors.forEach {
                         request.appRecErrorList shouldContain AppRecError().apply {
                             errorCode = it.type.verdi
                             details = it.details
+                            description = it.description
+                            oid = it.oid
                         }
                     }
                     request.ebXmlOverrides should beNull()
@@ -871,6 +875,8 @@ private fun randomApiMessageWithMetadata() = Message().apply {
 private fun randomApplicationReceiptError() = ApplicationReceiptError(
     type = FeilmeldingForApplikasjonskvittering.entries.minus(FeilmeldingForApplikasjonskvittering.UKJENT).random(),
     details = UUID.randomUUID().toString(),
+    description = if (nextBoolean()) UUID.randomUUID().toString() else null,
+    oid = if (nextBoolean()) UUID.randomUUID().toString() else null,
 )
 
 private fun randomStatusInfo() = StatusInfo().apply {

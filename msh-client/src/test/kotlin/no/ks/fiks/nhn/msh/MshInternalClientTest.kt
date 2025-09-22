@@ -348,6 +348,29 @@ class MshInternalClientTest : FreeSpec() {
                     it.message shouldBe "Got HTTP status 403: $expected"
                 }
             }
+
+            "Unknown JSON properties should be ignored" {
+                val id = UUID.randomUUID()
+                mockGetMessage(id, body = readResourceContentAsString("msh/get-message-response-with-unknown-property.json"))
+
+                val client = MshInternalClient(
+                    baseUrl = wireMock.baseUrl,
+                    sourceSystem = UUID.randomUUID().toString(),
+                    helseIdClient = mockk<HelseIdClient> { every { getAccessToken(any()) } returns buildTokenResponse(UUID.randomUUID().toString()) },
+                    proofBuilder = mockk<ProofBuilder> { every { buildProof(any(), any(), any()) } returns UUID.randomUUID().toString() },
+                )
+                client
+                    .getMessage(id)
+                    .asClue {
+                        it.id shouldBe UUID.fromString("80383714-f0de-4cf8-900f-c79ba3af028c")
+                        it.contentType shouldBe "application/xml"
+                        it.receiverHerId shouldBe 8143060
+                        it.senderHerId shouldBe 8094866
+                        it.businessDocumentId shouldBe "c88389b7-f8ad-40b2-81e1-090e715b7530"
+                        it.businessDocumentGenDate shouldBe OffsetDateTime.parse("2025-08-21T11:39:57Z")
+                        it.isAppRec shouldBe false
+                    }
+            }
         }
 
         "Get business document" - {
