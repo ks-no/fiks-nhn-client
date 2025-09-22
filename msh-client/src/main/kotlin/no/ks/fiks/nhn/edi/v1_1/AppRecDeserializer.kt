@@ -43,6 +43,8 @@ object AppRecDeserializer {
             ApplicationReceiptError(
                 type = FeilmeldingForApplikasjonskvittering.entries.firstOrNull { it.verdi == error.v } ?: FeilmeldingForApplikasjonskvittering.UKJENT,
                 details = error.ot,
+                description = error.dn,
+                oid = error.s,
             )
         } ?: emptyList(),
         sender = sender.hcp.inst.toInstitution(),

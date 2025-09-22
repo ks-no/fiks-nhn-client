@@ -120,6 +120,8 @@ open class Client(
                         ApplicationReceiptError(
                             type = FeilmeldingForApplikasjonskvittering.entries.find { it.verdi == error.errorCode } ?: FeilmeldingForApplikasjonskvittering.UKJENT,
                             details = error.details,
+                            description = error.description,
+                            oid = error.oid,
                         )
                     } ?: emptyList()
                 )
@@ -157,6 +159,8 @@ open class Client(
         return AppRecError()
             .errorCode(type.verdi)
             .details(details)
+            .description(description)
+            .oid(oid)
     }
 
     @JvmOverloads

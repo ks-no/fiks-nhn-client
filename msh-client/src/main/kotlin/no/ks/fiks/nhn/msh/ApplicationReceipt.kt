@@ -29,6 +29,8 @@ data class OutgoingApplicationReceipt(
 data class ApplicationReceiptError(
     val type: FeilmeldingForApplikasjonskvittering,
     val details: String?,
+    val description: String? = null,
+    val oid: String? = null,
 )
 
 data class Institution(

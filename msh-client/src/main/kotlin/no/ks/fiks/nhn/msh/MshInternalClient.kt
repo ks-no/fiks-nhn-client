@@ -2,6 +2,7 @@ package no.ks.fiks.nhn.msh
 
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.databind.DeserializationContext
+import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.JsonDeserializer
 import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
@@ -224,6 +225,7 @@ private fun buildDefaultClient() =
     HttpClient(CIO) {
         install(ContentNegotiation) {
             jackson {
+                disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
                 registerModule(JavaTimeModule())
                 registerModule(SimpleModule().apply {
                     addDeserializer(OffsetDateTime::class.java, object : JsonDeserializer<OffsetDateTime?>() {
