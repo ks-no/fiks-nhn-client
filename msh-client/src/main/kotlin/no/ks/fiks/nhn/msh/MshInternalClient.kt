@@ -52,7 +52,6 @@ class MshInternalClient(
 
     private val httpHelper = DpopHttpRequestHelper(helseIdClient, proofBuilder)
 
-    @JvmOverloads
     suspend fun getAppRecInfo(
         id: UUID,
         requestParams: RequestParameters? = null,
@@ -62,7 +61,6 @@ class MshInternalClient(
             it.body()
         }
 
-    @JvmOverloads
     suspend fun getMessages(
         receiverHerId: Int,
         includeMetadata: Boolean = false,
@@ -76,7 +74,6 @@ class MshInternalClient(
             it.body()
         }
 
-    @JvmOverloads
     suspend fun postMessage(
         request: PostMessageRequest,
         requestParams: RequestParameters? = null,
@@ -86,7 +83,6 @@ class MshInternalClient(
             it.bodyAsText().toUuid()
         }
 
-    @JvmOverloads
     suspend fun getMessage(
         id: UUID,
         requestParams: RequestParameters? = null,
@@ -96,7 +92,6 @@ class MshInternalClient(
             it.body()
         }
 
-    @JvmOverloads
     suspend fun getBusinessDocument(
         id: UUID,
         requestParams: RequestParameters? = null,
@@ -106,7 +101,6 @@ class MshInternalClient(
             it.body()
         }
 
-    @JvmOverloads
     suspend fun getStatus(
         id: UUID,
         requestParams: RequestParameters? = null,
@@ -116,7 +110,6 @@ class MshInternalClient(
             it.body()
         }
 
-    @JvmOverloads
     suspend fun postAppRec(
         id: UUID,
         senderHerId: Int,
@@ -128,7 +121,6 @@ class MshInternalClient(
             it.bodyAsText().toUuid()
         }
 
-    @JvmOverloads
     suspend fun markMessageRead(
         id: UUID,
         senderHerId: Int,

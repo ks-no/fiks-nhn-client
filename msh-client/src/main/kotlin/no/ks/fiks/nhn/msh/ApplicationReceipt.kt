@@ -8,7 +8,7 @@ data class IncomingApplicationReceipt(
     val id: String,
     val acknowledgedBusinessDocumentId: String,
     val status: StatusForMottakAvMelding,
-    val errors: List<ApplicationReceiptError>,
+    val errors: List<IncomingApplicationReceiptError>,
     val sender: Institution,
     val receiver: Institution,
 )
@@ -16,21 +16,27 @@ data class IncomingApplicationReceipt(
 data class ApplicationReceiptInfo(
     val receiverHerId: Int,
     val status: StatusForMottakAvMelding?,
-    val errors: List<ApplicationReceiptError>,
+    val errors: List<IncomingApplicationReceiptError>,
+)
+
+data class IncomingApplicationReceiptError(
+    val type: FeilmeldingForApplikasjonskvittering,
+    val details: String?,
+    val errorCode: String?,
+    val description: String?,
+    val oid: String?,
 )
 
 data class OutgoingApplicationReceipt(
     val acknowledgedId: UUID,
     val senderHerId: Int,
     val status: StatusForMottakAvMelding,
-    val errors: List<ApplicationReceiptError>? = null,
+    val errors: List<OutgoingApplicationReceiptError>? = null,
 )
 
-data class ApplicationReceiptError(
+data class OutgoingApplicationReceiptError(
     val type: FeilmeldingForApplikasjonskvittering,
-    val details: String?,
-    val description: String? = null,
-    val oid: String? = null,
+    val details: String? = null,
 )
 
 data class Institution(

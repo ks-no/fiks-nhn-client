@@ -20,7 +20,6 @@ open class Client(
     private val internalClient: MshInternalClient,
 ) {
 
-    @JvmOverloads
     suspend fun sendMessage(
         businessDocument: OutgoingBusinessDocument,
         requestParameters: RequestParameters? = null,
@@ -34,7 +33,6 @@ open class Client(
                 requestParams = requestParameters,
             )
 
-    @JvmOverloads
     suspend fun getMessages(
         receiverHerId: Int,
         requestParameters: RequestParameters? = null,
@@ -48,7 +46,6 @@ open class Client(
             .map { it.toMessageInfo() }
     }
 
-    @JvmOverloads
     suspend fun getMessagesWithMetadata(
         receiverHerId: Int,
         requestParameters: RequestParameters? = null,
@@ -62,7 +59,6 @@ open class Client(
             .map { it.toMessageInfoWithMetadata() }
     }
 
-    @JvmOverloads
     suspend fun getMessage(
         id: UUID,
         requestParameters: RequestParameters? = null,
@@ -72,7 +68,6 @@ open class Client(
             .toMessageInfoWithMetadata()
     }
 
-    @JvmOverloads
     suspend fun getBusinessDocument(
         id: UUID,
         requestParameters: RequestParameters? = null,
@@ -86,7 +81,6 @@ open class Client(
             }
     }
 
-    @JvmOverloads
     suspend fun getApplicationReceipt(
         id: UUID,
         requestParameters: RequestParameters? = null,
@@ -100,7 +94,6 @@ open class Client(
             }
     }
 
-    @JvmOverloads
     suspend fun getApplicationReceiptsForMessage(
         messageId: UUID,
         requestParameters: RequestParameters? = null,
@@ -117,9 +110,10 @@ open class Client(
                         null -> null
                     },
                     errors = info.appRecErrorList?.map { error ->
-                        ApplicationReceiptError(
+                        IncomingApplicationReceiptError(
                             type = FeilmeldingForApplikasjonskvittering.entries.find { it.verdi == error.errorCode } ?: FeilmeldingForApplikasjonskvittering.UKJENT,
                             details = error.details,
+                            errorCode = error.errorCode,
                             description = error.description,
                             oid = error.oid,
                         )
@@ -128,7 +122,6 @@ open class Client(
             }
     }
 
-    @JvmOverloads
     suspend fun sendApplicationReceipt(
         receipt: OutgoingApplicationReceipt,
         requestParameters: RequestParameters? = null,
@@ -152,18 +145,17 @@ open class Client(
         StatusForMottakAvMelding.AVVIST -> NhnAppRecStatus.REJECTED
     }
 
-    private fun List<ApplicationReceiptError>.toAppRecErrors() = map { it.toAppRecError() }
+    private fun List<OutgoingApplicationReceiptError>.toAppRecErrors() = map { it.toAppRecError() }
 
-    private fun ApplicationReceiptError.toAppRecError(): AppRecError {
+    private fun OutgoingApplicationReceiptError.toAppRecError(): AppRecError {
         if (type == FeilmeldingForApplikasjonskvittering.UKJENT) throw IllegalArgumentException("Ukjent is not a valid error type for an outgoing application receipt")
         return AppRecError()
             .errorCode(type.verdi)
+            .description(type.navn)
+            .oid(type.kodeverk)
             .details(details)
-            .description(description)
-            .oid(oid)
     }
 
-    @JvmOverloads
     suspend fun markMessageRead(
         id: UUID,
         receiverHerId: Int,
@@ -176,7 +168,6 @@ open class Client(
         )
     }
 
-    @JvmOverloads
     suspend fun getStatus(
         id: UUID,
         requestParameters: RequestParameters? = null,
