@@ -438,7 +438,9 @@ class ClientTest : FreeSpec() {
                     appRecErrorList = listOf(
                         AppRecError().apply {
                             errorCode = "E10"
-                            details = "Ugyldig meldingsidentifikator"
+                            description = "Ugyldig meldingsidentifikator"
+                            oid = "2.16.578.1.12.4.1.1.8221"
+                            details = "Extra details about error"
                         }
                     )
                 }
@@ -455,7 +457,10 @@ class ClientTest : FreeSpec() {
                         errors shouldHaveSize 1
                         with(errors.single()) {
                             type shouldBe FeilmeldingForApplikasjonskvittering.UGYLDIG_ID
-                            details shouldBe "Ugyldig meldingsidentifikator"
+                            errorCode shouldBe "E10"
+                            description shouldBe "Ugyldig meldingsidentifikator"
+                            oid shouldBe "2.16.578.1.12.4.1.1.8221"
+                            details shouldBe "Extra details about error"
                         }
                     }
                 }
@@ -468,10 +473,14 @@ class ClientTest : FreeSpec() {
                     appRecErrorList = listOf(
                         AppRecError().apply {
                             errorCode = "E32"
+                            description = "Pasientens navn mangler"
+                            oid = "2.16.578.1.12.4.1.1.8221"
                             details = "Noe gikk galt"
                         },
                         AppRecError().apply {
                             errorCode = "T02"
+                            description = "XML validerer ikke"
+                            oid = "2.16.578.1.12.4.1.1.8221"
                             details = "Feil i XML"
                         }
                     )
@@ -489,10 +498,16 @@ class ClientTest : FreeSpec() {
                         errors shouldHaveSize 2
                         with(errors[0]) {
                             type shouldBe FeilmeldingForApplikasjonskvittering.PASIENT_MANGLER_NAVN
+                            errorCode shouldBe "E32"
+                            description shouldBe "Pasientens navn mangler"
+                            oid shouldBe "2.16.578.1.12.4.1.1.8221"
                             details shouldBe "Noe gikk galt"
                         }
                         with(errors[1]) {
                             type shouldBe FeilmeldingForApplikasjonskvittering.VALIDERINGSFEIL_XML
+                            errorCode shouldBe "T02"
+                            description shouldBe "XML validerer ikke"
+                            oid shouldBe "2.16.578.1.12.4.1.1.8221"
                             details shouldBe "Feil i XML"
                         }
                     }
@@ -528,7 +543,9 @@ class ClientTest : FreeSpec() {
                     appRecErrorList = listOf(
                         AppRecError().apply {
                             errorCode = "A123"
-                            details = "Noe gikk galt"
+                            description = "Kan ikke håndteres"
+                            oid = "1.2.3.4.5.6.7.8.9"
+                            details = "Error X"
                         },
                     )
                 }
@@ -546,7 +563,10 @@ class ClientTest : FreeSpec() {
                         errors shouldHaveSize 1
                         with(errors.single()) {
                             type shouldBe FeilmeldingForApplikasjonskvittering.UKJENT
-                            details shouldBe "Noe gikk galt"
+                            errorCode shouldBe "A123"
+                            description shouldBe "Kan ikke håndteres"
+                            oid shouldBe "1.2.3.4.5.6.7.8.9"
+                            details shouldBe "Error X"
                         }
                     }
                 }
@@ -610,7 +630,7 @@ class ClientTest : FreeSpec() {
                     acknowledgedId = UUID.randomUUID(),
                     senderHerId = randomHerId(),
                     status = StatusForMottakAvMelding.OK_FEIL_I_DELMELDING,
-                    errors = List(nextInt(1, 5)) { randomApplicationReceiptError() },
+                    errors = List(nextInt(1, 5)) { randomOutgoingApplicationReceiptError() },
                 )
                 client.sendApplicationReceipt(receipt)
 
@@ -624,9 +644,9 @@ class ClientTest : FreeSpec() {
                     receipt.errors.forEach {
                         request.appRecErrorList shouldContain AppRecError().apply {
                             errorCode = it.type.verdi
+                            description = it.type.navn
+                            oid = it.type.kodeverk
                             details = it.details
-                            description = it.description
-                            oid = it.oid
                         }
                     }
                     request.ebXmlOverrides should beNull()
@@ -642,7 +662,7 @@ class ClientTest : FreeSpec() {
                     acknowledgedId = UUID.randomUUID(),
                     senderHerId = randomHerId(),
                     status = StatusForMottakAvMelding.AVVIST,
-                    errors = List(nextInt(1, 5)) { randomApplicationReceiptError() },
+                    errors = List(nextInt(1, 5)) { randomOutgoingApplicationReceiptError() },
                 )
                 client.sendApplicationReceipt(receipt)
 
@@ -656,9 +676,9 @@ class ClientTest : FreeSpec() {
                     receipt.errors.forEach {
                         request.appRecErrorList shouldContain AppRecError().apply {
                             errorCode = it.type.verdi
+                            description = it.type.navn
+                            oid = it.type.kodeverk
                             details = it.details
-                            description = it.description
-                            oid = it.oid
                         }
                     }
                     request.ebXmlOverrides should beNull()
@@ -672,7 +692,7 @@ class ClientTest : FreeSpec() {
                     acknowledgedId = UUID.randomUUID(),
                     senderHerId = randomHerId(),
                     status = StatusForMottakAvMelding.OK,
-                    errors = listOf(randomApplicationReceiptError()),
+                    errors = listOf(randomOutgoingApplicationReceiptError()),
                 )
 
                 shouldThrow<IllegalArgumentException> { client.sendApplicationReceipt(receipt) }.asClue {
@@ -872,12 +892,13 @@ private fun randomApiMessageWithMetadata() = Message().apply {
     isAppRec = nextBoolean()
 }
 
-private fun randomApplicationReceiptError() = ApplicationReceiptError(
-    type = FeilmeldingForApplikasjonskvittering.entries.minus(FeilmeldingForApplikasjonskvittering.UKJENT).random(),
-    details = UUID.randomUUID().toString(),
-    description = if (nextBoolean()) UUID.randomUUID().toString() else null,
-    oid = if (nextBoolean()) UUID.randomUUID().toString() else null,
-)
+private fun randomOutgoingApplicationReceiptError() =
+    FeilmeldingForApplikasjonskvittering.entries.minus(FeilmeldingForApplikasjonskvittering.UKJENT).random().let { type ->
+        OutgoingApplicationReceiptError(
+            type = type,
+            details = UUID.randomUUID().toString(),
+        )
+    }
 
 private fun randomStatusInfo() = StatusInfo().apply {
     receiverHerId = randomHerId()

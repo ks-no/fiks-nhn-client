@@ -40,9 +40,10 @@ object AppRecDeserializer {
         acknowledgedBusinessDocumentId = originalMsgId.id,
         status = StatusForMottakAvMelding.entries.firstOrNull { it.verdi == status.v } ?: throw IllegalArgumentException("Unknown app rec status: ${status.v}, ${status.dn}"),
         errors = error?.map { error ->
-            ApplicationReceiptError(
+            IncomingApplicationReceiptError(
                 type = FeilmeldingForApplikasjonskvittering.entries.firstOrNull { it.verdi == error.v } ?: FeilmeldingForApplikasjonskvittering.UKJENT,
                 details = error.ot,
+                errorCode = error.v,
                 description = error.dn,
                 oid = error.s,
             )

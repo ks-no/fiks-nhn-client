@@ -4,7 +4,7 @@ import no.ks.fiks.nhn.ar.AdresseregisteretClient
 import no.ks.fiks.nhn.flr.FastlegeregisteretClient
 import java.util.UUID
 
-class ClientWithFastlegeLookup(
+open class ClientWithFastlegeLookup(
     internalClient: MshInternalClient,
     flrClient: FastlegeregisteretClient,
     arClient: AdresseregisteretClient,
