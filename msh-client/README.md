@@ -7,15 +7,6 @@ Uses the Meldingstjener REST API provided by NHN:
 Test: https://api.tjener.test.melding.nhn.no  
 Prod: TODO: Missing
 
-### Import using Maven
-```xml
-<dependency>
-    <groupId>no.ks.fiks</groupId>
-    <artifactId>msh-client</artifactId>
-    <version>X.X.X</version>
-</dependency>
-```
-
 Usage examples can be found in tests defined [here](src/test/kotlin/no/ks/fiks/nhn/examples).
 
 The easiest way to create a client is using the `ClientFactory`, see examples.  
@@ -27,3 +18,13 @@ Four different clients are provided:
 
 The clients support using access tokens with organization numbers for use with single-/multi-tenancy as discussed [here](https://utviklerportal.nhn.no/informasjonstjenester/helseid/bruksmoenstre-og-eksempelkode/bruk-av-helseid/docs/tekniske-mekanismer/organisasjonsnumre_enmd).
 These organization numbers can be configured at the client level, but can also be provided per request by using the `RequestParameters` parameter.
+
+
+### Import using Maven
+```xml
+<dependency>
+    <groupId>no.ks.fiks</groupId>
+    <artifactId>msh-client</artifactId>
+    <version>X.X.X</version>
+</dependency>
+```
