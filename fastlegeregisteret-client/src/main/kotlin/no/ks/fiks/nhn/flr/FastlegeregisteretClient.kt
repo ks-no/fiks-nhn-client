@@ -1,5 +1,6 @@
 package no.ks.fiks.nhn.flr
 
+import jakarta.xml.ws.soap.SOAPFaultException
 import no.nhn.schemas.reg.flr.IFlrReadOperationsGetPatientGPDetailsGenericFaultFaultFaultMessage
 import no.nhn.schemas.reg.flr.PatientToGPContractAssociation
 
@@ -11,7 +12,24 @@ class FastlegeregisteretClient(
         try {
             service.getPatientGPDetails(patientId)?.convert()
         } catch (e: IFlrReadOperationsGetPatientGPDetailsGenericFaultFaultFaultMessage) {
-            throw FastlegeregisteretException(e.faultInfo?.errorCode?.value, e.faultInfo?.message?.value, e.message)
+            throw FastlegeregisteretApiException(
+                errorCode = e.faultInfo?.errorCode?.value,
+                faultMessage = e.faultInfo?.message?.value,
+                message = e.message,
+                cause = e,
+            )
+        } catch (e: SOAPFaultException) {
+            throw FastlegeregisteretApiException(
+                errorCode = e.fault.faultCode,
+                faultMessage = e.fault.faultString,
+                message = e.message,
+                cause = e,
+            )
+        } catch (e: Exception) {
+            throw FastlegeregisteretException(
+                message = "Unknown error from Fastlegeregisteret",
+                cause = e,
+            )
         }
 
     private fun PatientToGPContractAssociation.convert() = PatientGP(

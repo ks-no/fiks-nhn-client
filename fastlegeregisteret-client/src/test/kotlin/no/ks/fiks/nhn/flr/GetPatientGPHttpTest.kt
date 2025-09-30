@@ -36,7 +36,7 @@ class GetPatientGPHttpTest : StringSpec() {
             val patientId = UUID.randomUUID().toString()
             stubResponse(patientId, "get-patient-gp-not-found.xml")
 
-            shouldThrow<FastlegeregisteretException> { buildClient().getPatientGP(patientId) }
+            shouldThrow<FastlegeregisteretApiException> { buildClient().getPatientGP(patientId) }
                 .asClue {
                     it.errorCode shouldBe "Feil"
                     it.faultMessage shouldBe "ArgumentException: Personen er ikke tilknyttet fastlegekontrakt"
@@ -58,7 +58,7 @@ class GetPatientGPHttpTest : StringSpec() {
                 )
             )
 
-            shouldThrow<FastlegeregisteretException> { client.getPatientGP(patientId) }
+            shouldThrow<FastlegeregisteretApiException> { client.getPatientGP(patientId) }
                 .asClue {
                     it.errorCode shouldBe "Feil"
                     it.faultMessage shouldBe "ArgumentException: patientNin er ugyldig"
