@@ -1,7 +1,6 @@
 package no.ks.fiks.nhn.flr
 
-class FastlegeregisteretException(
-    val errorCode: String?,
-    val faultMessage: String?,
+open class FastlegeregisteretException(
     message: String?,
-) : RuntimeException(message)
+    cause: Throwable? = null,
+) : RuntimeException(message, cause)

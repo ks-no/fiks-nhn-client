@@ -2,4 +2,5 @@ package no.ks.fiks.nhn.ar
 
 open class AdresseregisteretException(
     message: String?,
-) : RuntimeException(message)
+    cause: Throwable? = null,
+) : RuntimeException(message, cause)

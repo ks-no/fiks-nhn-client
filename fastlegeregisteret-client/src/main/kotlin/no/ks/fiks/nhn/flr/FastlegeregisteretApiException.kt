@@ -1,8 +1,8 @@
-package no.ks.fiks.nhn.ar
+package no.ks.fiks.nhn.flr
 
-class AdresseregisteretApiException(
+class FastlegeregisteretApiException(
     val errorCode: String?,
     val faultMessage: String?,
     message: String?,
     cause: Throwable? = null,
-) : AdresseregisteretException(message, cause)
+) : FastlegeregisteretException(message, cause)

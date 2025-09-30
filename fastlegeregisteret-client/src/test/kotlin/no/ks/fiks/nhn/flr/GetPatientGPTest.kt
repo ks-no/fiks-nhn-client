@@ -54,7 +54,7 @@ class GetPatientGPTest : StringSpec({
         val faultErrorCode = UUID.randomUUID().toString()
         val faultMessage = UUID.randomUUID().toString()
 
-        shouldThrow<FastlegeregisteretException> {
+        shouldThrow<FastlegeregisteretApiException> {
             buildClient(
                 mockk {
                     every { getPatientGPDetails(any()) } throws IFlrReadOperationsGetPatientGPDetailsGenericFaultFaultFaultMessage(

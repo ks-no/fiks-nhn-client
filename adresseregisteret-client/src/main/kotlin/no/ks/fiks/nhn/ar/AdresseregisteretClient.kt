@@ -1,6 +1,7 @@
 package no.ks.fiks.nhn.ar
 
 import jakarta.xml.bind.JAXBElement
+import jakarta.xml.ws.soap.SOAPFaultException
 import mu.KotlinLogging
 import no.nhn.register.communicationparty.ICommunicationPartyServiceGetCommunicationPartyDetailsGenericFaultFaultFaultMessage
 import no.nhn.register.communicationparty.Organization
@@ -29,7 +30,24 @@ class AdresseregisteretClient(
                 }
         } catch (e: ICommunicationPartyServiceGetCommunicationPartyDetailsGenericFaultFaultFaultMessage) {
             log.debug(e) { "Exception was thrown by service" }
-            throw AdresseregisteretApiException(e.faultInfo?.errorCode?.value, e.faultInfo?.message?.value, e.message)
+            throw AdresseregisteretApiException(
+                errorCode = e.faultInfo?.errorCode?.value,
+                faultMessage = e.faultInfo?.message?.value,
+                message = e.message,
+                cause = e,
+            )
+        } catch (e: SOAPFaultException) {
+            throw AdresseregisteretApiException(
+                errorCode = e.fault.faultCode,
+                faultMessage = e.fault.faultString,
+                message = e.message,
+                cause = e,
+            )
+        } catch (e: Exception) {
+            throw AdresseregisteretException(
+                message = "Unknown error from Adresseregisteret",
+                cause = e,
+            )
         }
 
     fun lookupPostalAddress(herId: Int): PostalAddress =
