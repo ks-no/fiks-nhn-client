@@ -19,7 +19,7 @@
         <basePackage>${project.groupId}.stralfors</basePackage>
 
         <jakarta.annotation-api.version>3.0.0</jakarta.annotation-api.version>
-        <jackson.version>2.20.0</jackson.version>
+        <jackson.version>2.20.1</jackson.version>
         <feign.version>13.6</feign.version>
         <feign-form.version>3.8.0</feign-form.version>
     </properties>
