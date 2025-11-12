@@ -21,8 +21,8 @@ object AppRecDeserializer {
     private val headSchema = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI)
         .newSchema(
             arrayOf(
-                StreamSource(ClassLoader.getSystemResourceAsStream("xsd/kith.xsd")),
-                StreamSource(ClassLoader.getSystemResourceAsStream("xsd/apprec-v1.0.xsd")),
+                StreamSource(AppRecDeserializer::class.java.classLoader.getResourceAsStream("xsd/kith.xsd")),
+                StreamSource(AppRecDeserializer::class.java.classLoader.getResourceAsStream("xsd/apprec-v1.0.xsd")),
             )
         )
 

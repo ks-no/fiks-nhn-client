@@ -27,13 +27,13 @@ object XmlContext {
     private val headSchema = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI)
         .newSchema(
             arrayOf(
-                StreamSource(ClassLoader.getSystemResourceAsStream("xsd/xmldsig-core-schema.xsd")),
-                StreamSource(ClassLoader.getSystemResourceAsStream("xsd/kith.xsd")),
-                StreamSource(ClassLoader.getSystemResourceAsStream("xsd/kith-base64.xsd")),
-                StreamSource(ClassLoader.getSystemResourceAsStream("xsd/felleskomponent1.xsd")),
-                StreamSource(ClassLoader.getSystemResourceAsStream("xsd/MsgHead-v1_2.xsd")),
-                StreamSource(ClassLoader.getSystemResourceAsStream("xsd/dialogmelding-v1.0.xsd")),
-                StreamSource(ClassLoader.getSystemResourceAsStream("xsd/dialogmelding-v1.1.xsd")),
+                StreamSource(XmlContext::class.java.classLoader.getResourceAsStream("xsd/xmldsig-core-schema.xsd")),
+                StreamSource(XmlContext::class.java.classLoader.getResourceAsStream("xsd/kith.xsd")),
+                StreamSource(XmlContext::class.java.classLoader.getResourceAsStream("xsd/kith-base64.xsd")),
+                StreamSource(XmlContext::class.java.classLoader.getResourceAsStream("xsd/felleskomponent1.xsd")),
+                StreamSource(XmlContext::class.java.classLoader.getResourceAsStream("xsd/MsgHead-v1_2.xsd")),
+                StreamSource(XmlContext::class.java.classLoader.getResourceAsStream("xsd/dialogmelding-v1.0.xsd")),
+                StreamSource(XmlContext::class.java.classLoader.getResourceAsStream("xsd/dialogmelding-v1.1.xsd")),
             )
         )
 
