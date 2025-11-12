@@ -41,7 +41,7 @@
 
         <helseid.version>1.0.2</helseid.version>
 
-        <kotlin.version>2.2.20</kotlin.version>
+        <kotlin.version>2.2.21</kotlin.version>
         <kotlin-logging.version>3.0.5</kotlin-logging.version>
         <nimbus-jose-jwt.version>10.5</nimbus-jose-jwt.version>
         <jackson.version>2.20.0</jackson.version>
