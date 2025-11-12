@@ -1,1 +1,1 @@
-libPipelineMvnCentralJdk21()
+libPipelineMvnCentralJdk17()
