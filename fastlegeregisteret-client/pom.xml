@@ -14,7 +14,7 @@
     <description>Client for communicating with fastlegeregisteret (NHN)</description>
 
     <properties>
-        <cxf.version>4.1.3</cxf.version>
+        <cxf.version>4.1.4</cxf.version>
         <jakarta.xml.bind-api.version>4.0.4</jakarta.xml.bind-api.version>
         <jakarta.xml.ws-api.version>4.0.2</jakarta.xml.ws-api.version>
         <jakarta.jws-api.version>3.0.0</jakarta.jws-api.version>
