@@ -59,7 +59,7 @@ class MshInternalClient(
         invokeWithErrorHandling {
             client.getWithParams("$baseUrl/Messages/$id/apprec", requestParams)
         }.let {
-            if (it.status != HttpStatusCode.OK) throw it.toHttpException()
+            if (it.status != HttpStatusCode.OK) throw it.toHttpException(expectedStatus = HttpStatusCode.OK.value)
             it.body()
         }
 
@@ -74,7 +74,7 @@ class MshInternalClient(
                 parameter(INCLUDE_METADATA_PARAM, includeMetadata)
             }
         }.let {
-            if (it.status != HttpStatusCode.OK) throw it.toHttpException()
+            if (it.status != HttpStatusCode.OK) throw it.toHttpException(expectedStatus = HttpStatusCode.OK.value)
             it.body()
         }
 
@@ -85,7 +85,7 @@ class MshInternalClient(
         invokeWithErrorHandling {
             client.postWithParams("$baseUrl/Messages", request, requestParams)
         }.let {
-            if (it.status != HttpStatusCode.Created) throw it.toHttpException()
+            if (it.status != HttpStatusCode.Created) throw it.toHttpException(expectedStatus = HttpStatusCode.Created.value)
             it.bodyAsText().toUuid()
         }
 
@@ -96,7 +96,7 @@ class MshInternalClient(
         invokeWithErrorHandling {
             client.getWithParams("$baseUrl/Messages/$id", requestParams)
         }.let {
-            if (it.status != HttpStatusCode.OK) throw it.toHttpException()
+            if (it.status != HttpStatusCode.OK) throw it.toHttpException(expectedStatus = HttpStatusCode.OK.value)
             it.body()
         }
 
@@ -107,7 +107,7 @@ class MshInternalClient(
         invokeWithErrorHandling {
             client.getWithParams("$baseUrl/Messages/$id/business-document", requestParams)
         }.let {
-            if (it.status != HttpStatusCode.OK) throw it.toHttpException()
+            if (it.status != HttpStatusCode.OK) throw it.toHttpException(expectedStatus = HttpStatusCode.OK.value)
             it.body()
         }
 
@@ -118,7 +118,7 @@ class MshInternalClient(
         invokeWithErrorHandling {
             client.getWithParams("$baseUrl/Messages/$id/status", requestParams)
         }.let {
-            if (it.status != HttpStatusCode.OK) throw it.toHttpException()
+            if (it.status != HttpStatusCode.OK) throw it.toHttpException(expectedStatus = HttpStatusCode.OK.value)
             it.body()
         }
 
@@ -131,7 +131,7 @@ class MshInternalClient(
         invokeWithErrorHandling {
             client.postWithParams("$baseUrl/Messages/$id/apprec/$senderHerId", request, requestParams)
         }.let {
-            if (it.status != HttpStatusCode.Created) throw it.toHttpException()
+            if (it.status != HttpStatusCode.Created) throw it.toHttpException(expectedStatus = HttpStatusCode.Created.value)
             it.bodyAsText().toUuid()
         }
 
@@ -143,7 +143,7 @@ class MshInternalClient(
         invokeWithErrorHandling {
             client.putWithParams("$baseUrl/Messages/$id/read/$senderHerId", requestParams)
         }.also {
-            if (it.status != HttpStatusCode.NoContent) throw it.toHttpException()
+            if (it.status != HttpStatusCode.NoContent) throw it.toHttpException(expectedStatus = HttpStatusCode.NoContent.value)
         }
     }
 
@@ -234,12 +234,12 @@ class MshInternalClient(
     // Replaces leading and/or trailing quote
     private fun String.toUuid() = UUID.fromString(replace(Regex("^\"|\"$"), ""))
 
-    private suspend fun HttpResponse.toHttpException() =
+    private suspend fun HttpResponse.toHttpException(expectedStatus: Int) =
         when (status.value) {
-            in (300 until 400) -> HttpRedirectException(status.value, bodyAsText())
-            in (400 until 500) -> HttpClientException(status.value, bodyAsText())
-            in (500 until 600) -> HttpServerException(status.value, bodyAsText())
-            else -> HttpException(status.value, bodyAsText())
+            in (300 until 400) -> HttpRedirectException(status = status.value, body = bodyAsText())
+            in (400 until 500) -> HttpClientException(status = status.value, body = bodyAsText())
+            in (500 until 600) -> HttpServerException(status = status.value, body = bodyAsText())
+            else -> HttpException(status = status.value, expectedStatus = expectedStatus, body = bodyAsText())
         }
 
 }
