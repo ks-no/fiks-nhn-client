@@ -56,8 +56,10 @@ class MshInternalClient(
         id: UUID,
         requestParams: RequestParameters? = null,
     ): List<ApprecInfo> =
-        client.getWithParams("$baseUrl/Messages/$id/apprec", requestParams).let {
-            if (it.status != HttpStatusCode.OK) throw HttpException(it.status.value, it.bodyAsText())
+        invokeWithErrorHandling {
+            client.getWithParams("$baseUrl/Messages/$id/apprec", requestParams)
+        }.let {
+            if (it.status != HttpStatusCode.OK) throw it.toHttpException()
             it.body()
         }
 
@@ -66,11 +68,13 @@ class MshInternalClient(
         includeMetadata: Boolean = false,
         requestParams: RequestParameters? = null,
     ): List<Message> =
-        client.getWithParams("$baseUrl/Messages", requestParams) {
-            parameter(RECEIVER_HER_ID_PARAM, receiverHerId)
-            parameter(INCLUDE_METADATA_PARAM, includeMetadata)
+        invokeWithErrorHandling {
+            client.getWithParams("$baseUrl/Messages", requestParams) {
+                parameter(RECEIVER_HER_ID_PARAM, receiverHerId)
+                parameter(INCLUDE_METADATA_PARAM, includeMetadata)
+            }
         }.let {
-            if (it.status != HttpStatusCode.OK) throw HttpException(it.status.value, it.bodyAsText())
+            if (it.status != HttpStatusCode.OK) throw it.toHttpException()
             it.body()
         }
 
@@ -78,8 +82,10 @@ class MshInternalClient(
         request: PostMessageRequest,
         requestParams: RequestParameters? = null,
     ): UUID =
-        client.postWithParams("$baseUrl/Messages", request, requestParams).let {
-            if (it.status != HttpStatusCode.Created) throw HttpException(it.status.value, it.bodyAsText())
+        invokeWithErrorHandling {
+            client.postWithParams("$baseUrl/Messages", request, requestParams)
+        }.let {
+            if (it.status != HttpStatusCode.Created) throw it.toHttpException()
             it.bodyAsText().toUuid()
         }
 
@@ -87,8 +93,10 @@ class MshInternalClient(
         id: UUID,
         requestParams: RequestParameters? = null,
     ): Message =
-        client.getWithParams("$baseUrl/Messages/$id", requestParams).let {
-            if (it.status != HttpStatusCode.OK) throw HttpException(it.status.value, it.bodyAsText())
+        invokeWithErrorHandling {
+            client.getWithParams("$baseUrl/Messages/$id", requestParams)
+        }.let {
+            if (it.status != HttpStatusCode.OK) throw it.toHttpException()
             it.body()
         }
 
@@ -96,8 +104,10 @@ class MshInternalClient(
         id: UUID,
         requestParams: RequestParameters? = null,
     ): GetBusinessDocumentResponse =
-        client.getWithParams("$baseUrl/Messages/$id/business-document", requestParams).let {
-            if (it.status != HttpStatusCode.OK) throw HttpException(it.status.value, it.bodyAsText())
+        invokeWithErrorHandling {
+            client.getWithParams("$baseUrl/Messages/$id/business-document", requestParams)
+        }.let {
+            if (it.status != HttpStatusCode.OK) throw it.toHttpException()
             it.body()
         }
 
@@ -105,8 +115,10 @@ class MshInternalClient(
         id: UUID,
         requestParams: RequestParameters? = null,
     ): List<StatusInfo> =
-        client.getWithParams("$baseUrl/Messages/$id/status", requestParams).let {
-            if (it.status != HttpStatusCode.OK) throw HttpException(it.status.value, it.bodyAsText())
+        invokeWithErrorHandling {
+            client.getWithParams("$baseUrl/Messages/$id/status", requestParams)
+        }.let {
+            if (it.status != HttpStatusCode.OK) throw it.toHttpException()
             it.body()
         }
 
@@ -116,8 +128,10 @@ class MshInternalClient(
         request: PostAppRecRequest,
         requestParams: RequestParameters? = null,
     ): UUID =
-        client.postWithParams("$baseUrl/Messages/$id/apprec/$senderHerId", request, requestParams).let {
-            if (it.status != HttpStatusCode.Created) throw HttpException(it.status.value, it.bodyAsText())
+        invokeWithErrorHandling {
+            client.postWithParams("$baseUrl/Messages/$id/apprec/$senderHerId", request, requestParams)
+        }.let {
+            if (it.status != HttpStatusCode.Created) throw it.toHttpException()
             it.bodyAsText().toUuid()
         }
 
@@ -126,10 +140,19 @@ class MshInternalClient(
         senderHerId: Int,
         requestParams: RequestParameters? = null,
     ) {
-        client.putWithParams("$baseUrl/Messages/$id/read/$senderHerId", requestParams).also {
-            if (it.status != HttpStatusCode.NoContent) throw HttpException(it.status.value, it.bodyAsText())
+        invokeWithErrorHandling {
+            client.putWithParams("$baseUrl/Messages/$id/read/$senderHerId", requestParams)
+        }.also {
+            if (it.status != HttpStatusCode.NoContent) throw it.toHttpException()
         }
     }
+
+    private suspend fun <T> invokeWithErrorHandling(operation: suspend () -> T): T =
+        try {
+            operation.invoke()
+        } catch (e: Exception) {
+            throw MshException("Unknown error from MSH API", e)
+        }
 
     private fun HeadersBuilder.set(endpoint: Endpoint, requestParams: RequestParameters?) {
         append(API_VERSION_HEADER, API_VERSION)
@@ -210,6 +233,13 @@ class MshInternalClient(
 
     // Replaces leading and/or trailing quote
     private fun String.toUuid() = UUID.fromString(replace(Regex("^\"|\"$"), ""))
+
+    private suspend fun HttpResponse.toHttpException() =
+        when (status.value) {
+            in (400 until 500) -> HttpClientException(status.value, bodyAsText())
+            in (500 until 600) -> HttpServerException(status.value, bodyAsText())
+            else -> HttpException(status.value, bodyAsText())
+        }
 
 }
 

@@ -162,7 +162,7 @@ class MshInternalClientTest : FreeSpec() {
                 val expected = UUID.randomUUID().toString()
                 mockGetAppRec(id, 500, expected)
 
-                shouldThrow<HttpException> {
+                shouldThrow<HttpServerException> {
                     MshInternalClient(
                         baseUrl = wireMock.baseUrl,
                         sourceSystem = UUID.randomUUID().toString(),
@@ -216,7 +216,7 @@ class MshInternalClientTest : FreeSpec() {
                 val expected = UUID.randomUUID().toString()
                 mockGetMessages(receiverHerId, 400, expected)
 
-                shouldThrow<HttpException> {
+                shouldThrow<HttpClientException> {
                     MshInternalClient(
                         baseUrl = wireMock.baseUrl,
                         sourceSystem = UUID.randomUUID().toString(),
@@ -259,7 +259,7 @@ class MshInternalClientTest : FreeSpec() {
                 val expected = UUID.randomUUID().toString()
                 mockSendMessage(401, expected)
 
-                shouldThrow<HttpException> {
+                shouldThrow<HttpClientException> {
                     MshInternalClient(
                         baseUrl = wireMock.baseUrl,
                         sourceSystem = UUID.randomUUID().toString(),
@@ -335,7 +335,7 @@ class MshInternalClientTest : FreeSpec() {
                 val expected = UUID.randomUUID().toString()
                 mockGetMessage(id, 403, expected)
 
-                shouldThrow<HttpException> {
+                shouldThrow<HttpClientException> {
                     MshInternalClient(
                         baseUrl = wireMock.baseUrl,
                         sourceSystem = UUID.randomUUID().toString(),
@@ -430,7 +430,7 @@ class MshInternalClientTest : FreeSpec() {
                 val expected = UUID.randomUUID().toString()
                 mockGetBusinessDocument(id, 503, expected)
 
-                shouldThrow<HttpException> {
+                shouldThrow<HttpServerException> {
                     MshInternalClient(
                         baseUrl = wireMock.baseUrl,
                         sourceSystem = UUID.randomUUID().toString(),
@@ -508,7 +508,7 @@ class MshInternalClientTest : FreeSpec() {
                 val expected = UUID.randomUUID().toString()
                 mockGetStatus(id, 504, expected)
 
-                shouldThrow<HttpException> {
+                shouldThrow<HttpServerException> {
                     MshInternalClient(
                         baseUrl = wireMock.baseUrl,
                         sourceSystem = UUID.randomUUID().toString(),
@@ -561,7 +561,7 @@ class MshInternalClientTest : FreeSpec() {
                 val expected = UUID.randomUUID().toString()
                 mockPostAppRec(id, senderHerId, 500, expected)
 
-                shouldThrow<HttpException> {
+                shouldThrow<HttpServerException> {
                     MshInternalClient(
                         baseUrl = wireMock.baseUrl,
                         sourceSystem = UUID.randomUUID().toString(),
