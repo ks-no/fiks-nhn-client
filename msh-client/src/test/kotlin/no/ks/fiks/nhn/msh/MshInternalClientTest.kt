@@ -229,6 +229,25 @@ class MshInternalClientTest : FreeSpec() {
                     it.message shouldBe "Got HTTP status 400: $expected"
                 }
             }
+
+            "Redirect response should throw exception" {
+                val receiverHerId = randomHerId()
+                val expected = UUID.randomUUID().toString()
+                mockGetMessages(receiverHerId, 301, expected)
+
+                shouldThrow<HttpRedirectException> {
+                    MshInternalClient(
+                        baseUrl = wireMock.baseUrl,
+                        sourceSystem = UUID.randomUUID().toString(),
+                        helseIdClient = mockk<HelseIdClient> { every { getAccessToken(any()) } returns buildTokenResponse(UUID.randomUUID().toString()) },
+                        proofBuilder = mockk<ProofBuilder> { every { buildProof(any(), any(), any()) } returns UUID.randomUUID().toString() },
+                    ).getMessages(receiverHerId)
+                }.asClue {
+                    it.status shouldBe 301
+                    it.body shouldBe expected
+                    it.message shouldBe "Got HTTP status 301: $expected"
+                }
+            }
         }
 
         "Send message" - {

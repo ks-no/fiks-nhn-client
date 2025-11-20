@@ -236,6 +236,7 @@ class MshInternalClient(
 
     private suspend fun HttpResponse.toHttpException() =
         when (status.value) {
+            in (300 until 400) -> HttpRedirectException(status.value, bodyAsText())
             in (400 until 500) -> HttpClientException(status.value, bodyAsText())
             in (500 until 600) -> HttpServerException(status.value, bodyAsText())
             else -> HttpException(status.value, bodyAsText())
