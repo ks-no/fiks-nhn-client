@@ -36,7 +36,6 @@ import kotlin.time.Duration.Companion.seconds
 
 class MshInternalClientTest : FreeSpec() {
 
-
     private val wireMock = WireMockContainer("wiremock/wiremock:3.12.1")
         .also { it.start() }
     private val wireMockClient = WireMock(wireMock.host, wireMock.port)
@@ -49,8 +48,8 @@ class MshInternalClientTest : FreeSpec() {
                 mockGetAppRec(id)
 
                 val accessToken = UUID.randomUUID().toString()
-                val helseIdClient = mockk<HelseIdClient> { every { getAccessToken(any()) } returns buildTokenResponse(accessToken) }
-                val proofBuilder = mockk<ProofBuilder> { every { buildProof(any(), any(), any()) } returns UUID.randomUUID().toString() }
+                val helseIdClient = mockHelseIdClient(accessToken)
+                val proofBuilder = mockProofBuilder()
                 MshInternalClient(
                     baseUrl = wireMock.baseUrl,
                     sourceSystem = UUID.randomUUID().toString(),
@@ -80,12 +79,7 @@ class MshInternalClientTest : FreeSpec() {
                 val id = UUID.randomUUID()
                 mockGetAppRec(id, body = readResourceContentAsString("msh/get-apprecinfo-rejected.json"))
 
-                MshInternalClient(
-                    baseUrl = wireMock.baseUrl,
-                    sourceSystem = UUID.randomUUID().toString(),
-                    helseIdClient = mockk<HelseIdClient> { every { getAccessToken(any()) } returns buildTokenResponse(UUID.randomUUID().toString()) },
-                    proofBuilder = mockk<ProofBuilder> { every { buildProof(any(), any(), any()) } returns UUID.randomUUID().toString() },
-                ).getAppRecInfo(id)
+                buildDefaultClient().getAppRecInfo(id)
                     .asClue {
                         it shouldHaveSize 1
                         with(it.single()) {
@@ -104,12 +98,7 @@ class MshInternalClientTest : FreeSpec() {
                 val id = UUID.randomUUID()
                 mockGetAppRec(id, body = readResourceContentAsString("msh/get-apprecinfo-okerrorinmessagepart.json"))
 
-                MshInternalClient(
-                    baseUrl = wireMock.baseUrl,
-                    sourceSystem = UUID.randomUUID().toString(),
-                    helseIdClient = mockk<HelseIdClient> { every { getAccessToken(any()) } returns buildTokenResponse(UUID.randomUUID().toString()) },
-                    proofBuilder = mockk<ProofBuilder> { every { buildProof(any(), any(), any()) } returns UUID.randomUUID().toString() },
-                ).getAppRecInfo(id)
+                buildDefaultClient().getAppRecInfo(id)
                     .asClue {
                         it shouldHaveSize 1
                         with(it.single()) {
@@ -132,12 +121,7 @@ class MshInternalClientTest : FreeSpec() {
                 val id = UUID.randomUUID()
                 mockGetAppRec(id, body = readResourceContentAsString("msh/get-apprecinfo-multi.json"))
 
-                MshInternalClient(
-                    baseUrl = wireMock.baseUrl,
-                    sourceSystem = UUID.randomUUID().toString(),
-                    helseIdClient = mockk<HelseIdClient> { every { getAccessToken(any()) } returns buildTokenResponse(UUID.randomUUID().toString()) },
-                    proofBuilder = mockk<ProofBuilder> { every { buildProof(any(), any(), any()) } returns UUID.randomUUID().toString() },
-                ).getAppRecInfo(id)
+                buildDefaultClient().getAppRecInfo(id)
                     .asClue {
                         it shouldHaveSize 2
                         with(it[0]) {
@@ -160,15 +144,52 @@ class MshInternalClientTest : FreeSpec() {
             "Not OK response should throw exception" {
                 val id = UUID.randomUUID()
                 val expected = UUID.randomUUID().toString()
-                mockGetAppRec(id, 500, expected)
+                mockGetAppRec(id, 201, expected)
 
                 shouldThrow<HttpException> {
-                    MshInternalClient(
-                        baseUrl = wireMock.baseUrl,
-                        sourceSystem = UUID.randomUUID().toString(),
-                        helseIdClient = mockk<HelseIdClient> { every { getAccessToken(any()) } returns buildTokenResponse(UUID.randomUUID().toString()) },
-                        proofBuilder = mockk<ProofBuilder> { every { buildProof(any(), any(), any()) } returns UUID.randomUUID().toString() },
-                    ).getAppRecInfo(id)
+                    buildDefaultClient().getAppRecInfo(id)
+                }.asClue {
+                    it.status shouldBe 201
+                    it.body shouldBe expected
+                    it.message shouldBe "Got HTTP status 201 when expecting 200: $expected"
+                }
+            }
+
+            "Redirect response should throw exception" {
+                val id = UUID.randomUUID()
+                val expected = UUID.randomUUID().toString()
+                mockGetAppRec(id, 301, expected)
+
+                shouldThrow<HttpRedirectException> {
+                    buildDefaultClient().getAppRecInfo(id)
+                }.asClue {
+                    it.status shouldBe 301
+                    it.body shouldBe expected
+                    it.message shouldBe "Got HTTP status 301: $expected"
+                }
+            }
+
+            "Client error response should throw exception" {
+                val id = UUID.randomUUID()
+                val expected = UUID.randomUUID().toString()
+                mockGetAppRec(id, 400, expected)
+
+                shouldThrow<HttpClientException> {
+                    buildDefaultClient().getAppRecInfo(id)
+                }.asClue {
+                    it.status shouldBe 400
+                    it.body shouldBe expected
+                    it.message shouldBe "Got HTTP status 400: $expected"
+                }
+            }
+
+            "Server error response should throw exception" {
+                val id = UUID.randomUUID()
+                val expected = UUID.randomUUID().toString()
+                mockGetAppRec(id, 500, expected)
+
+                shouldThrow<HttpServerException> {
+                    buildDefaultClient().getAppRecInfo(id)
                 }.asClue {
                     it.status shouldBe 500
                     it.body shouldBe expected
@@ -183,8 +204,8 @@ class MshInternalClientTest : FreeSpec() {
                 mockGetMessages(herId)
 
                 val accessToken = UUID.randomUUID().toString()
-                val helseIdClient = mockk<HelseIdClient> { every { getAccessToken(any()) } returns buildTokenResponse(accessToken) }
-                val proofBuilder = mockk<ProofBuilder> { every { buildProof(any(), any(), any()) } returns UUID.randomUUID().toString() }
+                val helseIdClient = mockHelseIdClient(accessToken)
+                val proofBuilder = mockProofBuilder()
                 val client = MshInternalClient(
                     baseUrl = wireMock.baseUrl,
                     sourceSystem = UUID.randomUUID().toString(),
@@ -214,19 +235,56 @@ class MshInternalClientTest : FreeSpec() {
             "Not OK response should throw exception" {
                 val receiverHerId = randomHerId()
                 val expected = UUID.randomUUID().toString()
-                mockGetMessages(receiverHerId, 400, expected)
+                mockGetMessages(receiverHerId, 201, expected)
 
                 shouldThrow<HttpException> {
-                    MshInternalClient(
-                        baseUrl = wireMock.baseUrl,
-                        sourceSystem = UUID.randomUUID().toString(),
-                        helseIdClient = mockk<HelseIdClient> { every { getAccessToken(any()) } returns buildTokenResponse(UUID.randomUUID().toString()) },
-                        proofBuilder = mockk<ProofBuilder> { every { buildProof(any(), any(), any()) } returns UUID.randomUUID().toString() },
-                    ).getMessages(receiverHerId)
+                    buildDefaultClient().getMessages(receiverHerId)
                 }.asClue {
-                    it.status shouldBe 400
+                    it.status shouldBe 201
                     it.body shouldBe expected
-                    it.message shouldBe "Got HTTP status 400: $expected"
+                    it.message shouldBe "Got HTTP status 201 when expecting 200: $expected"
+                }
+            }
+
+            "Redirect response should throw exception" {
+                val receiverHerId = randomHerId()
+                val expected = UUID.randomUUID().toString()
+                mockGetMessages(receiverHerId, 301, expected)
+
+                shouldThrow<HttpRedirectException> {
+                    buildDefaultClient().getMessages(receiverHerId)
+                }.asClue {
+                    it.status shouldBe 301
+                    it.body shouldBe expected
+                    it.message shouldBe "Got HTTP status 301: $expected"
+                }
+            }
+
+            "Client error response should throw exception" {
+                val receiverHerId = randomHerId()
+                val expected = UUID.randomUUID().toString()
+                mockGetMessages(receiverHerId, 401, expected)
+
+                shouldThrow<HttpClientException> {
+                    buildDefaultClient().getMessages(receiverHerId)
+                }.asClue {
+                    it.status shouldBe 401
+                    it.body shouldBe expected
+                    it.message shouldBe "Got HTTP status 401: $expected"
+                }
+            }
+
+            "Server error response should throw exception" {
+                val receiverHerId = randomHerId()
+                val expected = UUID.randomUUID().toString()
+                mockGetMessages(receiverHerId, 503, expected)
+
+                shouldThrow<HttpServerException> {
+                    buildDefaultClient().getMessages(receiverHerId)
+                }.asClue {
+                    it.status shouldBe 503
+                    it.body shouldBe expected
+                    it.message shouldBe "Got HTTP status 503: $expected"
                 }
             }
         }
@@ -236,8 +294,8 @@ class MshInternalClientTest : FreeSpec() {
                 mockSendMessage()
 
                 val accessToken = UUID.randomUUID().toString()
-                val helseIdClient = mockk<HelseIdClient> { every { getAccessToken(any()) } returns buildTokenResponse(accessToken) }
-                val proofBuilder = mockk<ProofBuilder> { every { buildProof(any(), any(), any()) } returns UUID.randomUUID().toString() }
+                val helseIdClient = mockHelseIdClient(accessToken)
+                val proofBuilder = mockProofBuilder()
                 val client = MshInternalClient(
                     baseUrl = wireMock.baseUrl,
                     sourceSystem = UUID.randomUUID().toString(),
@@ -255,21 +313,55 @@ class MshInternalClientTest : FreeSpec() {
                 }
             }
 
-            "Not OK response should throw exception" {
+            "Not CREATED response should throw exception" {
                 val expected = UUID.randomUUID().toString()
-                mockSendMessage(401, expected)
+                mockSendMessage(200, expected)
 
                 shouldThrow<HttpException> {
-                    MshInternalClient(
-                        baseUrl = wireMock.baseUrl,
-                        sourceSystem = UUID.randomUUID().toString(),
-                        helseIdClient = mockk<HelseIdClient> { every { getAccessToken(any()) } returns buildTokenResponse(UUID.randomUUID().toString()) },
-                        proofBuilder = mockk<ProofBuilder> { every { buildProof(any(), any(), any()) } returns UUID.randomUUID().toString() },
-                    ).postMessage(PostMessageRequest())
+                    buildDefaultClient().postMessage(PostMessageRequest())
                 }.asClue {
-                    it.status shouldBe 401
+                    it.status shouldBe 200
                     it.body shouldBe expected
-                    it.message shouldBe "Got HTTP status 401: $expected"
+                    it.message shouldBe "Got HTTP status 200 when expecting 201: $expected"
+                }
+            }
+
+            "Redirect response should throw exception" {
+                val expected = UUID.randomUUID().toString()
+                mockSendMessage(302, expected)
+
+                shouldThrow<HttpRedirectException> {
+                    buildDefaultClient().postMessage(PostMessageRequest())
+                }.asClue {
+                    it.status shouldBe 302
+                    it.body shouldBe expected
+                    it.message shouldBe "Got HTTP status 302: $expected"
+                }
+            }
+
+            "Client error response should throw exception" {
+                val expected = UUID.randomUUID().toString()
+                mockSendMessage(404, expected)
+
+                shouldThrow<HttpClientException> {
+                    buildDefaultClient().postMessage(PostMessageRequest())
+                }.asClue {
+                    it.status shouldBe 404
+                    it.body shouldBe expected
+                    it.message shouldBe "Got HTTP status 404: $expected"
+                }
+            }
+
+            "Server error response should throw exception" {
+                val expected = UUID.randomUUID().toString()
+                mockSendMessage(504, expected)
+
+                shouldThrow<HttpServerException> {
+                    buildDefaultClient().postMessage(PostMessageRequest())
+                }.asClue {
+                    it.status shouldBe 504
+                    it.body shouldBe expected
+                    it.message shouldBe "Got HTTP status 504: $expected"
                 }
             }
         }
@@ -280,8 +372,8 @@ class MshInternalClientTest : FreeSpec() {
                 mockGetMessage(id)
 
                 val accessToken = UUID.randomUUID().toString()
-                val helseIdClient = mockk<HelseIdClient> { every { getAccessToken(any()) } returns buildTokenResponse(accessToken) }
-                val proofBuilder = mockk<ProofBuilder> { every { buildProof(any(), any(), any()) } returns UUID.randomUUID().toString() }
+                val helseIdClient = mockHelseIdClient(accessToken)
+                val proofBuilder = mockProofBuilder()
                 val client = MshInternalClient(
                     baseUrl = wireMock.baseUrl,
                     sourceSystem = UUID.randomUUID().toString(),
@@ -311,13 +403,7 @@ class MshInternalClientTest : FreeSpec() {
                 mockGetMessage(id, body = readResourceContentAsString("msh/get-message-apprec-response.json"))
 
                 val accessToken = UUID.randomUUID().toString()
-                val client = MshInternalClient(
-                    baseUrl = wireMock.baseUrl,
-                    sourceSystem = UUID.randomUUID().toString(),
-                    helseIdClient = mockk<HelseIdClient> { every { getAccessToken(any()) } returns buildTokenResponse(accessToken) },
-                    proofBuilder = mockk<ProofBuilder> { every { buildProof(any(), any(), any()) } returns UUID.randomUUID().toString() },
-                )
-                client
+                buildDefaultClient(accessToken)
                     .getMessage(id)
                     .asClue {
                         it.id shouldBe UUID.fromString("0c8f3d36-f9e7-4e3f-9d5c-c820fa9b5773")
@@ -333,15 +419,38 @@ class MshInternalClientTest : FreeSpec() {
             "Not OK response should throw exception" {
                 val id = UUID.randomUUID()
                 val expected = UUID.randomUUID().toString()
-                mockGetMessage(id, 403, expected)
+                mockGetMessage(id, 201, expected)
 
                 shouldThrow<HttpException> {
-                    MshInternalClient(
-                        baseUrl = wireMock.baseUrl,
-                        sourceSystem = UUID.randomUUID().toString(),
-                        helseIdClient = mockk<HelseIdClient> { every { getAccessToken(any()) } returns buildTokenResponse(UUID.randomUUID().toString()) },
-                        proofBuilder = mockk<ProofBuilder> { every { buildProof(any(), any(), any()) } returns UUID.randomUUID().toString() },
-                    ).getMessage(id)
+                    buildDefaultClient().getMessage(id)
+                }.asClue {
+                    it.status shouldBe 201
+                    it.body shouldBe expected
+                    it.message shouldBe "Got HTTP status 201 when expecting 200: $expected"
+                }
+            }
+
+            "Redirect response should throw exception" {
+                val id = UUID.randomUUID()
+                val expected = UUID.randomUUID().toString()
+                mockGetMessage(id, 307, expected)
+
+                shouldThrow<HttpRedirectException> {
+                    buildDefaultClient().getMessage(id)
+                }.asClue {
+                    it.status shouldBe 307
+                    it.body shouldBe expected
+                    it.message shouldBe "Got HTTP status 307: $expected"
+                }
+            }
+
+            "Client error response should throw exception" {
+                val id = UUID.randomUUID()
+                val expected = UUID.randomUUID().toString()
+                mockGetMessage(id, 403, expected)
+
+                shouldThrow<HttpClientException> {
+                    buildDefaultClient().getMessage(id)
                 }.asClue {
                     it.status shouldBe 403
                     it.body shouldBe expected
@@ -349,16 +458,25 @@ class MshInternalClientTest : FreeSpec() {
                 }
             }
 
+            "Client server response should throw exception" {
+                val id = UUID.randomUUID()
+                val expected = UUID.randomUUID().toString()
+                mockGetMessage(id, 500, expected)
+
+                shouldThrow<HttpServerException> {
+                    buildDefaultClient().getMessage(id)
+                }.asClue {
+                    it.status shouldBe 500
+                    it.body shouldBe expected
+                    it.message shouldBe "Got HTTP status 500: $expected"
+                }
+            }
+
             "Unknown JSON properties should be ignored" {
                 val id = UUID.randomUUID()
                 mockGetMessage(id, body = readResourceContentAsString("msh/get-message-response-with-unknown-property.json"))
 
-                val client = MshInternalClient(
-                    baseUrl = wireMock.baseUrl,
-                    sourceSystem = UUID.randomUUID().toString(),
-                    helseIdClient = mockk<HelseIdClient> { every { getAccessToken(any()) } returns buildTokenResponse(UUID.randomUUID().toString()) },
-                    proofBuilder = mockk<ProofBuilder> { every { buildProof(any(), any(), any()) } returns UUID.randomUUID().toString() },
-                )
+                val client = buildDefaultClient()
                 client
                     .getMessage(id)
                     .asClue {
@@ -379,8 +497,8 @@ class MshInternalClientTest : FreeSpec() {
                 mockGetBusinessDocument(id)
 
                 val accessToken = UUID.randomUUID().toString()
-                val helseIdClient = mockk<HelseIdClient> { every { getAccessToken(any()) } returns buildTokenResponse(accessToken) }
-                val proofBuilder = mockk<ProofBuilder> { every { buildProof(any(), any(), any()) } returns UUID.randomUUID().toString() }
+                val helseIdClient = mockHelseIdClient(accessToken)
+                val proofBuilder = mockProofBuilder()
                 val client = MshInternalClient(
                     baseUrl = wireMock.baseUrl,
                     sourceSystem = UUID.randomUUID().toString(),
@@ -410,13 +528,7 @@ class MshInternalClientTest : FreeSpec() {
                 mockGetBusinessDocument(id, body = readResourceContentAsString("msh/get-business-document-apprec-response.json"))
 
                 val accessToken = UUID.randomUUID().toString()
-                val client = MshInternalClient(
-                    baseUrl = wireMock.baseUrl,
-                    sourceSystem = UUID.randomUUID().toString(),
-                    helseIdClient = mockk<HelseIdClient> { every { getAccessToken(any()) } returns buildTokenResponse(accessToken) },
-                    proofBuilder = mockk<ProofBuilder> { every { buildProof(any(), any(), any()) } returns UUID.randomUUID().toString() },
-                )
-                client
+               buildDefaultClient(accessToken)
                     .getBusinessDocument(id)
                     .asClue {
                         it.businessDocument shouldBe "PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4KPEFwcFJlYyB4bWxuczp4c2k9Imh0dHA6Ly93d3cudzMub3JnLzIwMDEvWE1MU2NoZW1hLWluc3RhbmNlIiB4bWxuczp4c2Q9Imh0dHA6Ly93d3cudzMub3JnLzIwMDEvWE1MU2NoZW1hIiB4bWxucz0iaHR0cDovL3d3dy5raXRoLm5vL3htbHN0ZHMvYXBwcmVjLzIwMTItMDItMTUiPgogIDxNc2dUeXBlIFY9IkFQUFJFQyIgLz4KICA8TUlHdmVyc2lvbj52MS4xIDIwMTItMDItMTU8L01JR3ZlcnNpb24+CiAgPEdlbkRhdGU+MjAyNS0wOC0yMVQxMToyMToxNi4wMDA0MTU1WjwvR2VuRGF0ZT4KICA8SWQ+OWViYWFmNDQtNzMxNy00MWI3LTg5MmEtMmE1NjhhY2Q1MTExPC9JZD4KICA8U2VuZGVyPgogICAgPFJvbGUgVj0iUFJJTSIgRE49IlByaW3DpnJtb3R0YWtlciIgLz4KICAgIDxIQ1A+CiAgICAgIDxJbnN0PgogICAgICAgIDxOYW1lPk5ITjwvTmFtZT4KICAgICAgICA8SWQ+MTEyMzc0PC9JZD4KICAgICAgICA8VHlwZUlkIFY9IkhFUiIgRE49IkhFUi1pZCIgLz4KICAgICAgICA8RGVwdD4KICAgICAgICAgIDxOYW1lPk5ITjwvTmFtZT4KICAgICAgICAgIDxJZD44MDk0ODY2PC9JZD4KICAgICAgICAgIDxUeXBlSWQgVj0iSEVSIiBETj0iSEVSLWlkIiAvPgogICAgICAgIDwvRGVwdD4KICAgICAgPC9JbnN0PgogICAgPC9IQ1A+CiAgPC9TZW5kZXI+CiAgPFJlY2VpdmVyPgogICAgPFJvbGUgVj0iQVZTIiAvPgogICAgPEhDUD4KICAgICAgPEluc3Q+CiAgICAgICAgPE5hbWU+S1MtRElHSVRBTEUgRkVMTEVTVEpFTkVTVEVSIEFTPC9OYW1lPgogICAgICAgIDxJZD44MTQyOTg3PC9JZD4KICAgICAgICA8VHlwZUlkIFY9IkhFUiIgRE49IkhFUi1pZCIgLz4KICAgICAgICA8RGVwdD4KICAgICAgICAgIDxOYW1lPlN2YXJVdCBtZWxkaW5nc2Zvcm1pZGxlcjwvTmFtZT4KICAgICAgICAgIDxJZD44MTQzMDYwPC9JZD4KICAgICAgICAgIDxUeXBlSWQgVj0iSEVSIiBETj0iSEVSLWlkIiAvPgogICAgICAgIDwvRGVwdD4KICAgICAgPC9JbnN0PgogICAgPC9IQ1A+CiAgPC9SZWNlaXZlcj4KICA8U3RhdHVzIFY9IjEiIEROPSJPSyIgLz4KICA8T3JpZ2luYWxNc2dJZD4KICAgIDxNc2dUeXBlIFY9IkRJQUxPR19IRUxTRUZBR0xJRyIgRE49IkhlbHNlZmFnbGlnIGRpYWxvZyIgLz4KICAgIDxJc3N1ZURhdGU+MjAyNS0wOC0yMVQxMzoyMDo0OCswMjowMDwvSXNzdWVEYXRlPgogICAgPElkPmE1ZTk2NjVlLTQ5ODItNDUyMS1hNTBmLTRiMTIxZmMyNTA5NDwvSWQ+CiAgPC9PcmlnaW5hbE1zZ0lkPgo8L0FwcFJlYz4K"
@@ -428,15 +540,52 @@ class MshInternalClientTest : FreeSpec() {
             "Not OK response should throw exception" {
                 val id = UUID.randomUUID()
                 val expected = UUID.randomUUID().toString()
-                mockGetBusinessDocument(id, 503, expected)
+                mockGetBusinessDocument(id, 201, expected)
 
                 shouldThrow<HttpException> {
-                    MshInternalClient(
-                        baseUrl = wireMock.baseUrl,
-                        sourceSystem = UUID.randomUUID().toString(),
-                        helseIdClient = mockk<HelseIdClient> { every { getAccessToken(any()) } returns buildTokenResponse(UUID.randomUUID().toString()) },
-                        proofBuilder = mockk<ProofBuilder> { every { buildProof(any(), any(), any()) } returns UUID.randomUUID().toString() },
-                    ).getBusinessDocument(id)
+                    buildDefaultClient().getBusinessDocument(id)
+                }.asClue {
+                    it.status shouldBe 201
+                    it.body shouldBe expected
+                    it.message shouldBe "Got HTTP status 201 when expecting 200: $expected"
+                }
+            }
+
+            "Redirect response should throw exception" {
+                val id = UUID.randomUUID()
+                val expected = UUID.randomUUID().toString()
+                mockGetBusinessDocument(id, 302, expected)
+
+                shouldThrow<HttpRedirectException> {
+                    buildDefaultClient().getBusinessDocument(id)
+                }.asClue {
+                    it.status shouldBe 302
+                    it.body shouldBe expected
+                    it.message shouldBe "Got HTTP status 302: $expected"
+                }
+            }
+
+            "Client error response should throw exception" {
+                val id = UUID.randomUUID()
+                val expected = UUID.randomUUID().toString()
+                mockGetBusinessDocument(id, 403, expected)
+
+                shouldThrow<HttpClientException> {
+                    buildDefaultClient().getBusinessDocument(id)
+                }.asClue {
+                    it.status shouldBe 403
+                    it.body shouldBe expected
+                    it.message shouldBe "Got HTTP status 403: $expected"
+                }
+            }
+
+            "Server error response should throw exception" {
+                val id = UUID.randomUUID()
+                val expected = UUID.randomUUID().toString()
+                mockGetBusinessDocument(id, 503, expected)
+
+                shouldThrow<HttpServerException> {
+                    buildDefaultClient().getBusinessDocument(id)
                 }.asClue {
                     it.status shouldBe 503
                     it.body shouldBe expected
@@ -451,8 +600,8 @@ class MshInternalClientTest : FreeSpec() {
                 mockGetStatus(id)
 
                 val accessToken = UUID.randomUUID().toString()
-                val helseIdClient = mockk<HelseIdClient> { every { getAccessToken(any()) } returns buildTokenResponse(accessToken) }
-                val proofBuilder = mockk<ProofBuilder> { every { buildProof(any(), any(), any()) } returns UUID.randomUUID().toString() }
+                val helseIdClient = mockHelseIdClient(accessToken)
+                val proofBuilder = mockProofBuilder()
                 val client = MshInternalClient(
                     baseUrl = wireMock.baseUrl,
                     sourceSystem = UUID.randomUUID().toString(),
@@ -485,13 +634,7 @@ class MshInternalClientTest : FreeSpec() {
                 mockGetStatus(id, body = readResourceContentAsString("msh/get-status-acked.json"))
 
                 val accessToken = UUID.randomUUID().toString()
-                val client = MshInternalClient(
-                    baseUrl = wireMock.baseUrl,
-                    sourceSystem = UUID.randomUUID().toString(),
-                    helseIdClient = mockk<HelseIdClient> { every { getAccessToken(any()) } returns buildTokenResponse(accessToken) },
-                    proofBuilder = mockk<ProofBuilder> { every { buildProof(any(), any(), any()) } returns UUID.randomUUID().toString() },
-                )
-                client
+                buildDefaultClient(accessToken)
                     .getStatus(id)
                     .asClue {
                         it.size shouldBe 1
@@ -506,15 +649,52 @@ class MshInternalClientTest : FreeSpec() {
             "Not OK response should throw exception" {
                 val id = UUID.randomUUID()
                 val expected = UUID.randomUUID().toString()
-                mockGetStatus(id, 504, expected)
+                mockGetStatus(id, 201, expected)
 
                 shouldThrow<HttpException> {
-                    MshInternalClient(
-                        baseUrl = wireMock.baseUrl,
-                        sourceSystem = UUID.randomUUID().toString(),
-                        helseIdClient = mockk<HelseIdClient> { every { getAccessToken(any()) } returns buildTokenResponse(UUID.randomUUID().toString()) },
-                        proofBuilder = mockk<ProofBuilder> { every { buildProof(any(), any(), any()) } returns UUID.randomUUID().toString() },
-                    ).getStatus(id)
+                    buildDefaultClient().getStatus(id)
+                }.asClue {
+                    it.status shouldBe 201
+                    it.body shouldBe expected
+                    it.message shouldBe "Got HTTP status 201 when expecting 200: $expected"
+                }
+            }
+
+            "Redirect response should throw exception" {
+                val id = UUID.randomUUID()
+                val expected = UUID.randomUUID().toString()
+                mockGetStatus(id, 307, expected)
+
+                shouldThrow<HttpRedirectException> {
+                    buildDefaultClient().getStatus(id)
+                }.asClue {
+                    it.status shouldBe 307
+                    it.body shouldBe expected
+                    it.message shouldBe "Got HTTP status 307: $expected"
+                }
+            }
+
+            "Client error response should throw exception" {
+                val id = UUID.randomUUID()
+                val expected = UUID.randomUUID().toString()
+                mockGetStatus(id, 400, expected)
+
+                shouldThrow<HttpClientException> {
+                    buildDefaultClient().getStatus(id)
+                }.asClue {
+                    it.status shouldBe 400
+                    it.body shouldBe expected
+                    it.message shouldBe "Got HTTP status 400: $expected"
+                }
+            }
+
+            "Server error response should throw exception" {
+                val id = UUID.randomUUID()
+                val expected = UUID.randomUUID().toString()
+                mockGetStatus(id, 504, expected)
+
+                shouldThrow<HttpServerException> {
+                    buildDefaultClient().getStatus(id)
                 }.asClue {
                     it.status shouldBe 504
                     it.body shouldBe expected
@@ -530,8 +710,8 @@ class MshInternalClientTest : FreeSpec() {
                 mockPostAppRec(id, senderHerId)
 
                 val accessToken = UUID.randomUUID().toString()
-                val helseIdClient = mockk<HelseIdClient> { every { getAccessToken(any()) } returns buildTokenResponse(accessToken) }
-                val proofBuilder = mockk<ProofBuilder> { every { buildProof(any(), any(), any()) } returns UUID.randomUUID().toString() }
+                val helseIdClient = mockHelseIdClient(accessToken)
+                val proofBuilder = mockProofBuilder()
                 val client = MshInternalClient(
                     baseUrl = wireMock.baseUrl,
                     sourceSystem = UUID.randomUUID().toString(),
@@ -555,19 +735,59 @@ class MshInternalClientTest : FreeSpec() {
                 }
             }
 
-            "Not OK response should throw exception" {
+            "Not CREATED response should throw exception" {
+                val id = UUID.randomUUID()
+                val senderHerId = nextInt(1, 1000000)
+                val expected = UUID.randomUUID().toString()
+                mockPostAppRec(id, senderHerId, 200, expected)
+
+                shouldThrow<HttpException> {
+                    buildDefaultClient().postAppRec(id, senderHerId, PostAppRecRequest())
+                }.asClue {
+                    it.status shouldBe 200
+                    it.body shouldBe expected
+                    it.message shouldBe "Got HTTP status 200 when expecting 201: $expected"
+                }
+            }
+
+            "Redirect response should throw exception" {
+                val id = UUID.randomUUID()
+                val senderHerId = nextInt(1, 1000000)
+                val expected = UUID.randomUUID().toString()
+                mockPostAppRec(id, senderHerId, 301, expected)
+
+                shouldThrow<HttpRedirectException> {
+                    buildDefaultClient().postAppRec(id, senderHerId, PostAppRecRequest())
+                }.asClue {
+                    it.status shouldBe 301
+                    it.body shouldBe expected
+                    it.message shouldBe "Got HTTP status 301: $expected"
+                }
+            }
+
+            "Client error response should throw exception" {
+                val id = UUID.randomUUID()
+                val senderHerId = nextInt(1, 1000000)
+                val expected = UUID.randomUUID().toString()
+                mockPostAppRec(id, senderHerId, 401, expected)
+
+                shouldThrow<HttpClientException> {
+                    buildDefaultClient().postAppRec(id, senderHerId, PostAppRecRequest())
+                }.asClue {
+                    it.status shouldBe 401
+                    it.body shouldBe expected
+                    it.message shouldBe "Got HTTP status 401: $expected"
+                }
+            }
+
+            "Server error response should throw exception" {
                 val id = UUID.randomUUID()
                 val senderHerId = nextInt(1, 1000000)
                 val expected = UUID.randomUUID().toString()
                 mockPostAppRec(id, senderHerId, 500, expected)
 
-                shouldThrow<HttpException> {
-                    MshInternalClient(
-                        baseUrl = wireMock.baseUrl,
-                        sourceSystem = UUID.randomUUID().toString(),
-                        helseIdClient = mockk<HelseIdClient> { every { getAccessToken(any()) } returns buildTokenResponse(UUID.randomUUID().toString()) },
-                        proofBuilder = mockk<ProofBuilder> { every { buildProof(any(), any(), any()) } returns UUID.randomUUID().toString() },
-                    ).postAppRec(id, senderHerId, PostAppRecRequest())
+                shouldThrow<HttpServerException> {
+                    buildDefaultClient().postAppRec(id, senderHerId, PostAppRecRequest())
                 }.asClue {
                     it.status shouldBe 500
                     it.body shouldBe expected
@@ -583,8 +803,8 @@ class MshInternalClientTest : FreeSpec() {
                 mockMarkMessageRead(id, senderHerId)
 
                 val accessToken = UUID.randomUUID().toString()
-                val helseIdClient = mockk<HelseIdClient> { every { getAccessToken(any()) } returns buildTokenResponse(accessToken) }
-                val proofBuilder = mockk<ProofBuilder> { every { buildProof(any(), any(), any()) } returns UUID.randomUUID().toString() }
+                val helseIdClient = mockHelseIdClient(accessToken)
+                val proofBuilder = mockProofBuilder()
                 MshInternalClient(
                     baseUrl = wireMock.baseUrl,
                     sourceSystem = UUID.randomUUID().toString(),
@@ -602,23 +822,63 @@ class MshInternalClientTest : FreeSpec() {
                 }
             }
 
-            "Not OK response should throw exception" {
+            "Not NO_CONTENT response should throw exception" {
                 val id = UUID.randomUUID()
                 val senderHerId = nextInt(1, 1000000)
                 val expected = UUID.randomUUID().toString()
-                mockMarkMessageRead(id, senderHerId, 500, expected)
+                mockMarkMessageRead(id, senderHerId, 201, expected)
 
                 shouldThrow<HttpException> {
-                    MshInternalClient(
-                        baseUrl = wireMock.baseUrl,
-                        sourceSystem = UUID.randomUUID().toString(),
-                        helseIdClient = mockk<HelseIdClient> { every { getAccessToken(any()) } returns buildTokenResponse(UUID.randomUUID().toString()) },
-                        proofBuilder = mockk<ProofBuilder> { every { buildProof(any(), any(), any()) } returns UUID.randomUUID().toString() },
-                    ).markMessageRead(id, senderHerId)
+                    buildDefaultClient().markMessageRead(id, senderHerId)
                 }.asClue {
-                    it.status shouldBe 500
+                    it.status shouldBe 201
                     it.body shouldBe expected
-                    it.message shouldBe "Got HTTP status 500: $expected"
+                    it.message shouldBe "Got HTTP status 201 when expecting 204: $expected"
+                }
+            }
+
+            "Redirect response should throw exception" {
+                val id = UUID.randomUUID()
+                val senderHerId = nextInt(1, 1000000)
+                val expected = UUID.randomUUID().toString()
+                mockMarkMessageRead(id, senderHerId, 302, expected)
+
+                shouldThrow<HttpRedirectException> {
+                    buildDefaultClient().markMessageRead(id, senderHerId)
+                }.asClue {
+                    it.status shouldBe 302
+                    it.body shouldBe expected
+                    it.message shouldBe "Got HTTP status 302: $expected"
+                }
+            }
+
+            "Client error response should throw exception" {
+                val id = UUID.randomUUID()
+                val senderHerId = nextInt(1, 1000000)
+                val expected = UUID.randomUUID().toString()
+                mockMarkMessageRead(id, senderHerId, 404, expected)
+
+                shouldThrow<HttpClientException> {
+                    buildDefaultClient().markMessageRead(id, senderHerId)
+                }.asClue {
+                    it.status shouldBe 404
+                    it.body shouldBe expected
+                    it.message shouldBe "Got HTTP status 404: $expected"
+                }
+            }
+
+            "Server error response should throw exception" {
+                val id = UUID.randomUUID()
+                val senderHerId = nextInt(1, 1000000)
+                val expected = UUID.randomUUID().toString()
+                mockMarkMessageRead(id, senderHerId, 501, expected)
+
+                shouldThrow<HttpServerException> {
+                    buildDefaultClient().markMessageRead(id, senderHerId)
+                }.asClue {
+                    it.status shouldBe 501
+                    it.body shouldBe expected
+                    it.message shouldBe "Got HTTP status 501: $expected"
                 }
             }
         }
@@ -628,12 +888,12 @@ class MshInternalClientTest : FreeSpec() {
                 val id = UUID.randomUUID()
                 mockGetMessage(id)
 
-                val helseIdClient = mockk<HelseIdClient> { every { getAccessToken(any()) } returns buildTokenResponse("") }
+                val helseIdClient = mockHelseIdClient("")
                 MshInternalClient(
                     baseUrl = wireMock.baseUrl,
                     sourceSystem = UUID.randomUUID().toString(),
                     helseIdClient = helseIdClient,
-                    proofBuilder = mockk { every { buildProof(any(), any(), any()) } returns UUID.randomUUID().toString() },
+                    proofBuilder = mockProofBuilder(),
                 ).getMessage(id)
 
                 verifySequence {
@@ -646,12 +906,12 @@ class MshInternalClientTest : FreeSpec() {
                 mockGetMessage(id)
                 val childOrganization = randomOrganizationNumber()
 
-                val helseIdClient = mockk<HelseIdClient> { every { getAccessToken(any()) } returns buildTokenResponse("") }
+                val helseIdClient = mockHelseIdClient("")
                 MshInternalClient(
                     baseUrl = wireMock.baseUrl,
                     sourceSystem = UUID.randomUUID().toString(),
                     helseIdClient = helseIdClient,
-                    proofBuilder = mockk { every { buildProof(any(), any(), any()) } returns UUID.randomUUID().toString() },
+                    proofBuilder = mockProofBuilder(),
                     defaultTokenParams = HelseIdTokenParameters(
                         tenant = SingleTenantHelseIdTokenParameters(
                             childOrganization = childOrganization,
@@ -670,12 +930,12 @@ class MshInternalClientTest : FreeSpec() {
                 val parentOrganization = randomOrganizationNumber()
                 val childOrganization = randomOrganizationNumber()
 
-                val helseIdClient = mockk<HelseIdClient> { every { getAccessToken(any()) } returns buildTokenResponse("") }
+                val helseIdClient = mockHelseIdClient("")
                 MshInternalClient(
                     baseUrl = wireMock.baseUrl,
                     sourceSystem = UUID.randomUUID().toString(),
                     helseIdClient = helseIdClient,
-                    proofBuilder = mockk { every { buildProof(any(), any(), any()) } returns UUID.randomUUID().toString() },
+                    proofBuilder = mockProofBuilder(),
                     defaultTokenParams = HelseIdTokenParameters(
                         tenant = MultiTenantHelseIdTokenParameters(
                             parentOrganization = parentOrganization,
@@ -700,12 +960,12 @@ class MshInternalClientTest : FreeSpec() {
                 mockGetMessage(id)
                 val parentOrganization = randomOrganizationNumber()
 
-                val helseIdClient = mockk<HelseIdClient> { every { getAccessToken(any()) } returns buildTokenResponse("") }
+                val helseIdClient = mockHelseIdClient("")
                 MshInternalClient(
                     baseUrl = wireMock.baseUrl,
                     sourceSystem = UUID.randomUUID().toString(),
                     helseIdClient = helseIdClient,
-                    proofBuilder = mockk { every { buildProof(any(), any(), any()) } returns UUID.randomUUID().toString() },
+                    proofBuilder = mockProofBuilder(),
                     defaultTokenParams = HelseIdTokenParameters(
                         tenant = MultiTenantHelseIdTokenParameters(
                             parentOrganization = parentOrganization,
@@ -733,7 +993,7 @@ class MshInternalClientTest : FreeSpec() {
                     baseUrl = wireMock.baseUrl,
                     sourceSystem = UUID.randomUUID().toString(),
                     helseIdClient = helseIdClient,
-                    proofBuilder = mockk { every { buildProof(any(), any(), any()) } returns UUID.randomUUID().toString() },
+                    proofBuilder = mockProofBuilder(),
                     defaultTokenParams = HelseIdTokenParameters(
                         tenant = SingleTenantHelseIdTokenParameters(
                             childOrganization = configuredClientChildOrganization,
@@ -767,7 +1027,7 @@ class MshInternalClientTest : FreeSpec() {
                     baseUrl = wireMock.baseUrl,
                     sourceSystem = UUID.randomUUID().toString(),
                     helseIdClient = helseIdClient,
-                    proofBuilder = mockk { every { buildProof(any(), any(), any()) } returns UUID.randomUUID().toString() },
+                    proofBuilder = mockProofBuilder(),
                     defaultTokenParams = HelseIdTokenParameters(
                         tenant = MultiTenantHelseIdTokenParameters(
                             parentOrganization = configuredClientParentOrganization,
@@ -806,11 +1066,7 @@ class MshInternalClientTest : FreeSpec() {
                 MshInternalClient(
                     baseUrl = wireMock.baseUrl,
                     sourceSystem = UUID.randomUUID().toString(),
-                    helseIdClient = mockk<HelseIdClient> {
-                        every { getAccessToken(any()) } returns buildTokenResponse(
-                            accessToken
-                        )
-                    },
+                    helseIdClient = mockHelseIdClient(accessToken),
                     proofBuilder = mockk { every { buildProof(any(), any(), any()) } returns dpopProof },
                 ).getMessage(id)
 
@@ -862,7 +1118,7 @@ class MshInternalClientTest : FreeSpec() {
                     baseUrl = wireMock.baseUrl,
                     sourceSystem = UUID.randomUUID().toString(),
                     helseIdClient = helseIdClient,
-                    proofBuilder = mockk { every { buildProof(any(), any(), any()) } returns UUID.randomUUID().toString() },
+                    proofBuilder = mockProofBuilder(),
                     defaultTokenParams = HelseIdTokenParameters(
                         tenant = staticParams,
                     ),
@@ -909,6 +1165,17 @@ class MshInternalClientTest : FreeSpec() {
         }
 
     }
+
+    private fun buildDefaultClient(accessToken: String = UUID.randomUUID().toString()): MshInternalClient = MshInternalClient(
+        baseUrl = wireMock.baseUrl,
+        sourceSystem = UUID.randomUUID().toString(),
+        helseIdClient = mockHelseIdClient(accessToken),
+        proofBuilder = mockProofBuilder(),
+    )
+
+    private fun mockProofBuilder(): ProofBuilder = mockk<ProofBuilder> { every { buildProof(any(), any(), any()) } returns UUID.randomUUID().toString() }
+
+    private fun mockHelseIdClient(accessToken: String): HelseIdClient = mockk<HelseIdClient> { every { getAccessToken(any()) } returns buildTokenResponse(accessToken) }
 
     private fun mockGetAppRec(id: UUID, status: Int = 200, body: String = readResourceContentAsString("msh/get-apprecinfo-ok.json")) {
         wireMockClient.register(

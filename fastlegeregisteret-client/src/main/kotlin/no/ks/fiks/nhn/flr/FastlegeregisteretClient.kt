@@ -1,6 +1,5 @@
 package no.ks.fiks.nhn.flr
 
-import jakarta.xml.ws.soap.SOAPFaultException
 import no.nhn.schemas.reg.flr.IFlrReadOperationsGetPatientGPDetailsGenericFaultFaultFaultMessage
 import no.nhn.schemas.reg.flr.PatientToGPContractAssociation
 
@@ -15,13 +14,6 @@ class FastlegeregisteretClient(
             throw FastlegeregisteretApiException(
                 errorCode = e.faultInfo?.errorCode?.value,
                 faultMessage = e.faultInfo?.message?.value,
-                message = e.message,
-                cause = e,
-            )
-        } catch (e: SOAPFaultException) {
-            throw FastlegeregisteretApiException(
-                errorCode = e.fault.faultCode,
-                faultMessage = e.fault.faultString,
                 message = e.message,
                 cause = e,
             )

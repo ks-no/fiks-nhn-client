@@ -1,3 +1,5 @@
 package no.ks.fiks.nhn.edi
 
-class VedleggSizeException(message: String) : RuntimeException(message)
+import no.ks.fiks.nhn.msh.MshException
+
+class VedleggSizeException(message: String) : MshException(message)
