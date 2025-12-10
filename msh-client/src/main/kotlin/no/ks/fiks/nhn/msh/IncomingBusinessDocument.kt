@@ -11,7 +11,7 @@ data class IncomingBusinessDocument(
     val id: String,
     val date: LocalDateTime?,
     val type: MeldingensFunksjon,
-    val sender: Organization,
+    val sender: Sender,
     val receiver: Receiver,
     val message: Dialogmelding?,
     val vedlegg: IncomingVedlegg?,

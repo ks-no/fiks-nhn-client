@@ -99,45 +99,41 @@ object BusinessDocumentDeserializer {
 
     private fun MsgHead.getSender() =
         with(msgInfo.sender.organisation) {
-            Organization(
-                name = organisationName,
-                ids = getId(),
-                childOrganization = organisation?.let { childOrganisation ->
-                    with(childOrganisation) {
-                        ChildOrganization(
-                            name = organisationName,
-                            ids = getId(),
-                        )
-                    }
-                }
+            Sender(
+                parent = getParent(),
+                child = getChild(),
             )
         }
 
     private fun MsgHead.getReceiver() =
         with(msgInfo.receiver.organisation) {
             Receiver(
-                parent = OrganizationReceiverDetails(
-                    ids = ident.getOrganisasjonId(),
-                    name = organisationName,
-                ),
-                child = organisation
-                    ?.let {
-                        with(organisation) {
-                            OrganizationReceiverDetails(
-                                ids = ident.getOrganisasjonId(),
-                                name = it.organisationName,
-                            )
-                        }
-                    }
-                    ?: with(healthcareProfessional) {
-                        PersonReceiverDetails(
-                            ids = ident.getPersonId(),
-                            firstName = givenName,
-                            middleName = middleName,
-                            lastName = familyName,
-                        )
-                    },
+                parent = getParent(),
+                child = getChild(),
                 patient = getPatient(),
+            )
+        }
+
+    private fun NhnOrganisation.getParent() = OrganizationCommunicationParty(
+        ids = ident.getOrganisasjonId(),
+        name = organisationName,
+    )
+
+    private fun NhnOrganisation.getChild() = organisation
+        ?.let {
+            with(organisation) {
+                OrganizationCommunicationParty(
+                    ids = ident.getOrganisasjonId(),
+                    name = it.organisationName,
+                )
+            }
+        }
+        ?: with(healthcareProfessional) {
+            PersonCommunicationParty(
+                ids = ident.getPersonId(),
+                firstName = givenName,
+                middleName = middleName,
+                lastName = familyName,
             )
         }
 

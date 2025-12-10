@@ -16,7 +16,7 @@ class GpForPersonReceiverBuilder(
         val parent = fastlege.parent ?: throw GpNotFoundException("GP does not have a parent", person.fnr)
 
         return Receiver(
-            parent = OrganizationReceiverDetails(
+            parent = OrganizationCommunicationParty(
                 name = parent.name,
                 ids = listOf(
                     OrganizationId(
@@ -25,7 +25,7 @@ class GpForPersonReceiverBuilder(
                     )
                 ),
             ),
-            child = PersonReceiverDetails(
+            child = PersonCommunicationParty(
                 ids = listOf(
                     PersonId(
                         id = fastlege.herId.toString(),

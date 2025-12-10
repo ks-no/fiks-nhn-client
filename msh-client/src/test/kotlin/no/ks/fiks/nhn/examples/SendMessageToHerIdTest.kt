@@ -17,15 +17,17 @@ class SendMessageToHerIdTest : StringSpec({
         client.sendMessage(
             OutgoingBusinessDocument(
                 id = UUID.randomUUID(), // This id will be used to connect an application receipt to this message
-                sender = Organization(
-                    name = "<Name of sender organization (virksomhet)>",
-                    ids = listOf(
-                        OrganizationId(
-                            id = "<Sender organization HER-id>",
-                            type = OrganizationIdType.HER_ID,
-                        )
+                sender = Sender(
+                    parent = OrganizationCommunicationParty(
+                        name = "<Name of sender organization (virksomhet)>",
+                        ids = listOf(
+                            OrganizationId(
+                                id = "<Sender organization HER-id>",
+                                type = OrganizationIdType.HER_ID,
+                            )
+                        ),
                     ),
-                    childOrganization = ChildOrganization(
+                    child = OrganizationCommunicationParty( // This can also be PersonCommunicationParty
                         name = "<Name of the sending service (tjeneste), which is owned by the organization specified above>",
                         ids = listOf(
                             OrganizationId(
@@ -36,7 +38,7 @@ class SendMessageToHerIdTest : StringSpec({
                     )
                 ),
                 receiver = Receiver(
-                    parent = OrganizationReceiverDetails(
+                    parent = OrganizationCommunicationParty(
                         name = "<Name of the receiving organization (virksomhet)>",
                         ids = listOf(
                             OrganizationId(
@@ -45,7 +47,7 @@ class SendMessageToHerIdTest : StringSpec({
                             )
                         ),
                     ),
-                    child = PersonReceiverDetails( // This can also be OrganizationReceiverDetails
+                    child = PersonCommunicationParty( // This can also be OrganizationCommunicationParty
                         firstName = "<First name of receiving person>",
                         middleName = "<Middle name of receiving person>",
                         lastName = "<Last name of receiving person>",

@@ -15,8 +15,9 @@ import no.ks.fiks.hdir.*
 import no.ks.fiks.nhn.msh.Department
 import no.ks.fiks.nhn.msh.Institution
 import no.ks.fiks.nhn.msh.InstitutionPerson
+import no.ks.fiks.nhn.msh.OrganizationCommunicationParty
 import no.ks.fiks.nhn.msh.OrganizationId
-import no.ks.fiks.nhn.msh.OrganizationReceiverDetails
+import no.ks.fiks.nhn.msh.PersonCommunicationParty
 import no.ks.fiks.nhn.msh.PersonId
 import no.ks.fiks.nhn.readResourceContent
 import no.ks.fiks.nhn.readResourceContentAsString
@@ -36,11 +37,12 @@ class BusinessDocumentDeserializerTest : StringSpec({
             it.type shouldBe MeldingensFunksjon.DIALOG_FORESPORSEL
 
             with(it.sender) {
-                name shouldBe "NORSK HELSENETT SF"
-                ids.single().id shouldBe "112374"
-                ids.single().type shouldBe OrganizationIdType.HER_ID
+                parent.name shouldBe "NORSK HELSENETT SF"
+                parent.ids.single().id shouldBe "112374"
+                parent.ids.single().type shouldBe OrganizationIdType.HER_ID
 
-                with(childOrganization!!) {
+                child.shouldBeInstanceOf<OrganizationCommunicationParty>()
+                with(child) {
                     name shouldBe "Meldingsvalidering"
                     ids.single().id shouldBe "8094866"
                     ids.single().type shouldBe OrganizationIdType.HER_ID
@@ -52,8 +54,8 @@ class BusinessDocumentDeserializerTest : StringSpec({
                 parent.ids.single().id shouldBe "8142987"
                 parent.ids.single().type shouldBe OrganizationIdType.HER_ID
 
-                child.shouldBeInstanceOf<OrganizationReceiverDetails>()
-                with(child as OrganizationReceiverDetails) {
+                child.shouldBeInstanceOf<OrganizationCommunicationParty>()
+                with(child) {
                     name shouldBe "Saksbehandling pasientopplysninger"
                     ids.single().id shouldBe "8143060"
                     ids.single().type shouldBe OrganizationIdType.HER_ID
@@ -97,12 +99,23 @@ class BusinessDocumentDeserializerTest : StringSpec({
             doc.type shouldBe MeldingensFunksjon.DIALOG_SVAR
 
             with(doc.sender) {
-                name shouldBe "WebMed Feature PPS"
-                ids shouldHaveSize 2
-                ids shouldHaveSingleElement { it.id == "8142952" && it.type == OrganizationIdType.HER_ID }
-                ids shouldHaveSingleElement { it.id == "999988939" && it.type == OrganizationIdType.ENH }
+                parent.name shouldBe "WebMed Feature PPS"
+                parent.ids shouldHaveSize 2
+                parent.ids shouldHaveSingleElement { it.id == "8142952" && it.type == OrganizationIdType.HER_ID }
+                parent.ids shouldHaveSingleElement { it.id == "999988939" && it.type == OrganizationIdType.ENH }
 
-                childOrganization should beNull()
+                child.shouldBeInstanceOf<PersonCommunicationParty>()
+                with(child) {
+                    firstName shouldBe "Grønn"
+                    middleName should beNull()
+                    lastName shouldBe "Vits"
+
+                    ids shouldHaveSize 2
+                    ids[0].id shouldBe "565501872"
+                    ids[0].type shouldBe PersonIdType.HPR
+                    ids[1].id shouldBe "8143025"
+                    ids[1].type shouldBe PersonIdType.HER_ID
+                }
             }
 
             with(doc.receiver) {
@@ -110,8 +123,8 @@ class BusinessDocumentDeserializerTest : StringSpec({
                 parent.ids.single().id shouldBe "8142987"
                 parent.ids.single().type shouldBe OrganizationIdType.HER_ID
 
-                child.shouldBeInstanceOf<OrganizationReceiverDetails>()
-                with(child as OrganizationReceiverDetails) {
+                child.shouldBeInstanceOf<OrganizationCommunicationParty>()
+                with(child) {
                     name shouldBe "SvarUt meldingsformidler"
                     ids.single().id shouldBe "8143060"
                     ids.single().type shouldBe OrganizationIdType.HER_ID
@@ -150,11 +163,12 @@ class BusinessDocumentDeserializerTest : StringSpec({
             it.type shouldBe MeldingensFunksjon.DIALOG_HELSEFAGLIG
 
             with(it.sender) {
-                name shouldBe "NORSK HELSENETT SF"
-                ids.single().id shouldBe "112374"
-                ids.single().type shouldBe OrganizationIdType.HER_ID
+                parent.name shouldBe "NORSK HELSENETT SF"
+                parent.ids.single().id shouldBe "112374"
+                parent.ids.single().type shouldBe OrganizationIdType.HER_ID
 
-                with(childOrganization!!) {
+                child.shouldBeInstanceOf<OrganizationCommunicationParty>()
+                with(child) {
                     name shouldBe "Meldingsvalidering"
                     ids.single().id shouldBe "8094866"
                     ids.single().type shouldBe OrganizationIdType.HER_ID
@@ -166,8 +180,8 @@ class BusinessDocumentDeserializerTest : StringSpec({
                 parent.ids.single().id shouldBe "8142987"
                 parent.ids.single().type shouldBe OrganizationIdType.HER_ID
 
-                child.shouldBeInstanceOf<OrganizationReceiverDetails>()
-                with(child as OrganizationReceiverDetails) {
+                child.shouldBeInstanceOf<OrganizationCommunicationParty>()
+                with(child) {
                     name shouldBe "Saksbehandling pasientopplysninger"
                     ids.single().id shouldBe "8143060"
                     ids.single().type shouldBe OrganizationIdType.HER_ID

@@ -61,11 +61,11 @@ class ClientWithFastlegeLookupTest : FreeSpec() {
                             id = businessDocument.id,
                             sender = businessDocument.sender,
                             receiver = Receiver(
-                                parent = OrganizationReceiverDetails(
+                                parent = OrganizationCommunicationParty(
                                     ids = listOf(OrganizationId(gpCommunicationParty.parent!!.herId.toString(), OrganizationIdType.HER_ID)),
                                     name = gpCommunicationParty.parent!!.name
                                 ),
-                                child = PersonReceiverDetails(
+                                child = no.ks.fiks.nhn.msh.PersonCommunicationParty(
                                     ids = listOf(PersonId(gpCommunicationParty.herId.toString(), PersonIdType.HER_ID)),
                                     firstName = gpCommunicationParty.firstName,
                                     middleName = gpCommunicationParty.middleName,
@@ -109,10 +109,12 @@ private fun randomGPForPersonOutgoingBusinessDocument(
     vedleggBytes: ByteArray = nextBytes(nextInt(1000, 100000)),
 ): GPForPersonOutgoingBusinessDocument = GPForPersonOutgoingBusinessDocument(
     id = UUID.randomUUID(),
-    sender = Organization(
-        name = randomString(),
-        ids = listOf(randomOrganizationHerId()),
-        childOrganization = ChildOrganization(
+    sender = Sender(
+        parent = OrganizationCommunicationParty(
+            name = randomString(),
+            ids = listOf(randomOrganizationHerId()),
+        ),
+        child = OrganizationCommunicationParty(
             name = randomString(),
             ids = listOf(randomOrganizationHerId()),
         ),

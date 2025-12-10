@@ -5,9 +5,9 @@ import io.kotest.matchers.date.shouldBeBetween
 import io.kotest.matchers.shouldBe
 import no.ks.fiks.hdir.*
 import no.ks.fiks.nhn.msh.DialogmeldingVersion
-import no.ks.fiks.nhn.msh.OrganizationReceiverDetails
+import no.ks.fiks.nhn.msh.OrganizationCommunicationParty
 import no.ks.fiks.nhn.msh.OutgoingBusinessDocument
-import no.ks.fiks.nhn.msh.PersonReceiverDetails
+import no.ks.fiks.nhn.msh.PersonCommunicationParty
 import java.io.ByteArrayInputStream
 import java.time.OffsetDateTime
 import java.time.temporal.ChronoUnit
@@ -33,16 +33,31 @@ fun String.validateXmlAgainst(startTime: OffsetDateTime, document: OutgoingBusin
         xPath.evaluate("/MsgHead/MsgInfo/MIGversion", xmlDoc) shouldBe "v1.2 2006-05-24"
         OffsetDateTime.parse(xPath.evaluate("/MsgHead/MsgInfo/GenDate", xmlDoc)).shouldBeBetween(startTime.minusSeconds(1), OffsetDateTime.now())
 
-        xPath.evaluate("/MsgHead/MsgInfo/Sender/Organisation/OrganisationName", xmlDoc) shouldBe document.sender.name
-        xPath.evaluate("/MsgHead/MsgInfo/Sender/Organisation/Ident/Id", xmlDoc) shouldBe document.sender.ids.single().id
-        xPath.evaluate("/MsgHead/MsgInfo/Sender/Organisation/Ident/TypeId/@V", xmlDoc) shouldBe document.sender.ids.single().type.verdi
-        xPath.evaluate("/MsgHead/MsgInfo/Sender/Organisation/Ident/TypeId/@S", xmlDoc) shouldBe document.sender.ids.single().type.kodeverk
-        xPath.evaluate("/MsgHead/MsgInfo/Sender/Organisation/Ident/TypeId/@DN", xmlDoc) shouldBe document.sender.ids.single().type.navn
-        xPath.evaluate("/MsgHead/MsgInfo/Sender/Organisation/Organisation/OrganisationName", xmlDoc) shouldBe document.sender.childOrganization?.name
-        xPath.evaluate("/MsgHead/MsgInfo/Sender/Organisation/Organisation/Ident/Id", xmlDoc) shouldBe document.sender.childOrganization?.ids?.single()?.id
-        xPath.evaluate("/MsgHead/MsgInfo/Sender/Organisation/Organisation/Ident/TypeId/@V", xmlDoc) shouldBe document.sender.childOrganization?.ids?.single()?.type?.verdi
-        xPath.evaluate("/MsgHead/MsgInfo/Sender/Organisation/Organisation/Ident/TypeId/@S", xmlDoc) shouldBe document.sender.childOrganization?.ids?.single()?.type?.kodeverk
-        xPath.evaluate("/MsgHead/MsgInfo/Sender/Organisation/Organisation/Ident/TypeId/@DN", xmlDoc) shouldBe document.sender.childOrganization?.ids?.single()?.type?.navn
+        xPath.evaluate("/MsgHead/MsgInfo/Sender/Organisation/OrganisationName", xmlDoc) shouldBe document.sender.parent.name
+        xPath.evaluate("/MsgHead/MsgInfo/Sender/Organisation/Ident/Id", xmlDoc) shouldBe document.sender.parent.ids.single().id
+        xPath.evaluate("/MsgHead/MsgInfo/Sender/Organisation/Ident/TypeId/@V", xmlDoc) shouldBe document.sender.parent.ids.single().type.verdi
+        xPath.evaluate("/MsgHead/MsgInfo/Sender/Organisation/Ident/TypeId/@S", xmlDoc) shouldBe document.sender.parent.ids.single().type.kodeverk
+        xPath.evaluate("/MsgHead/MsgInfo/Sender/Organisation/Ident/TypeId/@DN", xmlDoc) shouldBe document.sender.parent.ids.single().type.navn
+        when (val senderChild = document.sender.child) {
+            is PersonCommunicationParty -> {
+                xPath.evaluate("/MsgHead/MsgInfo/Sender/Organisation/HealthcareProfessional/GivenName", xmlDoc) shouldBe senderChild.firstName
+                xPath.evaluate("/MsgHead/MsgInfo/Sender/Organisation/HealthcareProfessional/MiddleName", xmlDoc) shouldBe senderChild.middleName
+                xPath.evaluate("/MsgHead/MsgInfo/Sender/Organisation/HealthcareProfessional/FamilyName", xmlDoc) shouldBe senderChild.lastName
+
+                xPath.evaluate("/MsgHead/MsgInfo/Sender/Organisation/HealthcareProfessional/Ident/Id", xmlDoc) shouldBe senderChild.ids.single().id
+                xPath.evaluate("/MsgHead/MsgInfo/Sender/Organisation/HealthcareProfessional/Ident/TypeId/@V", xmlDoc) shouldBe senderChild.ids.single().type.verdi
+                xPath.evaluate("/MsgHead/MsgInfo/Sender/Organisation/HealthcareProfessional/Ident/TypeId/@S", xmlDoc) shouldBe senderChild.ids.single().type.kodeverk
+                xPath.evaluate("/MsgHead/MsgInfo/Sender/Organisation/HealthcareProfessional/Ident/TypeId/@DN", xmlDoc) shouldBe senderChild.ids.single().type.navn
+            }
+            is OrganizationCommunicationParty -> {
+                xPath.evaluate("/MsgHead/MsgInfo/Sender/Organisation/Organisation/OrganisationName", xmlDoc) shouldBe senderChild.name
+
+                xPath.evaluate("/MsgHead/MsgInfo/Sender/Organisation/Organisation/Ident/Id", xmlDoc) shouldBe senderChild.ids.single().id
+                xPath.evaluate("/MsgHead/MsgInfo/Sender/Organisation/Organisation/Ident/TypeId/@V", xmlDoc) shouldBe senderChild.ids.single().type.verdi
+                xPath.evaluate("/MsgHead/MsgInfo/Sender/Organisation/Organisation/Ident/TypeId/@S", xmlDoc) shouldBe senderChild.ids.single().type.kodeverk
+                xPath.evaluate("/MsgHead/MsgInfo/Sender/Organisation/Organisation/Ident/TypeId/@DN", xmlDoc) shouldBe senderChild.ids.single().type.navn
+            }
+        }
 
         xPath.evaluate("/MsgHead/MsgInfo/Receiver/Organisation/OrganisationName", xmlDoc) shouldBe document.receiver.parent.name
         xPath.evaluate("/MsgHead/MsgInfo/Receiver/Organisation/Ident/Id", xmlDoc) shouldBe document.receiver.parent.ids.single().id
@@ -51,7 +66,7 @@ fun String.validateXmlAgainst(startTime: OffsetDateTime, document: OutgoingBusin
         xPath.evaluate("/MsgHead/MsgInfo/Receiver/Organisation/Ident/TypeId/@DN", xmlDoc) shouldBe document.receiver.parent.ids.single().type.navn
 
         when (val receiverChild = document.receiver.child) {
-            is PersonReceiverDetails -> {
+            is PersonCommunicationParty -> {
                 xPath.evaluate("/MsgHead/MsgInfo/Receiver/Organisation/HealthcareProfessional/GivenName", xmlDoc) shouldBe receiverChild.firstName
                 xPath.evaluate("/MsgHead/MsgInfo/Receiver/Organisation/HealthcareProfessional/MiddleName", xmlDoc) shouldBe receiverChild.middleName
                 xPath.evaluate("/MsgHead/MsgInfo/Receiver/Organisation/HealthcareProfessional/FamilyName", xmlDoc) shouldBe receiverChild.lastName
@@ -61,7 +76,7 @@ fun String.validateXmlAgainst(startTime: OffsetDateTime, document: OutgoingBusin
                 xPath.evaluate("/MsgHead/MsgInfo/Receiver/Organisation/HealthcareProfessional/Ident/TypeId/@S", xmlDoc) shouldBe document.receiver.child.ids.single().type.kodeverk
                 xPath.evaluate("/MsgHead/MsgInfo/Receiver/Organisation/HealthcareProfessional/Ident/TypeId/@DN", xmlDoc) shouldBe document.receiver.child.ids.single().type.navn
             }
-            is OrganizationReceiverDetails -> {
+            is OrganizationCommunicationParty -> {
                 xPath.evaluate("/MsgHead/MsgInfo/Receiver/Organisation/Organisation/OrganisationName", xmlDoc) shouldBe receiverChild.name
 
                 xPath.evaluate("/MsgHead/MsgInfo/Receiver/Organisation/Organisation/Ident/Id", xmlDoc) shouldBe document.receiver.child.ids.single().id
