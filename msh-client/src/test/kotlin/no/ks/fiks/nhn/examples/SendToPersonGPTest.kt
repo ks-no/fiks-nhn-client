@@ -26,7 +26,7 @@ class SendToPersonGPTest : StringSpec({
                             ),
                         ),
                     ),
-                    child = OrganizationCommunicationParty(
+                    child = OrganizationCommunicationParty( // This can also be PersonCommunicationParty
                         name = "<Name of the sending service (tjeneste), which is owned by the organization specified above>",
                         ids = listOf(
                             OrganizationId(
