@@ -16,15 +16,17 @@ class SendToPersonGPTest : StringSpec({
         client.sendMessageToGPForPerson(
             GPForPersonOutgoingBusinessDocument(
                 id = UUID.randomUUID(), // This id will be used to connect an application receipt to this message
-                sender = Organization(
-                    name = "<Name of sender organization (virksomhet)>",
-                    ids = listOf(
-                        OrganizationId(
-                            id = "<Sender organization HER-id>",
-                            type = OrganizationIdType.HER_ID,
+                sender = Sender(
+                    parent = OrganizationCommunicationParty(
+                        name = "<Name of sender organization (virksomhet)>",
+                        ids = listOf(
+                            OrganizationId(
+                                id = "<Sender organization HER-id>",
+                                type = OrganizationIdType.HER_ID,
+                            ),
                         ),
                     ),
-                    childOrganization = ChildOrganization(
+                    child = OrganizationCommunicationParty( // This can also be PersonCommunicationParty
                         name = "<Name of the sending service (tjeneste), which is owned by the organization specified above>",
                         ids = listOf(
                             OrganizationId(

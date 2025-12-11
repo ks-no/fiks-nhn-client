@@ -829,20 +829,22 @@ private fun randomOutgoingBusinessDocument(
     vedleggBytes: ByteArray = nextBytes(nextInt(1000, 100000)),
 ): OutgoingBusinessDocument = OutgoingBusinessDocument(
     id = UUID.randomUUID(),
-    sender = Organization(
-        name = randomString(),
-        ids = listOf(randomOrganizationHerId()),
-        childOrganization = ChildOrganization(
+    sender = Sender(
+        parent = OrganizationCommunicationParty(
+            name = randomString(),
+            ids = listOf(randomOrganizationHerId()),
+        ),
+        child = OrganizationCommunicationParty(
             name = randomString(),
             ids = listOf(randomOrganizationHerId()),
         ),
     ),
     receiver = Receiver(
-        parent = OrganizationReceiverDetails(
+        parent = OrganizationCommunicationParty(
             ids = listOf(randomOrganizationHerId()),
             name = randomString(),
         ),
-        child = PersonReceiverDetails(
+        child = PersonCommunicationParty(
             ids = listOf(randomPersonHerId()),
             firstName = randomString(),
             middleName = randomString(),

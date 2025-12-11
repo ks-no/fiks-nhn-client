@@ -7,7 +7,7 @@ import java.util.*
 
 data class OutgoingBusinessDocument(
     val id: UUID,
-    val sender: Organization,
+    val sender: Sender,
     val receiver: Receiver,
     val message: OutgoingMessage,
     val vedlegg: OutgoingVedlegg,
@@ -16,7 +16,7 @@ data class OutgoingBusinessDocument(
 
 data class GPForPersonOutgoingBusinessDocument(
     val id: UUID,
-    val sender: Organization,
+    val sender: Sender,
     val person: Person,
     val message: OutgoingMessage,
     val vedlegg: OutgoingVedlegg,

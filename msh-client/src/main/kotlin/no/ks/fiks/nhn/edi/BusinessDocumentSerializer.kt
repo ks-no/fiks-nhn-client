@@ -14,6 +14,7 @@ import javax.xml.datatype.DatatypeFactory
 import no.kith.xmlstds.msghead._2006_05_24.Organisation as NhnOrganisation
 import no.kith.xmlstds.msghead._2006_05_24.Patient as NhnPatient
 import no.kith.xmlstds.msghead._2006_05_24.Receiver as NhnReceiver
+import no.kith.xmlstds.msghead._2006_05_24.Sender as NhnSender
 import no.ks.fiks.nhn.edi.v1_0.DialogmeldingBuilder as DialogmeldingBuilder1_0
 import no.ks.fiks.nhn.edi.v1_1.DialogmeldingBuilder as DialogmeldingBuilder1_1
 
@@ -46,30 +47,11 @@ object BusinessDocumentSerializer {
                 miGversion = MSG_HEAD_VERSION
                 genDate = currentDateTime()
                 msgId = businessDocument.id.toString()
-                sender = toSender(businessDocument.sender)
+                sender = NhnSender().apply {
+                    organisation = toOrganisation(businessDocument.sender.parent, businessDocument.sender.child)
+                }
                 receiver = NhnReceiver().apply {
-                    organisation = NhnOrganisation().apply {
-                        organisationName = businessDocument.receiver.parent.name
-                        ident = businessDocument.receiver.parent.ids.map { toIdent(it) }
-                        organisation = businessDocument.receiver.child
-                            .let { it as? OrganizationReceiverDetails }
-                            ?.let { org ->
-                                NhnOrganisation().apply {
-                                    organisationName = org.name
-                                    ident = org.ids.map { toIdent(it) }
-                                }
-                            }
-                        healthcareProfessional = businessDocument.receiver.child
-                            .let { it as? PersonReceiverDetails }
-                            ?.let { person ->
-                                HealthcareProfessional().apply {
-                                    givenName = person.firstName
-                                    middleName = person.middleName
-                                    familyName = person.lastName
-                                    ident = person.ids.map { toIdent(it) }
-                                }
-                            }
-                    }
+                    organisation = toOrganisation(businessDocument.receiver.parent, businessDocument.receiver.child)
                 }
                 patient = NhnPatient().apply {
                     givenName = businessDocument.receiver.patient.firstName
@@ -93,6 +75,32 @@ object BusinessDocumentSerializer {
         }
         .also { XmlContext.validateObject(it) }
 
+    private fun toOrganisation(
+        parent: OrganizationCommunicationParty,
+        child: CommunicationParty,
+    ): NhnOrganisation = NhnOrganisation().apply {
+        organisationName = parent.name
+        ident = parent.ids.map { toIdent(it) }
+        organisation = child
+            .let { it as? OrganizationCommunicationParty }
+            ?.let { org ->
+                NhnOrganisation().apply {
+                    organisationName = org.name
+                    ident = org.ids.map { toIdent(it) }
+                }
+            }
+        healthcareProfessional = child
+            .let { it as? PersonCommunicationParty }
+            ?.let { person ->
+                HealthcareProfessional().apply {
+                    givenName = person.firstName
+                    middleName = person.middleName
+                    familyName = person.lastName
+                    ident = person.ids.map { toIdent(it) }
+                }
+            }
+    }
+
     private fun buildMsgInfoType(version: DialogmeldingVersion) =
         when (version) {
             DialogmeldingVersion.V1_0 -> MeldingensFunksjon.DIALOG_FORESPORSEL
@@ -109,21 +117,6 @@ object BusinessDocumentSerializer {
             DateTimeFormatter.ISO_OFFSET_DATE_TIME
                 .format(ZonedDateTime.now().truncatedTo(ChronoUnit.SECONDS))
         )
-
-    private fun toSender(input: Organization) = Sender().apply {
-        organisation = toOrganisation(input)
-    }
-
-    private fun toOrganisation(input: Organization): NhnOrganisation = NhnOrganisation().apply {
-        organisationName = input.name
-        ident = input.ids.map { toIdent(it) }
-        organisation = input.childOrganization?.let { toOrganisation(it) }
-    }
-
-    private fun toOrganisation(input: ChildOrganization): NhnOrganisation = NhnOrganisation().apply {
-        organisationName = input.name
-        ident = input.ids.map { toIdent(it) }
-    }
 
     private fun toIdent(input: Id) = Ident().apply {
         id = input.id

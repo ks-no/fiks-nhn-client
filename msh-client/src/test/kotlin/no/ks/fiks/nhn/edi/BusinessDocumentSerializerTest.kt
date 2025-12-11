@@ -18,10 +18,28 @@ import kotlin.random.Random.Default.nextInt
 
 class BusinessDocumentSerializerTest : StringSpec({
 
+    "Test serialization of Dialogmelding 1.0 message with person sender child" {
+        val start = OffsetDateTime.now().minusSeconds(1)
+        val vedleggBytes = nextBytes(nextInt(100, 1000))
+        val document = randomOutgoingBusinessDocument(DialogmeldingVersion.V1_0, vedleggBytes, senderChild = randomPersonCommunicationParty())
+
+        BusinessDocumentSerializer.serializeNhnMessage(document)
+            .validateXmlAgainst(start, document, vedleggBytes)
+    }
+
+    "Test serialization of Dialogmelding 1.0 message with organization sender child" {
+        val start = OffsetDateTime.now().minusSeconds(1)
+        val vedleggBytes = nextBytes(nextInt(100, 1000))
+        val document = randomOutgoingBusinessDocument(DialogmeldingVersion.V1_0, vedleggBytes, senderChild = randomOrganizationCommunicationParty())
+
+        BusinessDocumentSerializer.serializeNhnMessage(document)
+            .validateXmlAgainst(start, document, vedleggBytes)
+    }
+
     "Test serialization of Dialogmelding 1.0 message with person receiver child" {
         val start = OffsetDateTime.now().minusSeconds(1)
         val vedleggBytes = nextBytes(nextInt(100, 1000))
-        val document = randomOutgoingBusinessDocument(DialogmeldingVersion.V1_0, vedleggBytes, randomPersonReceiverDetails())
+        val document = randomOutgoingBusinessDocument(DialogmeldingVersion.V1_0, vedleggBytes, receiverChild = randomPersonCommunicationParty())
 
         BusinessDocumentSerializer.serializeNhnMessage(document)
             .validateXmlAgainst(start, document, vedleggBytes)
@@ -30,7 +48,25 @@ class BusinessDocumentSerializerTest : StringSpec({
     "Test serialization of Dialogmelding 1.0 message with organization receiver child" {
         val start = OffsetDateTime.now().minusSeconds(1)
         val vedleggBytes = nextBytes(nextInt(100, 1000))
-        val document = randomOutgoingBusinessDocument(DialogmeldingVersion.V1_0, vedleggBytes, randomOrganizationReceiverDetails())
+        val document = randomOutgoingBusinessDocument(DialogmeldingVersion.V1_0, vedleggBytes, receiverChild = randomOrganizationCommunicationParty())
+
+        BusinessDocumentSerializer.serializeNhnMessage(document)
+            .validateXmlAgainst(start, document, vedleggBytes)
+    }
+
+    "Test serialization of Dialogmelding 1.1 message with person sender child" {
+        val start = OffsetDateTime.now().minusSeconds(1)
+        val vedleggBytes = nextBytes(nextInt(100, 1000))
+        val document = randomOutgoingBusinessDocument(DialogmeldingVersion.V1_1, vedleggBytes, senderChild = randomPersonCommunicationParty())
+
+        BusinessDocumentSerializer.serializeNhnMessage(document)
+            .validateXmlAgainst(start, document, vedleggBytes)
+    }
+
+    "Test serialization of Dialogmelding 1.1 message with organization sender child" {
+        val start = OffsetDateTime.now().minusSeconds(1)
+        val vedleggBytes = nextBytes(nextInt(100, 1000))
+        val document = randomOutgoingBusinessDocument(DialogmeldingVersion.V1_1, vedleggBytes, senderChild = randomOrganizationCommunicationParty())
 
         BusinessDocumentSerializer.serializeNhnMessage(document)
             .validateXmlAgainst(start, document, vedleggBytes)
@@ -39,7 +75,7 @@ class BusinessDocumentSerializerTest : StringSpec({
     "Test serialization of Dialogmelding 1.1 message with person receiver child" {
         val start = OffsetDateTime.now().minusSeconds(1)
         val vedleggBytes = nextBytes(nextInt(100, 1000))
-        val document = randomOutgoingBusinessDocument(DialogmeldingVersion.V1_1, vedleggBytes, randomPersonReceiverDetails())
+        val document = randomOutgoingBusinessDocument(DialogmeldingVersion.V1_1, vedleggBytes, receiverChild = randomPersonCommunicationParty())
 
         BusinessDocumentSerializer.serializeNhnMessage(document)
             .validateXmlAgainst(start, document, vedleggBytes)
@@ -48,7 +84,7 @@ class BusinessDocumentSerializerTest : StringSpec({
     "Test serialization of Dialogmelding 1.1 message with organization receiver child" {
         val start = OffsetDateTime.now().minusSeconds(1)
         val vedleggBytes = nextBytes(nextInt(100, 1000))
-        val document = randomOutgoingBusinessDocument(DialogmeldingVersion.V1_1, vedleggBytes, randomOrganizationReceiverDetails())
+        val document = randomOutgoingBusinessDocument(DialogmeldingVersion.V1_1, vedleggBytes, receiverChild = randomOrganizationCommunicationParty())
 
         BusinessDocumentSerializer.serializeNhnMessage(document)
             .validateXmlAgainst(start, document, vedleggBytes)
@@ -56,14 +92,14 @@ class BusinessDocumentSerializerTest : StringSpec({
 
     "A vedlegg of size 18 MB should be accepted" {
         val vedleggBytes = nextBytes(18000000)
-        val document = randomOutgoingBusinessDocument(DialogmeldingVersion.V1_1, vedleggBytes, randomOrganizationReceiverDetails())
+        val document = randomOutgoingBusinessDocument(DialogmeldingVersion.V1_1, vedleggBytes, randomOrganizationCommunicationParty())
 
         BusinessDocumentSerializer.serializeNhnMessage(document)
     }
 
     "If vedlegg has size greater than 18 MB, an exception should be thrown" {
         val vedleggBytes = nextBytes(18000001)
-        val document = randomOutgoingBusinessDocument(DialogmeldingVersion.V1_1, vedleggBytes, randomOrganizationReceiverDetails())
+        val document = randomOutgoingBusinessDocument(DialogmeldingVersion.V1_1, vedleggBytes, randomOrganizationCommunicationParty())
 
         shouldThrow<VedleggSizeException> {  BusinessDocumentSerializer.serializeNhnMessage(document) }.asClue {
             it.message shouldBe "The size of vedlegg exceeds the max size of 18000000 bytes"
@@ -75,22 +111,18 @@ class BusinessDocumentSerializerTest : StringSpec({
 private fun randomOutgoingBusinessDocument(
     version: DialogmeldingVersion,
     vedleggBytes: ByteArray,
-    receiverChild: ReceiverDetails = randomPersonReceiverDetails(),
+    senderParent: OrganizationCommunicationParty = randomOrganizationCommunicationParty(),
+    senderChild: CommunicationParty = randomPersonCommunicationParty(),
+    receiverParent: OrganizationCommunicationParty = randomOrganizationCommunicationParty(),
+    receiverChild: CommunicationParty = randomPersonCommunicationParty(),
 ): OutgoingBusinessDocument = OutgoingBusinessDocument(
     id = UUID.randomUUID(),
-    sender = Organization(
-        name = UUID.randomUUID().toString(),
-        ids = listOf(OrganizationId(UUID.randomUUID().toString(), OrganizationIdType.entries.random())),
-        childOrganization = ChildOrganization(
-            name = UUID.randomUUID().toString(),
-            ids = listOf(OrganizationId(UUID.randomUUID().toString(), OrganizationIdType.entries.random())),
-        )
+    sender = Sender(
+        parent = senderParent,
+        child = senderChild,
     ),
     receiver = Receiver(
-        parent = OrganizationReceiverDetails(
-            name = UUID.randomUUID().toString(),
-            ids = listOf(OrganizationId(UUID.randomUUID().toString(), OrganizationIdType.entries.random())),
-        ),
+        parent = receiverParent,
         child = receiverChild,
         patient = Patient(
             fnr = UUID.randomUUID().toString(),
@@ -119,14 +151,14 @@ private fun randomOutgoingBusinessDocument(
     version = version,
 )
 
-private fun randomPersonReceiverDetails() = PersonReceiverDetails(
+private fun randomPersonCommunicationParty() = PersonCommunicationParty(
     firstName = UUID.randomUUID().toString(),
     middleName = UUID.randomUUID().toString(),
     lastName = UUID.randomUUID().toString(),
     ids = listOf(PersonId(UUID.randomUUID().toString(), PersonIdType.entries.random())),
 )
 
-private fun randomOrganizationReceiverDetails() = OrganizationReceiverDetails(
+private fun randomOrganizationCommunicationParty() = OrganizationCommunicationParty(
     name = UUID.randomUUID().toString(),
     ids = listOf(OrganizationId(UUID.randomUUID().toString(), OrganizationIdType.entries.random())),
 )
