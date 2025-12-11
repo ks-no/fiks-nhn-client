@@ -65,7 +65,7 @@ class ClientWithFastlegeLookupTest : FreeSpec() {
                                     ids = listOf(OrganizationId(gpCommunicationParty.parent!!.herId.toString(), OrganizationIdType.HER_ID)),
                                     name = gpCommunicationParty.parent!!.name
                                 ),
-                                child = no.ks.fiks.nhn.msh.PersonCommunicationParty(
+                                child = PersonCommunicationParty(
                                     ids = listOf(PersonId(gpCommunicationParty.herId.toString(), PersonIdType.HER_ID)),
                                     firstName = gpCommunicationParty.firstName,
                                     middleName = gpCommunicationParty.middleName,
