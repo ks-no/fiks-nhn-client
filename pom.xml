@@ -12,7 +12,7 @@
 
     <groupId>no.ks.fiks</groupId>
     <artifactId>nhn-client-parent</artifactId>
-    <version>1.1.1-SNAPSHOT</version>
+    <version>1.2.0</version>
     <packaging>pom</packaging>
     <name>${project.groupId}:${project.artifactId}</name>
     <description>Parent for clients communicating with different NHN services</description>
