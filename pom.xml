@@ -45,6 +45,7 @@
         <kotlin-logging.version>3.0.5</kotlin-logging.version>
         <nimbus-jose-jwt.version>10.6</nimbus-jose-jwt.version>
         <jackson.version>2.20.1</jackson.version>
+        <caffeine.version>3.2.3</caffeine.version>
 
         <kotest.version>6.0.1</kotest.version>
         <mockk.version>1.14.2</mockk.version>
@@ -104,6 +105,11 @@
                 <groupId>com.nimbusds</groupId>
                 <artifactId>nimbus-jose-jwt</artifactId>
                 <version>${nimbus-jose-jwt.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.ben-manes.caffeine</groupId>
+                <artifactId>caffeine</artifactId>
+                <version>${caffeine.version}</version>
             </dependency>
 
 

@@ -66,6 +66,10 @@
             <artifactId>cxf-rt-rs-security-oauth2</artifactId>
             <version>${cxf.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+        </dependency>
 
 
         <dependency>

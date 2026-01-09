@@ -12,7 +12,7 @@ import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.every
 import io.mockk.mockk
 import no.nhn.common.ar.GenericFault
-import no.nhn.register.communicationparty.*
+import no.nhn.register.communicationparty.ICommunicationPartyServiceGetCommunicationPartyDetailsGenericFaultFaultFaultMessage
 import java.util.*
 import kotlin.random.Random.Default.nextInt
 import no.nhn.register.communicationparty.CommunicationParty as NhnCommunicationParty
