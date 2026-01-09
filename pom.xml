@@ -47,6 +47,8 @@
         <jackson.version>2.20.1</jackson.version>
         <caffeine.version>3.2.3</caffeine.version>
 
+        <junit.version>5.14.2</junit.version>
+        <junit-platform.version>1.14.2</junit-platform.version>
         <kotest.version>6.0.1</kotest.version>
         <mockk.version>1.14.2</mockk.version>
         <wiremock.version>3.13.2</wiremock.version>
@@ -113,6 +115,36 @@
             </dependency>
 
 
+            <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter</artifactId>
+                <version>${junit.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter-api</artifactId>
+                <version>${junit.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.junit.platform</groupId>
+                <artifactId>junit-platform-engine</artifactId>
+                <version>${junit-platform.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.junit.platform</groupId>
+                <artifactId>junit-platform-suite-api</artifactId>
+                <version>${junit-platform.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.junit.platform</groupId>
+                <artifactId>junit-platform-launcher</artifactId>
+                <version>${junit-platform.version}</version>
+                <scope>test</scope>
+            </dependency>
             <dependency>
                 <groupId>io.kotest</groupId>
                 <artifactId>kotest-runner-junit5-jvm</artifactId>
