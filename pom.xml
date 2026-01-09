@@ -51,7 +51,7 @@
         <mockk.version>1.14.2</mockk.version>
         <wiremock.version>3.13.2</wiremock.version>
         <wiremock-testcontainers.version>1.0-alpha-15</wiremock-testcontainers.version>
-        <ktor-client.version>3.3.2</ktor-client.version>
+        <ktor-client.version>3.3.3</ktor-client.version>
     </properties>
 
     <dependencyManagement>
