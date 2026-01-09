@@ -1,5 +1,6 @@
 package no.ks.fiks.nhn.ar
 
+import com.github.benmanes.caffeine.cache.Caffeine
 import jakarta.xml.bind.JAXBElement
 import mu.KotlinLogging
 import no.nhn.register.communicationparty.ICommunicationPartyServiceGetCommunicationPartyDetailsGenericFaultFaultFaultMessage
@@ -10,11 +11,32 @@ import no.nhn.register.communicationparty.CommunicationParty as NhnCommunication
 
 private val log = KotlinLogging.logger { }
 
-class AdresseregisteretClient(
+class AdresseregisteretClient @JvmOverloads constructor(
     private val service: AdresseregisteretService,
+    cacheConfig: CacheConfig? = null,
 ) {
 
-    fun lookupHerId(herId: Int): CommunicationParty? =
+    private val cache = cacheConfig
+        ?.let { CaffeineCache(config = cacheConfig, loader = ::lookupHerIdFromApi) }
+        ?: Cache { lookupHerIdFromApi(it) }
+
+    fun lookupHerId(herId: Int): CommunicationParty? = cache.get(herId)
+
+    fun lookupPostalAddress(herId: Int): PostalAddress =
+        lookupHerId(herId)?.let { communicationParty ->
+            if (communicationParty.physicalAddresses.isEmpty()) {
+                throw AddressNotFoundException("Could not find any physicalAdresses related to herId")
+            }
+            log.debug("Found ${communicationParty.physicalAddresses.size} addresses for $herId")
+
+            val addressPriority = listOf(PostalAddressType.POSTADRESSE, PostalAddressType.BESOKSADRESSE)
+
+            addressPriority.firstNotNullOfOrNull { type -> communicationParty.physicalAddresses.firstOrNull { it.type == type } }
+                ?.toPostalAddress(communicationParty.name)
+                ?: throw AddressNotFoundException("Could not find any relevant physicalAdresses related to herId")
+        } ?: throw AddressNotFoundException("Did not find any communication party related to herId")
+
+    private fun lookupHerIdFromApi(herId: Int): CommunicationParty? =
         try {
             service.getCommunicationPartyDetails(herId)
                 ?.let {
@@ -38,20 +60,6 @@ class AdresseregisteretClient(
                 cause = e,
             )
         }
-
-    fun lookupPostalAddress(herId: Int): PostalAddress =
-        lookupHerId(herId)?.let { communicationParty ->
-            if (communicationParty.physicalAddresses.isEmpty()) {
-                throw AddressNotFoundException("Could not find any physicalAdresses related to herId")
-            }
-            log.debug("Found ${communicationParty.physicalAddresses.size} addresses for $herId")
-
-            val addressPriority = listOf(PostalAddressType.POSTADRESSE, PostalAddressType.BESOKSADRESSE)
-
-            addressPriority.firstNotNullOfOrNull { type -> communicationParty.physicalAddresses.firstOrNull { it.type == type } }
-                ?.toPostalAddress(communicationParty.name)
-                ?: throw AddressNotFoundException("Could not find any relevant physicalAdresses related to herId")
-        } ?: throw AddressNotFoundException("Did not find any communication party related to herId")
 
 
     private fun Organization.convert() = OrganizationCommunicationParty(
@@ -114,6 +122,25 @@ class AdresseregisteretClient(
             )
         }
         ?: emptyList()
+
+
+    private fun interface Cache {
+        fun get(herId: Int): CommunicationParty?
+    }
+
+    private class CaffeineCache(
+        config: CacheConfig,
+        loader: (Int) -> CommunicationParty?,
+    ) : Cache {
+
+        private val cache = Caffeine.newBuilder()
+            .maximumSize(config.maxSize)
+            .expireAfterWrite(config.cacheTtl)
+            .build<Int, CommunicationParty?> { herId -> loader.invoke(herId) }
+
+        override fun get(herId: Int) = cache.get(herId)
+
+    }
 
 }
 
