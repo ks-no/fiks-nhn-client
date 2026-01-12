@@ -47,7 +47,7 @@
         <jackson.version>2.20.1</jackson.version>
         <caffeine.version>3.2.3</caffeine.version>
 
-        <junit.version>5.14.2</junit.version>
+        <junit.version>6.0.2</junit.version>
         <junit-platform.version>1.14.2</junit-platform.version>
         <kotest.version>6.0.7</kotest.version>
         <mockk.version>1.14.7</mockk.version>
