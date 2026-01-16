@@ -25,6 +25,8 @@ import no.ks.fiks.nhn.edi.v1_1.AppRecDeserializer as AppRecDeserializer1_1
 private const val MSG_HEAD_ROOT = "MsgHead"
 private const val APP_REC_ROOT = "AppRec"
 
+private const val MSG_HEAD_VERSION = "v1.2 2006-05-24"
+
 private const val APPREC_VERSION_1_0 = "1.0 2004-11-21"
 private const val APPREC_VERSION_1_1 = "v1.1 2012-02-15"
 
@@ -36,6 +38,7 @@ object BusinessDocumentDeserializer {
 
     fun deserializeMsgHead(msgHeadXml: String): IncomingBusinessDocument {
         validateRootElement(msgHeadXml, MSG_HEAD_ROOT)
+        if (getVersion(msgHeadXml) != MSG_HEAD_VERSION) throw IllegalArgumentException("Invalid MIGversion. Only $MSG_HEAD_VERSION is supported.")
         XmlContext.validateXml(msgHeadXml)
         val msgHead = XmlContext.createUnmarshaller().unmarshal(StreamSource(StringReader(msgHeadXml)), MsgHead::class.java).value
         if (msgHead.msgInfo == null) throw IllegalArgumentException("Could not find MsgInfo in the provided XML. The message is invalid or of wrong type.")
@@ -71,8 +74,8 @@ object BusinessDocumentDeserializer {
         }
     }
 
-    private fun getVersion(appRecXml: String): String? {
-        val reader = factory.createXMLStreamReader(StringReader(appRecXml))
+    private fun getVersion(xml: String): String? {
+        val reader = factory.createXMLStreamReader(StringReader(xml))
 
         while (reader.hasNext()) {
             if (reader.next() == XMLStreamConstants.START_ELEMENT) {
