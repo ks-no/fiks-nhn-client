@@ -149,6 +149,10 @@ private fun randomOutgoingBusinessDocument(
         data = ByteArrayInputStream(vedleggBytes),
     ),
     version = version,
+    conversationRef = ConversationRef(
+        refToParent = UUID.randomUUID().toString(),
+        refToConversation = UUID.randomUUID().toString(),
+    )
 )
 
 private fun randomPersonCommunicationParty() = PersonCommunicationParty(

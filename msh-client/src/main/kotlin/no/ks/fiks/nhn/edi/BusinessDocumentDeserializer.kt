@@ -56,6 +56,7 @@ object BusinessDocumentDeserializer {
             receiver = msgHead.getReceiver(),
             message = msgHead.getMessage(),
             vedlegg = msgHead.getVedlegg(),
+            conversationRef = msgHead.getConversationRef(),
         )
     }
 
@@ -258,6 +259,9 @@ object BusinessDocumentDeserializer {
                     }
             }
         }
+    private fun MsgHead.getConversationRef() =
+        if (msgInfo.conversationRef?.refToConversation.isNullOrBlank() && msgInfo.conversationRef?.refToParent.isNullOrBlank()) null
+        else ConversationRef(refToParent = msgInfo.conversationRef?.refToParent, refToConversation = msgInfo.conversationRef?.refToConversation)
 
     private fun CS.toMeldingensFunksjon() = MeldingensFunksjon.entries.firstOrNull { it.verdi == v } ?: throw IllegalArgumentException("Unknown message type: $v, $dn")
 

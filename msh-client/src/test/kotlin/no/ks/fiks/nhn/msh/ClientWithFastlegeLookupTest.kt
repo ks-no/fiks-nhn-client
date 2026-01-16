@@ -81,6 +81,10 @@ class ClientWithFastlegeLookupTest : FreeSpec() {
                             message = businessDocument.message,
                             vedlegg = businessDocument.vedlegg,
                             version = businessDocument.version,
+                            conversationRef = ConversationRef(
+                                refToParent = businessDocument.conversationRef?.refToParent,
+                                refToConversation = businessDocument.conversationRef?.refToConversation,
+                            ),
                         ),
                         vedleggBytes = vedleggBytes,
                     )
@@ -145,6 +149,10 @@ private fun randomGPForPersonOutgoingBusinessDocument(
         data = ByteArrayInputStream(vedleggBytes),
     ),
     version = DialogmeldingVersion.entries.random(),
+    conversationRef = ConversationRef(
+        refToParent = UUID.randomUUID().toString(),
+        refToConversation = UUID.randomUUID().toString(),
+    )
 )
 
 private fun randomPersonCommunicationParty(): PersonCommunicationParty = PersonCommunicationParty(

@@ -65,6 +65,10 @@ class SendToPersonGPTest : StringSpec({
                     data = ClassLoader.getSystemResourceAsStream("small.pdf")!!, // InputStream containing the bytes for the attached PDF
                 ),
                 version = DialogmeldingVersion.V1_1, // 1.0 is also supported, but 1.1 is preferred and will be the main focus
+                conversationRef = ConversationRef( // Should be set if this message is part of a dialogue
+                    refToParent = "<Reference to the previous message of this dialogue, should contain the same value as the id field of that message>",
+                    refToConversation = "Reference to the first message of this dialogue, should contain the same value as id field of that message>",
+                )
             )
         )
     }

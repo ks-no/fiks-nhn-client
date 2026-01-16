@@ -15,6 +15,7 @@ import no.kith.xmlstds.msghead._2006_05_24.Organisation as NhnOrganisation
 import no.kith.xmlstds.msghead._2006_05_24.Patient as NhnPatient
 import no.kith.xmlstds.msghead._2006_05_24.Receiver as NhnReceiver
 import no.kith.xmlstds.msghead._2006_05_24.Sender as NhnSender
+import no.kith.xmlstds.msghead._2006_05_24.ConversationRef as NhnConversationRef
 import no.ks.fiks.nhn.edi.v1_0.DialogmeldingBuilder as DialogmeldingBuilder1_0
 import no.ks.fiks.nhn.edi.v1_1.DialogmeldingBuilder as DialogmeldingBuilder1_1
 
@@ -71,6 +72,12 @@ object BusinessDocumentSerializer {
                         }
                     }
                 )
+                conversationRef = businessDocument.conversationRef?.let {
+                    NhnConversationRef().apply {
+                        refToParent = it.refToParent
+                        refToConversation = it.refToConversation
+                    }
+                }
             }
         }
         .also { XmlContext.validateObject(it) }
