@@ -12,16 +12,9 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNot
 import io.kotest.matchers.types.shouldBeInstanceOf
 import no.ks.fiks.hdir.*
-import no.ks.fiks.nhn.msh.Department
-import no.ks.fiks.nhn.msh.Institution
-import no.ks.fiks.nhn.msh.InstitutionPerson
-import no.ks.fiks.nhn.msh.OrganizationCommunicationParty
-import no.ks.fiks.nhn.msh.OrganizationId
-import no.ks.fiks.nhn.msh.PersonCommunicationParty
-import no.ks.fiks.nhn.msh.PersonId
+import no.ks.fiks.nhn.msh.*
 import no.ks.fiks.nhn.readResourceContent
 import no.ks.fiks.nhn.readResourceContentAsString
-import java.lang.IllegalArgumentException
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
@@ -209,6 +202,12 @@ class BusinessDocumentDeserializerTest : StringSpec({
                 data!!.readAllBytes() shouldBe readResourceContent("small.pdf")
             }
         }
+    }
+
+    "Should throw exception if version is invalid" {
+        shouldThrow<IllegalArgumentException> {
+            BusinessDocumentDeserializer.deserializeMsgHead(readResourceContentAsString("dialogmelding/invalid-version.xml"))
+        }.asClue { it.message shouldBe "Invalid MIGversion. Only v1.2 2006-05-24 is supported." }
     }
 
     "Should be able to deserialize AppRec 1.0" {
