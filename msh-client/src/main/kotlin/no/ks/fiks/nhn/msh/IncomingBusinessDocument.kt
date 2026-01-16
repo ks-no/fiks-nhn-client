@@ -4,12 +4,11 @@ import no.ks.fiks.hdir.KodeverkVerdi
 import no.ks.fiks.hdir.MeldingensFunksjon
 import java.io.InputStream
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.time.OffsetDateTime
 
 data class IncomingBusinessDocument(
     val id: String,
-    val date: LocalDateTime?,
+    val date: OffsetDateTime?,
     val type: MeldingensFunksjon,
     val sender: Sender,
     val receiver: Receiver,
