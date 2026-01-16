@@ -13,6 +13,7 @@ import java.io.ByteArrayInputStream
 import java.io.StringReader
 import java.time.OffsetDateTime
 import java.time.ZoneId
+import java.util.GregorianCalendar
 import java.util.TimeZone
 import javax.xml.datatype.DatatypeConstants.FIELD_UNDEFINED
 import javax.xml.datatype.XMLGregorianCalendar
@@ -31,6 +32,8 @@ private const val APP_REC_ROOT = "AppRec"
 private const val APPREC_VERSION_1_0 = "1.0 2004-11-21"
 private const val APPREC_VERSION_1_1 = "v1.1 2012-02-15"
 
+private const val DEFAULT_ZONE = "Europe/Oslo"
+
 private val log = KotlinLogging.logger { }
 
 object BusinessDocumentDeserializer {
@@ -44,7 +47,7 @@ object BusinessDocumentDeserializer {
         if (msgHead.msgInfo == null) throw IllegalArgumentException("Could not find MsgInfo in the provided XML. The message is invalid or of wrong type.")
         return IncomingBusinessDocument(
             id = msgHead.msgInfo.msgId,
-            date = msgHead.msgInfo.genDate.toLocalDateTime(),
+            date = msgHead.msgInfo.genDate.toOffsetDateTime(),
             type = msgHead.getType(),
             sender = msgHead.getSender(),
             receiver = msgHead.getReceiver(),
@@ -222,21 +225,18 @@ object BusinessDocumentDeserializer {
 
     private fun Any?.getText() = (this as? Node)?.firstChild?.nodeValue
 
-    private fun XMLGregorianCalendar?.toLocalDate() = this?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
+    private fun XMLGregorianCalendar.toLocalDate() = toZonedDateTime().withZoneSameInstant(ZoneId.of(DEFAULT_ZONE)).toLocalDate()
+
+    private fun XMLGregorianCalendar.toOffsetDateTime() = toZonedDateTime().toOffsetDateTime()
+
+    private fun XMLGregorianCalendar.toZonedDateTime() = toGregorianCalendarWithZone().toZonedDateTime()
 
     // Converts the XML timestamp to a LocalDateTime with the same instant as the original timestamp, but in the system default time zone
-    // TODO: Return ZonedDateTime or OffsetDateTime?
-    private fun XMLGregorianCalendar?.toLocalDateTime() =
-        if (this?.timezone == FIELD_UNDEFINED) this // If XML timestamp does not have offset, consider it to be Norwegian timezone
-            .toGregorianCalendar(TimeZone.getTimeZone("Europe/Oslo"), null, null)
-            .toZonedDateTime()
-            .withZoneSameInstant(ZoneId.systemDefault())
-            .toLocalDateTime()
+    private fun XMLGregorianCalendar.toGregorianCalendarWithZone() =
+        if (timezone == FIELD_UNDEFINED) this // If XML timestamp does not have offset, consider it to be Norwegian timezone
+            .toGregorianCalendar(TimeZone.getTimeZone(DEFAULT_ZONE), null, null)
         else this // Use offset from XML timestamp
-            ?.toGregorianCalendar()
-            ?.toZonedDateTime()
-            ?.withZoneSameInstant(ZoneId.systemDefault())
-            ?.toLocalDateTime()
+            .toGregorianCalendar()
 
     private fun MsgHead.getVedlegg() =
         document.drop(1).singleOrNull()?.let { doc ->

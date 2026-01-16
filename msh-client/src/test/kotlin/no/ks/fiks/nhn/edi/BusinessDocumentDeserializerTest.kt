@@ -12,19 +12,11 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNot
 import io.kotest.matchers.types.shouldBeInstanceOf
 import no.ks.fiks.hdir.*
-import no.ks.fiks.nhn.msh.Department
-import no.ks.fiks.nhn.msh.Institution
-import no.ks.fiks.nhn.msh.InstitutionPerson
-import no.ks.fiks.nhn.msh.OrganizationCommunicationParty
-import no.ks.fiks.nhn.msh.OrganizationId
-import no.ks.fiks.nhn.msh.PersonCommunicationParty
-import no.ks.fiks.nhn.msh.PersonId
+import no.ks.fiks.nhn.msh.*
 import no.ks.fiks.nhn.readResourceContent
 import no.ks.fiks.nhn.readResourceContentAsString
-import java.lang.IllegalArgumentException
 import java.time.LocalDate
 import java.time.OffsetDateTime
-import java.time.ZoneId
 import java.time.ZoneOffset
 
 class BusinessDocumentDeserializerTest : StringSpec({
@@ -35,8 +27,6 @@ class BusinessDocumentDeserializerTest : StringSpec({
         ).asClue {
             it.id shouldBe "6ddb98ed-9e34-4efa-9163-62e4ea0cbf43"
             it.date shouldBe OffsetDateTime.of(2025, 5, 13, 11, 51, 1, 0, ZoneOffset.ofHours(2))
-                .atZoneSameInstant(ZoneId.systemDefault())
-                .toLocalDateTime()
             it.type shouldBe MeldingensFunksjon.DIALOG_FORESPORSEL
 
             with(it.sender) {
@@ -99,8 +89,6 @@ class BusinessDocumentDeserializerTest : StringSpec({
         ).asClue { doc ->
             doc.id shouldBe "a748bb20-4e0f-4922-9b06-ec2c101eb9c1"
             doc.date shouldBe OffsetDateTime.of(2025, 6, 10, 10, 55, 20, 0, ZoneOffset.ofHours(3))
-                .atZoneSameInstant(ZoneId.systemDefault())
-                .toLocalDateTime()
             doc.type shouldBe MeldingensFunksjon.DIALOG_SVAR
 
             with(doc.sender) {
