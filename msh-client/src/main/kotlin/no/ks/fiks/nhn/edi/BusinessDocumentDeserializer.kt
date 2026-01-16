@@ -231,12 +231,11 @@ object BusinessDocumentDeserializer {
 
     private fun XMLGregorianCalendar.toZonedDateTime() = toGregorianCalendarWithZone().toZonedDateTime()
 
-    // Converts the XML timestamp to a LocalDateTime with the same instant as the original timestamp, but in the system default time zone
     private fun XMLGregorianCalendar.toGregorianCalendarWithZone() =
-        if (timezone == FIELD_UNDEFINED) this // If XML timestamp does not have offset, consider it to be Norwegian timezone
-            .toGregorianCalendar(TimeZone.getTimeZone(DEFAULT_ZONE), null, null)
-        else this // Use offset from XML timestamp
-            .toGregorianCalendar()
+        if (timezone == FIELD_UNDEFINED)
+            toGregorianCalendar(TimeZone.getTimeZone(DEFAULT_ZONE), null, null) // If XML timestamp does not have offset, consider it to be Norwegian timezone
+        else
+            toGregorianCalendar() // Use offset from XML timestamp
 
     private fun MsgHead.getVedlegg() =
         document.drop(1).singleOrNull()?.let { doc ->
