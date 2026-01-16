@@ -12,6 +12,9 @@ import org.w3c.dom.Node
 import java.io.ByteArrayInputStream
 import java.io.StringReader
 import java.time.OffsetDateTime
+import java.time.ZoneId
+import java.util.TimeZone
+import javax.xml.datatype.DatatypeConstants.FIELD_UNDEFINED
 import javax.xml.datatype.XMLGregorianCalendar
 import javax.xml.stream.XMLInputFactory
 import javax.xml.stream.XMLStreamConstants
@@ -221,7 +224,19 @@ object BusinessDocumentDeserializer {
 
     private fun XMLGregorianCalendar?.toLocalDate() = this?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
 
-    private fun XMLGregorianCalendar?.toLocalDateTime() = this?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDateTime()
+    // Converts the XML timestamp to a LocalDateTime with the same instant as the original timestamp, but in the system default time zone
+    // TODO: Return ZonedDateTime or OffsetDateTime?
+    private fun XMLGregorianCalendar?.toLocalDateTime() =
+        if (this?.timezone == FIELD_UNDEFINED) this // If XML timestamp does not have offset, consider it to be Norwegian timezone
+            .toGregorianCalendar(TimeZone.getTimeZone("Europe/Oslo"), null, null)
+            .toZonedDateTime()
+            .withZoneSameInstant(ZoneId.systemDefault())
+            .toLocalDateTime()
+        else this // Use offset from XML timestamp
+            ?.toGregorianCalendar()
+            ?.toZonedDateTime()
+            ?.withZoneSameInstant(ZoneId.systemDefault())
+            ?.toLocalDateTime()
 
     private fun MsgHead.getVedlegg() =
         document.drop(1).singleOrNull()?.let { doc ->

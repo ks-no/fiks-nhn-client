@@ -23,8 +23,9 @@ import no.ks.fiks.nhn.readResourceContent
 import no.ks.fiks.nhn.readResourceContentAsString
 import java.lang.IllegalArgumentException
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.time.OffsetDateTime
+import java.time.ZoneId
+import java.time.ZoneOffset
 
 class BusinessDocumentDeserializerTest : StringSpec({
 
@@ -33,7 +34,9 @@ class BusinessDocumentDeserializerTest : StringSpec({
             readResourceContentAsString("dialogmelding/1.0/foresporsel-og-svar/dialog-foresporsel-samsvar-test.xml")
         ).asClue {
             it.id shouldBe "6ddb98ed-9e34-4efa-9163-62e4ea0cbf43"
-            it.date shouldBe LocalDateTime.of(2025, 5, 13, 11, 51, 1)
+            it.date shouldBe OffsetDateTime.of(2025, 5, 13, 11, 51, 1, 0, ZoneOffset.ofHours(2))
+                .atZoneSameInstant(ZoneId.systemDefault())
+                .toLocalDateTime()
             it.type shouldBe MeldingensFunksjon.DIALOG_FORESPORSEL
 
             with(it.sender) {
@@ -95,7 +98,9 @@ class BusinessDocumentDeserializerTest : StringSpec({
             readResourceContentAsString("dialogmelding/1.0/foresporsel-og-svar/dialog-svar-webmed-test.xml")
         ).asClue { doc ->
             doc.id shouldBe "a748bb20-4e0f-4922-9b06-ec2c101eb9c1"
-            doc.date shouldBe LocalDateTime.of(2025, 6, 10, 10, 55, 20)
+            doc.date shouldBe OffsetDateTime.of(2025, 6, 10, 10, 55, 20, 0, ZoneOffset.ofHours(3))
+                .atZoneSameInstant(ZoneId.systemDefault())
+                .toLocalDateTime()
             doc.type shouldBe MeldingensFunksjon.DIALOG_SVAR
 
             with(doc.sender) {
