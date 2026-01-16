@@ -138,5 +138,8 @@ fun String.validateXmlAgainst(startTime: OffsetDateTime, document: OutgoingBusin
         xPath.evaluate("/MsgHead/Document[2]/RefDoc/MimeType", xmlDoc) shouldBe "application/pdf"
         xPath.evaluate("/MsgHead/Document[2]/RefDoc/Description", xmlDoc) shouldBe document.vedlegg.description
         Base64.getDecoder().decode(xPath.evaluate("/MsgHead/Document[2]/RefDoc/Content/Base64Container", xmlDoc)) shouldBe vedleggBytes
+
+        xPath.evaluate("/MsgHead/MsgInfo/ConversationRef/RefToParent", xmlDoc) shouldBe document.conversationRef?.refToParent
+        xPath.evaluate("/MsgHead/MsgInfo/ConversationRef/RefToConversation", xmlDoc) shouldBe document.conversationRef?.refToConversation
     }
 }

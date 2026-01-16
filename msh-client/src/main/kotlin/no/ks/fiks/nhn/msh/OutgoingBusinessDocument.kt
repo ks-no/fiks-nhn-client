@@ -12,6 +12,7 @@ data class OutgoingBusinessDocument(
     val message: OutgoingMessage,
     val vedlegg: OutgoingVedlegg,
     val version: DialogmeldingVersion,
+    val conversationRef: ConversationRef?,
 )
 
 data class GPForPersonOutgoingBusinessDocument(
@@ -21,6 +22,7 @@ data class GPForPersonOutgoingBusinessDocument(
     val message: OutgoingMessage,
     val vedlegg: OutgoingVedlegg,
     val version: DialogmeldingVersion,
+    val conversationRef: ConversationRef?,
 )
 
 data class OutgoingVedlegg(

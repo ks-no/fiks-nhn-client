@@ -87,6 +87,8 @@ class BusinessDocumentDeserializerTest : StringSpec({
                 data shouldNot beNull()
                 data!!.readAllBytes() shouldBe readResourceContent("small.pdf")
             }
+
+            it.conversationRef should beNull()
         }
     }
 
@@ -152,6 +154,12 @@ class BusinessDocumentDeserializerTest : StringSpec({
             }
 
             doc.vedlegg should beNull()
+
+            doc.conversationRef shouldNot beNull()
+            with(doc.conversationRef!!) {
+                refToParent shouldBe "4f77040c-3610-4d17-bef1-76994ab2726b"
+                refToConversation shouldBe "4f77040c-3610-4d17-bef1-76994ab2726b"
+            }
         }
     }
 

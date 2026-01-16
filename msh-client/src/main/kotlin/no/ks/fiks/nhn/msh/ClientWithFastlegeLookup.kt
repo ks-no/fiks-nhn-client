@@ -24,6 +24,7 @@ open class ClientWithFastlegeLookup(
                 message = businessDocument.message,
                 vedlegg = businessDocument.vedlegg,
                 version = businessDocument.version,
+                conversationRef = businessDocument.conversationRef,
             ),
             requestParameters,
         )

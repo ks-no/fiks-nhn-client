@@ -877,6 +877,10 @@ private fun randomOutgoingBusinessDocument(
         data = ByteArrayInputStream(vedleggBytes),
     ),
     version = DialogmeldingVersion.entries.random(),
+    conversationRef = ConversationRef(
+        refToParent = UUID.randomUUID().toString(),
+        refToConversation = UUID.randomUUID().toString(),
+    )
 )
 
 private fun randomApiMessageWithoutMetadata() = Message().apply {
