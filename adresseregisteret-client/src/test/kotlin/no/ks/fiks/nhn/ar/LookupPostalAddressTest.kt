@@ -1,9 +1,9 @@
 package no.ks.fiks.nhn.ar
 
 import io.kotest.assertions.asClue
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.shouldBe
-import org.junit.jupiter.api.assertThrows
 import java.util.UUID
 import kotlin.random.Random.Default.nextInt
 
@@ -11,7 +11,7 @@ class LookupPostalAddressTest : FreeSpec(){
   init {
 
       "Verify that missing communicationparty throws AddressNotFoundException" {
-          assertThrows<AddressNotFoundException> {
+          shouldThrow<AddressNotFoundException> {
               buildClient(setupServiceMock(null))
                   .lookupPostalAddress(nextInt(1000, 100000))
           }.asClue {
@@ -21,7 +21,7 @@ class LookupPostalAddressTest : FreeSpec(){
 
       "Verify that communicationparty with no physicalAddress throws AddressNotFoundException" {
           val organizationPerson = buildOrganizationPerson(physicalAddresses = emptyList())
-          assertThrows<AddressNotFoundException> {
+          shouldThrow<AddressNotFoundException> {
               buildClient(setupServiceMock(organizationPerson))
                   .lookupPostalAddress(nextInt(1000, 100000))
           }.asClue {
