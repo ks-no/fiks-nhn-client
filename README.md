@@ -16,4 +16,5 @@ Vedlegg til meldinger: https://sarepta.helsedir.no/standard/Vedlegg%20til%20meld
 
 Kodeverk: https://finnkode.helsedirektoratet.no/adm/collections
 
-HIS 1174:2016: https://www.helsedirektoratet.no/standarder/bruk-av-kontaktopplysninger-i-basismeldinger-dialogmelding-og-pleie-og-omsorgsmeldinger
+HIS 1174:2016: https://www.helsedirektoratet.no/standarder/bruk-av-kontaktopplysninger-i-basismeldinger-dialogmelding-og-pleie-og-omsorgsmeldinger  
+Tjenestebasert adressering: https://www.helsedirektoratet.no/standarder/tjenestebasert-adressering
