@@ -1,5 +1,8 @@
 package no.ks.fiks.nhn.msh
 
+import no.ks.fiks.hdir.OrganizationIdType
+import no.ks.fiks.hdir.PersonIdType
+
 
 data class Sender(
     val parent: OrganizationCommunicationParty,
@@ -13,6 +16,8 @@ data class Receiver(
 )
 
 sealed class CommunicationParty(val ids: List<Id>) {
+
+    abstract val herId: Int?
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -33,6 +38,9 @@ class OrganizationCommunicationParty(
     ids: List<OrganizationId>,
     val name: String,
 ) : CommunicationParty(ids) {
+
+    override val herId
+        get() = ids.firstOrNull { it.type == OrganizationIdType.HER_ID }?.id?.toIntOrNull()
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -62,9 +70,8 @@ class PersonCommunicationParty(
     val lastName: String,
 ) : CommunicationParty(ids) {
 
-    override fun toString(): String {
-        return "PersonCommunicationParty(ids='$ids', firstName='$firstName', middleName=$middleName, lastName='$lastName')"
-    }
+    override val herId
+        get() = ids.firstOrNull { it.type == PersonIdType.HER_ID }?.id?.toIntOrNull()
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -88,6 +95,9 @@ class PersonCommunicationParty(
         return result
     }
 
+    override fun toString(): String {
+        return "PersonCommunicationParty(ids='$ids', firstName='$firstName', middleName=$middleName, lastName='$lastName')"
+    }
 
 }
 
