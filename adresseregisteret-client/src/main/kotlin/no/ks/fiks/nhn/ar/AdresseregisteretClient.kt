@@ -108,10 +108,17 @@ class AdresseregisteretClient @JvmOverloads constructor(
                 postbox = address.postbox.valueNotBlank(),
                 postalCode = address.postalCode?.toString()?.padStart(4, '0'),
                 city = address.city.valueNotBlank(),
-                country = address.country.value?.codeText?.valueNotBlank(),
+                country = address.convertCountry(),
             )
         }
         ?: emptyList()
+
+    private fun no.nhn.common.ar.PhysicalAddress.convertCountry(): Country? {
+        val code = country.value?.codeValue?.valueNotBlank()
+        val name = country.value?.codeText?.valueNotBlank()
+        if (code == null || name == null) return null
+        return Country(code = code, name = name)
+    }
 
     private fun NhnCommunicationParty.convertElectronicAddresses() = electronicAddresses?.value?.electronicAddress
         ?.map { address ->

@@ -65,7 +65,7 @@ data class PhysicalAddress(
     val postbox: String?,
     val postalCode: String?,
     val city: String?,
-    val country: String?,
+    val country: Country?,
 )
 
 data class PostalAddress(
@@ -74,7 +74,12 @@ data class PostalAddress(
     val postbox: String?,
     val postalCode: String?,
     val city: String?,
-    val country: String?,
+    val country: Country?,
+)
+
+data class Country(
+    val code: String,
+    val name: String,
 )
 
 data class ElectronicAddress(

@@ -12,6 +12,7 @@ import no.nhn.register.communicationparty.Service
 import no.nhn.register.hpr.Person
 import java.time.OffsetDateTime
 import java.util.GregorianCalendar
+import java.util.Locale
 import java.util.UUID
 import javax.xml.datatype.DatatypeFactory
 import javax.xml.namespace.QName
@@ -95,13 +96,17 @@ fun buildPhysicalAddress(
     postalCode: Int? = nextInt(0, 10000),
     city: String? = buildRandomString(),
     country: String? = buildRandomString(),
+    countryCode: String? = Locale.getISOCountries().random(),
 ) = PhysicalAddress().apply {
     this.type = buildJAXBElement(Code().apply { codeValue = buildJAXBElement(type) })
     this.streetAddress = buildJAXBElement(streetAddress)
     this.postbox = buildJAXBElement(postbox)
     this.postalCode = postalCode
     this.city = buildJAXBElement(city)
-    this.country = buildJAXBElement(Code().apply { codeText = buildJAXBElement(country) })
+    this.country = buildJAXBElement(Code().apply {
+        codeText = buildJAXBElement(country)
+        codeValue = buildJAXBElement(countryCode)
+    })
 }
 
 fun buildElectronicAddress(

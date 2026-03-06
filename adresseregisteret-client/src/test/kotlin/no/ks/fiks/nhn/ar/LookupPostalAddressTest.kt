@@ -49,7 +49,8 @@ class LookupPostalAddressTest : FreeSpec(){
                   it.postalCode shouldBe postalAddress.postalCode.toString().padStart(4, '0')
                   it.postbox shouldBe postalAddress.postbox.value
                   it.city shouldBe postalAddress.city.value
-                  it.country shouldBe postalAddress.country.value?.codeText?.value
+                  it.country?.code shouldBe postalAddress.country.value?.codeValue?.value
+                  it.country?.name shouldBe postalAddress.country.value?.codeText?.value
 
               }
       }
@@ -73,7 +74,8 @@ class LookupPostalAddressTest : FreeSpec(){
                   it.postalCode shouldBe besoksadresse.postalCode.toString().padStart(4, '0')
                   it.postbox shouldBe besoksadresse.postbox.value
                   it.city shouldBe besoksadresse.city.value
-                  it.country shouldBe besoksadresse.country.value?.codeText?.value
+                  it.country?.code shouldBe besoksadresse.country.value?.codeValue?.value
+                  it.country?.name shouldBe besoksadresse.country.value?.codeText?.value
               }
       }
   }
