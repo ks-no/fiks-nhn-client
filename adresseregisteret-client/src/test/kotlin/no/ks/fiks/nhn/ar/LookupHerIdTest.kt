@@ -12,6 +12,7 @@ import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.every
 import io.mockk.mockk
 import no.nhn.common.ar.GenericFault
+import no.nhn.common.ar.PhysicalAddress
 import no.nhn.register.communicationparty.ICommunicationPartyServiceGetCommunicationPartyDetailsGenericFaultFaultFaultMessage
 import java.util.*
 import kotlin.random.Random.Default.nextInt
@@ -84,10 +85,10 @@ class LookupHerIdTest : StringSpec({
             setupServiceMock(
                 buildOrganization(
                     physicalAddresses = listOf(
-                        buildPhysicalAddress(postalCode = postalCode1),
-                        buildPhysicalAddress(postalCode = postalCode2),
-                        buildPhysicalAddress(postalCode = postalCode3),
-                        buildPhysicalAddress(postalCode = postalCode4),
+                        buildPhysicalAddress(postalCode = postalCode1, type = PostalAddressType.POSTADRESSE.code),
+                        buildPhysicalAddress(postalCode = postalCode2, type = PostalAddressType.POSTADRESSE.code),
+                        buildPhysicalAddress(postalCode = postalCode3, type = PostalAddressType.POSTADRESSE.code),
+                        buildPhysicalAddress(postalCode = postalCode4, type = PostalAddressType.POSTADRESSE.code),
                     )
                 )
             )
@@ -103,16 +104,13 @@ class LookupHerIdTest : StringSpec({
     }
 
     "Unknown physical address type should map to null" {
-        val type1 = PostalAddressType.entries.random()
-        val type2 = PostalAddressType.entries.random()
-
         buildClient(
             setupServiceMock(
                 buildOrganization(
                     physicalAddresses = listOf(
-                        buildPhysicalAddress(type = type1.code),
+                        buildPhysicalAddress(type = PostalAddressType.BESOKSADRESSE.code),
                         buildPhysicalAddress(type = UUID.randomUUID().toString()),
-                        buildPhysicalAddress(type = type2.code),
+                        buildPhysicalAddress(type = PostalAddressType.POSTADRESSE.code),
                     )
                 )
             )
@@ -120,9 +118,9 @@ class LookupHerIdTest : StringSpec({
             .lookupHerId(nextInt(1000, 100000))
             .asClue {
                 it.shouldBeInstanceOf<OrganizationCommunicationParty>()
-                it.physicalAddresses[0].type shouldBe type1
-                it.physicalAddresses[1].type should beNull()
-                it.physicalAddresses[2].type shouldBe type2
+                it.physicalAddresses[0].type shouldBe PostalAddressType.POSTADRESSE
+                it.physicalAddresses[1].type shouldBe PostalAddressType.BESOKSADRESSE
+                it.physicalAddresses[2].type should beNull()
             }
     }
 
@@ -287,7 +285,7 @@ private infix fun CommunicationParty.shouldHaveSameValuesAs(expected: NhnCommuni
     parent.name shouldBe expected.parentName.value
     parent.organizationNumber shouldBe expected.parentOrganizationNumber.toString()
     physicalAddresses shouldHaveSize expected.physicalAddresses.value.physicalAddress.size
-    physicalAddresses.zip(expected.physicalAddresses.value.physicalAddress).forEach { (actual, expected) ->
+    physicalAddresses.zip(expected.physicalAddresses.value.physicalAddress.expectedSort()).forEach { (actual, expected) ->
         actual.type!!.code shouldBe expected.type.value.codeValue.value
         actual.streetAddress shouldBe expected.streetAddress.value
         actual.postbox shouldBe expected.postbox.value
@@ -295,5 +293,13 @@ private infix fun CommunicationParty.shouldHaveSameValuesAs(expected: NhnCommuni
         actual.city shouldBe expected.city.value
         actual.country?.code shouldBe expected.country.value.codeValue.value
         actual.country?.name shouldBe expected.country.value.codeText.value
+    }
+}
+
+private fun List<PhysicalAddress>.expectedSort() = sortedBy {
+    when (it.type?.value?.codeValue?.value) {
+        "PST" -> 0
+        "RES" -> 1
+        else -> 2
     }
 }

@@ -3,6 +3,7 @@ package no.ks.fiks.nhn.ar
 import com.github.benmanes.caffeine.cache.Caffeine
 import jakarta.xml.bind.JAXBElement
 import mu.KotlinLogging
+import no.nhn.common.ar.Code
 import no.nhn.register.communicationparty.ICommunicationPartyServiceGetCommunicationPartyDetailsGenericFaultFaultFaultMessage
 import no.nhn.register.communicationparty.Organization
 import no.nhn.register.communicationparty.OrganizationPerson
@@ -29,9 +30,7 @@ class AdresseregisteretClient @JvmOverloads constructor(
             }
             log.debug("Found ${communicationParty.physicalAddresses.size} addresses for $herId")
 
-            val addressPriority = listOf(PostalAddressType.POSTADRESSE, PostalAddressType.BESOKSADRESSE)
-
-            addressPriority.firstNotNullOfOrNull { type -> communicationParty.physicalAddresses.firstOrNull { it.type == type } }
+            communicationParty.physicalAddresses.firstOrNull()
                 ?.toPostalAddress(communicationParty.name)
                 ?: throw AddressNotFoundException("Could not find any relevant physicalAdresses related to herId")
         } ?: throw AddressNotFoundException("Did not find any communication party related to herId")
@@ -110,6 +109,13 @@ class AdresseregisteretClient @JvmOverloads constructor(
                 city = address.city.valueNotBlank(),
                 country = address.convertCountry(),
             )
+        }
+        ?.sortedBy { address ->
+            when (address.type) {
+                PostalAddressType.POSTADRESSE -> 0
+                PostalAddressType.BESOKSADRESSE -> 1
+                else -> 2
+            }
         }
         ?: emptyList()
 
