@@ -1,5 +1,6 @@
 package no.ks.fiks.nhn.msh
 
+import no.ks.fiks.hdir.Adressetype
 import no.ks.fiks.hdir.OrganizationIdType
 import no.ks.fiks.hdir.PersonIdType
 
@@ -15,9 +16,33 @@ data class Receiver(
     val patient: Patient,
 )
 
-sealed class CommunicationParty(val ids: List<Id>) {
+data class Address(
+    val type: Adressetype?,
+    val streetAdr: String?,
+    val postalCode: String?,
+    val city: String?,
+    val postbox: String?,
+    val county: County?,
+    val country: Country?,
+)
+
+data class County(
+    val code: String,
+    val name: String,
+)
+
+data class Country(
+    val code: String,
+    val name: String,
+)
+
+sealed class CommunicationParty(
+    val ids: List<Id>,
+    val address: Address?,
+) {
 
     abstract val herId: Int?
+    abstract val fullName: String
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -36,11 +61,15 @@ sealed class CommunicationParty(val ids: List<Id>) {
 
 class OrganizationCommunicationParty(
     ids: List<OrganizationId>,
+    address: Address? = null,
     val name: String,
-) : CommunicationParty(ids) {
+) : CommunicationParty(ids, address) {
 
-    override val herId
+    override val herId: Int?
         get() = ids.firstOrNull { it.type == OrganizationIdType.HER_ID }?.id?.toIntOrNull()
+
+    override val fullName: String
+        get() = name
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -65,13 +94,17 @@ class OrganizationCommunicationParty(
 
 class PersonCommunicationParty(
     ids: List<PersonId>,
+    address: Address? = null,
     val firstName: String,
     val middleName: String?,
     val lastName: String,
-) : CommunicationParty(ids) {
+) : CommunicationParty(ids, address) {
 
-    override val herId
+    override val herId: Int?
         get() = ids.firstOrNull { it.type == PersonIdType.HER_ID }?.id?.toIntOrNull()
+
+    override val fullName: String
+        get() = listOf(firstName, middleName, lastName).filter { !it.isNullOrBlank() }.joinToString(" ")
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

@@ -156,13 +156,13 @@ private fun randomOutgoingBusinessDocument(
 )
 
 private fun randomPersonCommunicationParty() = PersonCommunicationParty(
+    ids = listOf(PersonId(UUID.randomUUID().toString(), PersonIdType.entries.random())),
     firstName = UUID.randomUUID().toString(),
     middleName = UUID.randomUUID().toString(),
     lastName = UUID.randomUUID().toString(),
-    ids = listOf(PersonId(UUID.randomUUID().toString(), PersonIdType.entries.random())),
 )
 
 private fun randomOrganizationCommunicationParty() = OrganizationCommunicationParty(
-    name = UUID.randomUUID().toString(),
     ids = listOf(OrganizationId(UUID.randomUUID().toString(), OrganizationIdType.entries.random())),
+    name = UUID.randomUUID().toString(),
 )

@@ -126,6 +126,7 @@ object BusinessDocumentDeserializer {
 
     private fun NhnOrganisation.getParent() = OrganizationCommunicationParty(
         ids = ident.getOrganisasjonId(),
+        address = convertAddress(),
         name = organisationName,
     )
 
@@ -134,6 +135,7 @@ object BusinessDocumentDeserializer {
             with(organisation) {
                 OrganizationCommunicationParty(
                     ids = ident.getOrganisasjonId(),
+                    address = convertAddress(),
                     name = it.organisationName,
                 )
             }
@@ -141,9 +143,23 @@ object BusinessDocumentDeserializer {
         ?: with(healthcareProfessional) {
             PersonCommunicationParty(
                 ids = ident.getPersonId(),
+                address = convertAddress(),
                 firstName = givenName,
                 middleName = middleName,
                 lastName = familyName,
+            )
+        }
+
+    private fun NhnOrganisation.convertAddress() =
+        address?.let { address ->
+            Address(
+                type = address.type?.let { type -> Adressetype.entries.firstOrNull { it.verdi == type.v } },
+                streetAdr = address.streetAdr,
+                postalCode = address.postalCode,
+                city = address.city,
+                postbox = address.postbox,
+                county = address.county?.let { County(it.v, it.dn) },
+                country = address.country?.let { Country(it.v, it.dn) },
             )
         }
 
