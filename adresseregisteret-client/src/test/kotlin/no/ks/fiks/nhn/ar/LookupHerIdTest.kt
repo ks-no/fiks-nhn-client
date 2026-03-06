@@ -298,8 +298,8 @@ private infix fun CommunicationParty.shouldHaveSameValuesAs(expected: NhnCommuni
 
 private fun List<PhysicalAddress>.expectedSort() = sortedBy {
     when (it.type?.value?.codeValue?.value) {
-        "PST" -> 0
-        "RES" -> 1
+        PostalAddressType.POSTADRESSE.code -> 0
+        PostalAddressType.BESOKSADRESSE.code -> 1
         else -> 2
     }
 }
