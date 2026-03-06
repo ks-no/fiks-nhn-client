@@ -17,13 +17,14 @@ class GpForPersonReceiverBuilder(
 
         return Receiver(
             parent = OrganizationCommunicationParty(
-                name = parent.name,
                 ids = listOf(
                     OrganizationId(
                         id = parent.herId.toString(),
                         type = OrganizationIdType.HER_ID,
                     )
                 ),
+                address = null,
+                name = parent.name,
             ),
             child = PersonCommunicationParty(
                 ids = listOf(
@@ -32,6 +33,7 @@ class GpForPersonReceiverBuilder(
                         type = PersonIdType.HER_ID,
                     )
                 ),
+                address = null,
                 firstName = fastlege.firstName,
                 middleName = fastlege.middleName,
                 lastName = fastlege.lastName,
