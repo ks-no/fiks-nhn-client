@@ -143,7 +143,8 @@ class LookupHerIdHttpTest : StringSpec() {
                         postbox should beNull()
                         postalCode shouldBe "7435"
                         city shouldBe "TRONDHEIM"
-                        country shouldBe "Norge"
+                        country?.code shouldBe "NO"
+                        country?.name shouldBe "Norge"
                     }
                     with(party.physicalAddresses.single { it.type == PostalAddressType.BESOKSADRESSE }) {
                         type shouldBe PostalAddressType.BESOKSADRESSE
@@ -151,7 +152,8 @@ class LookupHerIdHttpTest : StringSpec() {
                         postbox should beNull()
                         postalCode shouldBe "7030"
                         city shouldBe "TRONDHEIM"
-                        country shouldBe "Norge"
+                        country?.code shouldBe "NO"
+                        country?.name shouldBe "Norge"
                     }
                     party.electronicAddresses shouldHaveSize 7
                     with(party.electronicAddresses[0]) {
@@ -236,7 +238,8 @@ class LookupHerIdHttpTest : StringSpec() {
                         postbox should beNull()
                         postalCode shouldBe "0037"
                         city shouldBe "OSLO"
-                        country shouldBe "Norge"
+                        country?.code shouldBe "NO"
+                        country?.name shouldBe "Norge"
                     }
                     it.organizationNumber shouldBe "888333444"
                 }

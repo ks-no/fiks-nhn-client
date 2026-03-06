@@ -162,6 +162,7 @@ class LookupHerIdTest : StringSpec({
                             postalCode = null,
                             city = null,
                             country = null,
+                            countryCode = null,
                         ),
                     )
                 )
@@ -292,6 +293,7 @@ private infix fun CommunicationParty.shouldHaveSameValuesAs(expected: NhnCommuni
         actual.postbox shouldBe expected.postbox.value
         actual.postalCode!!.toInt() shouldBe expected.postalCode
         actual.city shouldBe expected.city.value
-        actual.country shouldBe expected.country.value.codeText.value
+        actual.country?.code shouldBe expected.country.value.codeValue.value
+        actual.country?.name shouldBe expected.country.value.codeText.value
     }
 }
