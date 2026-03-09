@@ -60,7 +60,7 @@ data class CommunicationPartyParent(
 )
 
 data class PhysicalAddress(
-    val type: PostalAddressType?,
+    val type: PostalAddressType,
     val streetAddress: String?,
     val postbox: String?,
     val postalCode: String?,

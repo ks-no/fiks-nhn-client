@@ -103,7 +103,7 @@ class LookupHerIdTest : StringSpec({
             }
     }
 
-    "Unknown physical address type should map to null" {
+    "Unknown physical address type should be ignored" {
         buildClient(
             setupServiceMock(
                 buildOrganization(
@@ -118,9 +118,9 @@ class LookupHerIdTest : StringSpec({
             .lookupHerId(nextInt(1000, 100000))
             .asClue {
                 it.shouldBeInstanceOf<OrganizationCommunicationParty>()
+                it.physicalAddresses shouldHaveSize 2
                 it.physicalAddresses[0].type shouldBe PostalAddressType.POSTADRESSE
                 it.physicalAddresses[1].type shouldBe PostalAddressType.BESOKSADRESSE
-                it.physicalAddresses[2].type should beNull()
             }
     }
 
@@ -154,7 +154,7 @@ class LookupHerIdTest : StringSpec({
                 buildOrganization(
                     physicalAddresses = listOf(
                         buildPhysicalAddress(
-                            type = null,
+                            type = "PST",
                             streetAddress = null,
                             postbox = null,
                             postalCode = null,
@@ -171,7 +171,7 @@ class LookupHerIdTest : StringSpec({
                 it.shouldBeInstanceOf<OrganizationCommunicationParty>()
                 it.physicalAddresses shouldHaveSize 1
                 with(it.physicalAddresses.single()) {
-                    type shouldBe null
+                    type shouldBe PostalAddressType.POSTADRESSE
                     streetAddress shouldBe null
                     postbox shouldBe null
                     postalCode shouldBe null
@@ -213,7 +213,7 @@ class LookupHerIdTest : StringSpec({
                 buildOrganization(
                     physicalAddresses = listOf(
                         buildPhysicalAddress(
-                            type = "",
+                            type = "RES",
                             streetAddress = " ",
                             postbox = "\t",
                             city = "",
@@ -228,7 +228,7 @@ class LookupHerIdTest : StringSpec({
                 it.shouldBeInstanceOf<OrganizationCommunicationParty>()
                 it.physicalAddresses shouldHaveSize 1
                 with(it.physicalAddresses.single()) {
-                    type shouldBe null
+                    type shouldBe PostalAddressType.BESOKSADRESSE
                     streetAddress shouldBe null
                     postbox shouldBe null
                     city shouldBe null
