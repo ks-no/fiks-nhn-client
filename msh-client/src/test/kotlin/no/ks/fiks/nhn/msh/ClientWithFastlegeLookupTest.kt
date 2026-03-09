@@ -4,15 +4,20 @@ import io.kotest.assertions.asClue
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.shouldBe
 import io.mockk.*
+import no.ks.fiks.hdir.Adressetype
 import no.ks.fiks.hdir.Helsepersonell
 import no.ks.fiks.hdir.HelsepersonellsFunksjoner
 import no.ks.fiks.hdir.OrganizationIdType
 import no.ks.fiks.hdir.PersonIdType
 import no.ks.fiks.nhn.ar.AdresseregisteretClient
 import no.ks.fiks.nhn.ar.CommunicationPartyParent
+import no.ks.fiks.nhn.ar.Country
 import no.ks.fiks.nhn.ar.PersonCommunicationParty
+import no.ks.fiks.nhn.ar.PhysicalAddress
+import no.ks.fiks.nhn.ar.PostalAddressType
 import no.ks.fiks.nhn.flr.FastlegeregisteretClient
 import no.ks.fiks.nhn.flr.PatientGP
+import no.ks.fiks.nhn.randomAddress
 import no.ks.fiks.nhn.randomHerId
 import no.ks.fiks.nhn.randomOrganizationHerId
 import no.ks.fiks.nhn.randomString
@@ -63,10 +68,22 @@ class ClientWithFastlegeLookupTest : FreeSpec() {
                             receiver = Receiver(
                                 parent = OrganizationCommunicationParty(
                                     ids = listOf(OrganizationId(gpCommunicationParty.parent!!.herId.toString(), OrganizationIdType.HER_ID)),
+                                    address = null,
                                     name = gpCommunicationParty.parent!!.name
                                 ),
                                 child = PersonCommunicationParty(
                                     ids = listOf(PersonId(gpCommunicationParty.herId.toString(), PersonIdType.HER_ID)),
+                                    address = gpCommunicationParty.physicalAddresses.firstOrNull()?.let {
+                                        Address(
+                                            type = Adressetype.POSTADRESSE,
+                                            streetAdr = it.streetAddress,
+                                            postalCode = it.postalCode,
+                                            city = it.city,
+                                            postbox = it.postbox,
+                                            county = null,
+                                            country = it.country?.let { country -> no.ks.fiks.nhn.msh.Country(code = country.code, name = country.name) }
+                                        )
+                                    },
                                     firstName = gpCommunicationParty.firstName,
                                     middleName = gpCommunicationParty.middleName,
                                     lastName = gpCommunicationParty.lastName
@@ -109,6 +126,7 @@ class ClientWithFastlegeLookupTest : FreeSpec() {
         }
     }
 }
+
 private fun randomGPForPersonOutgoingBusinessDocument(
     vedleggBytes: ByteArray = nextBytes(nextInt(1000, 100000)),
 ): GPForPersonOutgoingBusinessDocument = GPForPersonOutgoingBusinessDocument(
@@ -116,10 +134,12 @@ private fun randomGPForPersonOutgoingBusinessDocument(
     sender = Sender(
         parent = OrganizationCommunicationParty(
             name = randomString(),
+            address = randomAddress(),
             ids = listOf(randomOrganizationHerId()),
         ),
         child = OrganizationCommunicationParty(
             name = randomString(),
+            address = randomAddress(),
             ids = listOf(randomOrganizationHerId()),
         ),
     ),
@@ -159,7 +179,24 @@ private fun randomPersonCommunicationParty(): PersonCommunicationParty = PersonC
     herId = randomHerId(),
     name = randomString(),
     parent = CommunicationPartyParent(randomHerId(), randomString(), randomString()),
-    physicalAddresses = listOf(),
+    physicalAddresses = listOf(
+        PhysicalAddress(
+            PostalAddressType.POSTADRESSE,
+            randomString(),
+            randomString(),
+            randomString(),
+            randomString(),
+            Country(randomString(), randomString())
+        ),
+        PhysicalAddress(
+            PostalAddressType.BESOKSADRESSE,
+            randomString(),
+            randomString(),
+            randomString(),
+            randomString(),
+            Country(randomString(), randomString())
+        ),
+    ),
     electronicAddresses = listOf(),
     firstName = randomString(),
     middleName = randomString(),

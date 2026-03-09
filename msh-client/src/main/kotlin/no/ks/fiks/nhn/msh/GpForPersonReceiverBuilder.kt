@@ -1,5 +1,6 @@
 package no.ks.fiks.nhn.msh
 
+import no.ks.fiks.hdir.Adressetype
 import no.ks.fiks.hdir.OrganizationIdType
 import no.ks.fiks.hdir.PersonIdType
 import no.ks.fiks.nhn.ar.AdresseregisteretClient
@@ -33,7 +34,17 @@ class GpForPersonReceiverBuilder(
                         type = PersonIdType.HER_ID,
                     )
                 ),
-                address = null,
+                address = fastlege.physicalAddresses.firstOrNull()?.let {
+                    Address(
+                        type = Adressetype.entries.firstOrNull { nyType -> nyType.verdi == it.type?.code },
+                        streetAdr = it.streetAddress,
+                        postalCode = it.postalCode,
+                        city = it.city,
+                        postbox = it.postbox,
+                        county = null,
+                        country = it.country?.let { country -> Country(code = country.code, name = country.name) }
+                    )
+                },
                 firstName = fastlege.firstName,
                 middleName = fastlege.middleName,
                 lastName = fastlege.lastName,

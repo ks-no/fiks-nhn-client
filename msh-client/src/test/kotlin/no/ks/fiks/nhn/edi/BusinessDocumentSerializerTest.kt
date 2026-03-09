@@ -4,15 +4,18 @@ import io.kotest.assertions.asClue
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
+import no.ks.fiks.hdir.Adressetype
 import no.ks.fiks.hdir.Helsepersonell
 import no.ks.fiks.hdir.HelsepersonellsFunksjoner
 import no.ks.fiks.hdir.OrganizationIdType
 import no.ks.fiks.hdir.PersonIdType
 import no.ks.fiks.nhn.msh.*
+import no.ks.fiks.nhn.randomAddress
 import no.ks.fiks.nhn.validateXmlAgainst
 import java.io.ByteArrayInputStream
 import java.time.OffsetDateTime
 import java.util.*
+import kotlin.random.Random.Default.nextBoolean
 import kotlin.random.Random.Default.nextBytes
 import kotlin.random.Random.Default.nextInt
 
@@ -157,6 +160,7 @@ private fun randomOutgoingBusinessDocument(
 
 private fun randomPersonCommunicationParty() = PersonCommunicationParty(
     ids = listOf(PersonId(UUID.randomUUID().toString(), PersonIdType.entries.random())),
+    address = if (nextBoolean()) randomAddress() else null,
     firstName = UUID.randomUUID().toString(),
     middleName = UUID.randomUUID().toString(),
     lastName = UUID.randomUUID().toString(),
@@ -164,5 +168,6 @@ private fun randomPersonCommunicationParty() = PersonCommunicationParty(
 
 private fun randomOrganizationCommunicationParty() = OrganizationCommunicationParty(
     ids = listOf(OrganizationId(UUID.randomUUID().toString(), OrganizationIdType.entries.random())),
+    address = if (nextBoolean()) randomAddress() else null,
     name = UUID.randomUUID().toString(),
 )

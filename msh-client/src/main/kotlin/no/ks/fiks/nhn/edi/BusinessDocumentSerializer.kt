@@ -5,12 +5,14 @@ import no.kith.xmlstds.msghead._2006_05_24.*
 import no.kith.xmlstds.msghead._2006_05_24.HealthcareProfessional
 import no.ks.fiks.hdir.*
 import no.ks.fiks.nhn.msh.*
+import no.ks.fiks.nhn.msh.Address
 import java.io.InputStream
 import java.io.StringWriter
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import javax.xml.datatype.DatatypeFactory
+import no.kith.xmlstds.msghead._2006_05_24.Address as NhnAddress
 import no.kith.xmlstds.msghead._2006_05_24.Organisation as NhnOrganisation
 import no.kith.xmlstds.msghead._2006_05_24.Patient as NhnPatient
 import no.kith.xmlstds.msghead._2006_05_24.Receiver as NhnReceiver
@@ -88,12 +90,14 @@ object BusinessDocumentSerializer {
     ): NhnOrganisation = NhnOrganisation().apply {
         organisationName = parent.name
         ident = parent.ids.map { toIdent(it) }
+        address = parent.address?.let { convert(it) }
         organisation = child
             .let { it as? OrganizationCommunicationParty }
             ?.let { org ->
                 NhnOrganisation().apply {
                     organisationName = org.name
                     ident = org.ids.map { toIdent(it) }
+                    address = org.address?.let { convert(it) }
                 }
             }
         healthcareProfessional = child
@@ -104,6 +108,7 @@ object BusinessDocumentSerializer {
                     middleName = person.middleName
                     familyName = person.lastName
                     ident = person.ids.map { toIdent(it) }
+                    address = person.address?.let { convert(it) }
                 }
             }
     }
@@ -134,6 +139,31 @@ object BusinessDocumentSerializer {
         v = type.verdi
         dn = type.navn
         s = type.kodeverk
+    }
+
+    private fun convert(address: Address) = NhnAddress().apply {
+        type = address.type?.let {
+            CS().apply {
+                v = it.verdi
+                dn = it.navn
+            }
+        }
+        streetAdr = address.streetAdr
+        postalCode = address.postalCode
+        city = address.city
+        postbox = address.postbox
+        county = address.county?.let {
+            CS().apply {
+                v = it.code
+                dn = it.name
+            }
+        }
+        country = address.country?.let {
+            CS().apply {
+                v = it.code
+                dn = it.name
+            }
+        }
     }
 
     private fun buildDialogmeldingDocument(businessDocument: OutgoingBusinessDocument) =

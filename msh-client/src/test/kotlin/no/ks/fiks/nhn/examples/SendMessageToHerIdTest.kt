@@ -3,6 +3,7 @@ package no.ks.fiks.nhn.examples
 import io.kotest.core.spec.style.StringSpec
 import io.mockk.coEvery
 import io.mockk.mockk
+import no.ks.fiks.hdir.Adressetype
 import no.ks.fiks.hdir.Helsepersonell
 import no.ks.fiks.hdir.HelsepersonellsFunksjoner
 import no.ks.fiks.hdir.OrganizationIdType
@@ -26,6 +27,15 @@ class SendMessageToHerIdTest : StringSpec({
                                 type = OrganizationIdType.HER_ID,
                             )
                         ),
+                        address = Address(
+                            type = Adressetype.POSTADRESSE,
+                            streetAdr = "<Street address>",
+                            postalCode = "<Postal code>",
+                            city = "<City>",
+                            postbox = "<Postbox>",
+                            county = County(code = "<County code>", name = "<County name>"),
+                            country = Country(code = "<Country code>", name = "<Country name>"),
+                        ),
                     ),
                     child = OrganizationCommunicationParty( // This can also be PersonCommunicationParty
                         name = "<Name of the sending service (tjeneste), which is owned by the organization specified above>",
@@ -34,6 +44,15 @@ class SendMessageToHerIdTest : StringSpec({
                                 id = "<The HER-id of this service>",
                                 type = OrganizationIdType.HER_ID,
                             )
+                        ),
+                        address = Address(
+                            type = Adressetype.POSTADRESSE,
+                            streetAdr = "<Street address>",
+                            postalCode = "<Postal code>",
+                            city = "<City>",
+                            postbox = "<Postbox>",
+                            county = County(code = "<County code>", name = "<County name>"),
+                            country = Country(code = "<Country code>", name = "<Country name>"),
                         ),
                     )
                 ),
@@ -46,6 +65,15 @@ class SendMessageToHerIdTest : StringSpec({
                                 type = OrganizationIdType.HER_ID,
                             )
                         ),
+                        address = Address(
+                            type = Adressetype.POSTADRESSE,
+                            streetAdr = "<Street address>",
+                            postalCode = "<Postal code>",
+                            city = "<City>",
+                            postbox = "<Postbox>",
+                            county = County(code = "<County code>", name = "<County name>"),
+                            country = Country(code = "<Country code>", name = "<Country name>"),
+                        ),
                     ),
                     child = PersonCommunicationParty( // This can also be OrganizationCommunicationParty
                         firstName = "<First name of receiving person>",
@@ -56,6 +84,15 @@ class SendMessageToHerIdTest : StringSpec({
                                 id = "<Receiving person HER-id>",
                                 type = PersonIdType.HER_ID,
                             )
+                        ),
+                        address = Address(
+                            type = Adressetype.POSTADRESSE,
+                            streetAdr = "<Street address>",
+                            postalCode = "<Postal code>",
+                            city = "<City>",
+                            postbox = "<Postbox>",
+                            county = County(code = "<County code>", name = "<County name>"),
+                            country = Country(code = "<Country code>", name = "<Country name>"),
                         ),
                     ),
                     patient = Patient(

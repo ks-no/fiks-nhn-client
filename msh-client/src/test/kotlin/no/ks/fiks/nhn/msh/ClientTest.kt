@@ -832,20 +832,24 @@ private fun randomOutgoingBusinessDocument(
     sender = Sender(
         parent = OrganizationCommunicationParty(
             name = randomString(),
+            address = randomAddress(),
             ids = listOf(randomOrganizationHerId()),
         ),
         child = OrganizationCommunicationParty(
             name = randomString(),
+            address = randomAddress(),
             ids = listOf(randomOrganizationHerId()),
         ),
     ),
     receiver = Receiver(
         parent = OrganizationCommunicationParty(
             ids = listOf(randomOrganizationHerId()),
+            address = randomAddress(),
             name = randomString(),
         ),
         child = PersonCommunicationParty(
             ids = listOf(randomPersonHerId()),
+            address = randomAddress(),
             firstName = randomString(),
             middleName = randomString(),
             lastName = randomString(),
