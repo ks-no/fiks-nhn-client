@@ -100,21 +100,23 @@ class AdresseregisteretClient @JvmOverloads constructor(
             }
 
     private fun NhnCommunicationParty.convertPhysicalAddresses() = physicalAddresses.value?.physicalAddress
-        ?.map { address ->
-            PhysicalAddress(
-                type = PostalAddressType.fromCode(address.type.value?.codeValue?.value),
-                streetAddress = address.streetAddress.valueNotBlank(),
-                postbox = address.postbox.valueNotBlank(),
-                postalCode = address.postalCode?.toString()?.padStart(4, '0'),
-                city = address.city.valueNotBlank(),
-                country = address.convertCountry(),
-            )
+        ?.mapNotNull { address ->
+            val typeCode = address.type.value?.codeValue?.value
+            PostalAddressType.fromCode(typeCode)?.let { type ->
+                PhysicalAddress(
+                    type = type,
+                    streetAddress = address.streetAddress.valueNotBlank(),
+                    postbox = address.postbox.valueNotBlank(),
+                    postalCode = address.postalCode?.toString()?.padStart(4, '0'),
+                    city = address.city.valueNotBlank(),
+                    country = address.convertCountry(),
+                )
+            }.also { if (it == null) log.warn { "Ignoring address with unknown type '$typeCode'" } }
         }
         ?.sortedBy { address ->
             when (address.type) {
                 PostalAddressType.POSTADRESSE -> 0
                 PostalAddressType.BESOKSADRESSE -> 1
-                else -> 2
             }
         }
         ?: emptyList()
