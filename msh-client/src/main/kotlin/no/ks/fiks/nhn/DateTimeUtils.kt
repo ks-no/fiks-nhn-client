@@ -14,12 +14,14 @@ fun String.parseOffsetDateTimeOrNull(): OffsetDateTime? =
     try {
         OffsetDateTime.parse(this)
     } catch (_: DateTimeParseException) {
-        try {
-            LocalDateTime.parse(this).atZone(DEFAULT_ZONE).toOffsetDateTime()
-        } catch (_: DateTimeParseException) {
-            log.warn { "Unable to parse date: $this" }
-            null
-        }
+        parseAsLocalDateTime()
     }
+
+private fun String.parseAsLocalDateTime(): OffsetDateTime? = try {
+    LocalDateTime.parse(this).atZone(DEFAULT_ZONE).toOffsetDateTime()
+} catch (_: DateTimeParseException) {
+    log.warn { "Unable to parse date: $this" }
+    null
+}
 
 
