@@ -22,13 +22,11 @@ import no.ks.fiks.helseid.dpop.Endpoint
 import no.ks.fiks.helseid.dpop.HttpMethod
 import no.ks.fiks.helseid.dpop.ProofBuilder
 import no.ks.fiks.helseid.http.DpopHttpRequestHelper
+import no.ks.fiks.nhn.parseOffsetDateTimeOrNull
 import no.nhn.msh.v2.model.*
 import no.nhn.msh.v2.model.Message
 import no.nhn.msh.v2.model.StatusInfo
-import java.time.LocalDateTime
 import java.time.OffsetDateTime
-import java.time.ZoneOffset
-import java.time.format.DateTimeParseException
 import java.util.*
 
 private const val API_VERSION_HEADER = "api-version"
@@ -255,24 +253,9 @@ private fun buildDefaultClient() =
                         override fun deserialize(
                             parser: JsonParser,
                             context: DeserializationContext
-                        ): OffsetDateTime? = parser.text.tryParseOffsetDateTime()
+                        ): OffsetDateTime? = parser.text.parseOffsetDateTimeOrNull()
                     })
                 })
             }
         }
     }
-
-private fun String.tryParseOffsetDateTime()  = try {
-    OffsetDateTime.parse(this)
-} catch (_: DateTimeParseException) {
-    tryParseOffsetDateTimeWithoutZone()
-}
-
-private fun String.tryParseOffsetDateTimeWithoutZone() = try {
-    val local = LocalDateTime.parse(this)
-    OffsetDateTime.of(local, ZoneOffset.UTC)
-} catch (_: DateTimeParseException) {
-    log.error { "Unable to parse date: $this" }
-    null
-}
-
