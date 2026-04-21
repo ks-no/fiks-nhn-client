@@ -388,7 +388,7 @@ class MshInternalClientTest : FreeSpec() {
                         it.receiverHerId shouldBe 8143060
                         it.senderHerId shouldBe 8094866
                         it.businessDocumentId shouldBe "c88389b7-f8ad-40b2-81e1-090e715b7530"
-                        it.businessDocumentGenDate shouldBe OffsetDateTime.parse("2025-08-21T11:39:57Z")
+                        it.businessDocumentGenDate shouldBe OffsetDateTime.parse("2025-08-21T11:39:57+02:00")
                         it.isAppRec shouldBe false
                     }
 
@@ -411,7 +411,7 @@ class MshInternalClientTest : FreeSpec() {
                         it.receiverHerId shouldBe 8143060
                         it.senderHerId shouldBe 8094866
                         it.businessDocumentId shouldBe "9ebaaf44-7317-41b7-892a-2a568acd5111"
-                        it.businessDocumentGenDate shouldBe OffsetDateTime.parse("2025-08-21T11:21:16.0004155Z")
+                        it.businessDocumentGenDate shouldBe OffsetDateTime.parse("2025-08-21T11:21:16.0004155+02:00")
                         it.isAppRec shouldBe true
                     }
             }
@@ -485,7 +485,7 @@ class MshInternalClientTest : FreeSpec() {
                         it.receiverHerId shouldBe 8143060
                         it.senderHerId shouldBe 8094866
                         it.businessDocumentId shouldBe "c88389b7-f8ad-40b2-81e1-090e715b7530"
-                        it.businessDocumentGenDate shouldBe OffsetDateTime.parse("2025-08-21T11:39:57Z")
+                        it.businessDocumentGenDate shouldBe OffsetDateTime.parse("2025-08-21T11:39:57+02:00")
                         it.isAppRec shouldBe false
                     }
             }

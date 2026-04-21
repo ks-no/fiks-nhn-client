@@ -7,14 +7,13 @@ import no.kith.xmlstds.msghead._2006_05_24.CV
 import no.kith.xmlstds.msghead._2006_05_24.Ident
 import no.kith.xmlstds.msghead._2006_05_24.MsgHead
 import no.ks.fiks.hdir.*
+import no.ks.fiks.nhn.DEFAULT_ZONE
 import no.ks.fiks.nhn.msh.*
+import no.ks.fiks.nhn.parseOffsetDateTimeOrNull
 import org.w3c.dom.Node
 import java.io.ByteArrayInputStream
 import java.io.StringReader
-import java.time.OffsetDateTime
-import java.time.ZoneId
-import java.util.GregorianCalendar
-import java.util.TimeZone
+import java.util.*
 import javax.xml.datatype.DatatypeConstants.FIELD_UNDEFINED
 import javax.xml.datatype.XMLGregorianCalendar
 import javax.xml.stream.XMLInputFactory
@@ -33,8 +32,6 @@ private const val MSG_HEAD_VERSION = "v1.2 2006-05-24"
 
 private const val APPREC_VERSION_1_0 = "1.0 2004-11-21"
 private const val APPREC_VERSION_1_1 = "v1.1 2012-02-15"
-
-private const val DEFAULT_ZONE = "Europe/Oslo"
 
 private val log = KotlinLogging.logger { }
 
@@ -245,7 +242,7 @@ object BusinessDocumentDeserializer {
 
     private fun Any?.getText() = (this as? Node)?.firstChild?.nodeValue
 
-    private fun XMLGregorianCalendar.toLocalDate() = toZonedDateTime().withZoneSameInstant(ZoneId.of(DEFAULT_ZONE)).toLocalDate()
+    private fun XMLGregorianCalendar.toLocalDate() = toZonedDateTime().withZoneSameInstant(DEFAULT_ZONE).toLocalDate()
 
     private fun XMLGregorianCalendar.toOffsetDateTime() = toZonedDateTime().toOffsetDateTime()
 
@@ -265,7 +262,7 @@ object BusinessDocumentDeserializer {
                     .also { if (it == null) log.info { "Ignoring ref doc of type ${refDoc.msgType.v}, as only 'A, Vedlegg' is supported" } }
                     ?.let {
                         IncomingVedlegg(
-                            date = refDoc.issueDate.v?.let { OffsetDateTime.parse(it) },
+                            date = refDoc.issueDate.v?.parseOffsetDateTimeOrNull(),
                             description = refDoc.description,
                             mimeType = refDoc.mimeType,
                             data = (refDoc.content.any.single() as? Base64Container)
@@ -275,6 +272,7 @@ object BusinessDocumentDeserializer {
                     }
             }
         }
+
     private fun MsgHead.getConversationRef() =
         if (msgInfo.conversationRef?.refToConversation.isNullOrBlank() && msgInfo.conversationRef?.refToParent.isNullOrBlank()) null
         else ConversationRef(refToParent = msgInfo.conversationRef?.refToParent, refToConversation = msgInfo.conversationRef?.refToConversation)

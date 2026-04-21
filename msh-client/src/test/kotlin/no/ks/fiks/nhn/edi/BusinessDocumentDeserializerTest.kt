@@ -212,6 +212,47 @@ class BusinessDocumentDeserializerTest : StringSpec({
         }
     }
 
+    "Vedlegg date with UTC offset should be parsed correctly" {
+        BusinessDocumentDeserializer.deserializeMsgHead(
+            readResourceContentAsString("dialogmelding/1.0/foresporsel-og-svar/dialog-foresporsel-samsvar-test.xml")
+        ).asClue { it.vedlegg!!.date shouldBe OffsetDateTime.parse("2025-05-13T11:51:01.5833859Z") }
+    }
+
+    "Vedlegg date with specific positive offset should be parsed correctly" {
+        BusinessDocumentDeserializer.deserializeMsgHead(
+            readResourceContentAsString("dialogmelding/1.0/foresporsel-og-svar/dialog-foresporsel-samsvar-test.xml")
+                .replace("2025-05-13T11:51:01.5833859Z", "2025-06-14T01:02:03.123+05:00")
+        ).asClue { it.vedlegg!!.date shouldBe OffsetDateTime.of(2025, 6, 14, 1, 2, 3, 123000000, ZoneOffset.ofHours(5)) }
+    }
+
+    "Vedlegg date with specific negative offset should be parsed correctly" {
+        BusinessDocumentDeserializer.deserializeMsgHead(
+            readResourceContentAsString("dialogmelding/1.0/foresporsel-og-svar/dialog-foresporsel-samsvar-test.xml")
+                .replace("2025-05-13T11:51:01.5833859Z", "2025-06-14T01:02:03-04:00")
+        ).asClue { it.vedlegg!!.date shouldBe OffsetDateTime.of(2025, 6, 14, 1, 2, 3, 0, ZoneOffset.ofHours(-4)) }
+    }
+
+    "Vedlegg date without offset should be interpreted as Norwegian timezone (UTC+1 in winter)" {
+        BusinessDocumentDeserializer.deserializeMsgHead(
+            readResourceContentAsString("dialogmelding/1.0/foresporsel-og-svar/dialog-foresporsel-samsvar-test.xml")
+                .replace("2025-05-13T11:51:01.5833859Z", "2025-01-02T23:22:21")
+        ).asClue { it.vedlegg!!.date shouldBe OffsetDateTime.of(2025, 1, 2, 23, 22, 21, 0, ZoneOffset.ofHours(1)) }
+    }
+
+    "Vedlegg date without offset should be interpreted as Norwegian timezone (UTC+2 in summer)" {
+        BusinessDocumentDeserializer.deserializeMsgHead(
+            readResourceContentAsString("dialogmelding/1.0/foresporsel-og-svar/dialog-foresporsel-samsvar-test.xml")
+                .replace("2025-05-13T11:51:01.5833859Z", "2025-05-13T11:51:01")
+        ).asClue { it.vedlegg!!.date shouldBe OffsetDateTime.of(2025, 5, 13, 11, 51, 1, 0, ZoneOffset.ofHours(2)) }
+    }
+
+    "Invalid vedlegg date should give null" {
+        BusinessDocumentDeserializer.deserializeMsgHead(
+            readResourceContentAsString("dialogmelding/1.0/foresporsel-og-svar/dialog-foresporsel-samsvar-test.xml")
+                .replace("2025-05-13T11:51:01.5833859Z", "2025")
+        ).asClue { it.vedlegg!!.date should beNull() }
+    }
+
     "Should throw exception if version is invalid" {
         shouldThrow<IllegalArgumentException> {
             BusinessDocumentDeserializer.deserializeMsgHead(readResourceContentAsString("dialogmelding/invalid-version.xml"))
