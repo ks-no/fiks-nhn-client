@@ -156,6 +156,78 @@ class BusinessDocumentDeserializerTest : StringSpec({
         }
     }
 
+    "Should be able to deserialize Dialogmelding 1.0 Notat" {
+        // TODO: The used XML-file is just a copy of the svar file with type changed. Should get a proper example and use that instead
+        BusinessDocumentDeserializer.deserializeMsgHead(
+            readResourceContentAsString("dialogmelding/1.0/foresporsel-og-svar/dialog-notat-webmed-test.xml")
+        ).asClue { doc ->
+            doc.id shouldBe "a748bb20-4e0f-4922-9b06-ec2c101eb9c1"
+            doc.date shouldBe OffsetDateTime.of(2025, 6, 10, 10, 55, 20, 0, ZoneOffset.ofHours(3))
+            doc.type shouldBe MeldingensFunksjon.DIALOG_NOTAT
+
+            with(doc.sender) {
+                parent.name shouldBe "WebMed Feature PPS"
+                parent.ids shouldHaveSize 2
+                parent.ids shouldHaveSingleElement { it.id == "8142952" && it.type == OrganizationIdType.HER_ID }
+                parent.ids shouldHaveSingleElement { it.id == "999988939" && it.type == OrganizationIdType.ENH }
+
+                child.shouldBeInstanceOf<PersonCommunicationParty>()
+                with(child) {
+                    firstName shouldBe "Grønn"
+                    middleName should beNull()
+                    lastName shouldBe "Vits"
+
+                    ids shouldHaveSize 2
+                    ids[0].id shouldBe "565501872"
+                    ids[0].type shouldBe PersonIdType.HPR
+                    ids[1].id shouldBe "8143025"
+                    ids[1].type shouldBe PersonIdType.HER_ID
+                }
+            }
+
+            with(doc.receiver) {
+                parent.name shouldBe "KS-DIGITALE FELLESTJENESTER AS"
+                parent.ids.single().id shouldBe "8142987"
+                parent.ids.single().type shouldBe OrganizationIdType.HER_ID
+
+                child.shouldBeInstanceOf<OrganizationCommunicationParty>()
+                with(child) {
+                    name shouldBe "SvarUt meldingsformidler"
+                    ids.single().id shouldBe "8143060"
+                    ids.single().type shouldBe OrganizationIdType.HER_ID
+                }
+
+                with(patient) {
+                    fnr shouldBe "15720255178"
+                    firstName shouldBe "BRUN"
+                    middleName should beNull()
+                    lastName shouldBe "LENESTOL"
+                }
+            }
+
+            doc.message shouldNot beNull()
+            with(doc.message!!) {
+                foresporsel should beNull()
+                notat shouldNot beNull()
+                with(notat!!) {
+                    tema shouldBe TypeOpplysningPasientsamhandlingLege.ANNEN_HENVENDELSE
+                    temaBeskrivelse should beNull()
+                    innhold shouldBe """Lege svarer med notat.
+                            Innkommende melding vises OK. """
+                    dato shouldBe LocalDate.of(2025, 6, 10)
+                }
+            }
+
+            doc.vedlegg should beNull()
+
+            doc.conversationRef shouldNot beNull()
+            with(doc.conversationRef!!) {
+                refToParent shouldBe "4f77040c-3610-4d17-bef1-76994ab2726b"
+                refToConversation shouldBe "4f77040c-3610-4d17-bef1-76994ab2726b"
+            }
+        }
+    }
+
     "Should be able to deserialize Dialogmelding 1.1 Helsefaglig dialog" {
         BusinessDocumentDeserializer.deserializeMsgHead(
             readResourceContentAsString("dialogmelding/1.1/helsefaglig-dialog/samsvar-test-message.xml")
