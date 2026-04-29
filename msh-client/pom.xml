@@ -20,7 +20,7 @@
 
         <basicjaxb-plugins.version>2.2.1</basicjaxb-plugins.version>
         <higherjaxb-maven-plugin.version>2.2.1</higherjaxb-maven-plugin.version>
-        <hyperjaxb-annox-plugin.version>2.2.1</hyperjaxb-annox-plugin.version>
+        <hyperjaxb-annox-plugin.version>3.0.0</hyperjaxb-annox-plugin.version>
     </properties>
 
     <dependencies>
