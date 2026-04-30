@@ -18,6 +18,7 @@ private const val CONTENT_TRANSFER_ENCODING = "base64"
 
 open class Client(
     private val internalClient: MshInternalClient,
+    private val messageHandlers: List<MessageHandler> = emptyList(),
 ) {
 
     suspend fun sendMessage(
@@ -77,7 +78,11 @@ open class Client(
             .let {
                 if (it.contentTransferEncoding != CONTENT_TRANSFER_ENCODING) throw IllegalArgumentException("'${it.contentTransferEncoding}' is not a supported transfer encoding")
                 if (it.contentType != CONTENT_TYPE) throw IllegalArgumentException("'${it.contentType}' is not a supported content type")
-                BusinessDocumentDeserializer.deserializeMsgHead(String(Base64.getDecoder().decode(it.businessDocument)))
+
+                val xml = String(Base64.getDecoder().decode(it.businessDocument))
+                val result = runCatching { BusinessDocumentDeserializer.deserializeMsgHead(xml) }
+                messageHandlers.forEach { h -> h.onIncomingBusinessDocument(id, xml, result) }
+                result.getOrThrow()
             }
     }
 
@@ -90,7 +95,11 @@ open class Client(
             .let {
                 if (it.contentTransferEncoding != CONTENT_TRANSFER_ENCODING) throw IllegalArgumentException("'${it.contentTransferEncoding}' is not a supported transfer encoding")
                 if (it.contentType != CONTENT_TYPE) throw IllegalArgumentException("'${it.contentType}' is not a supported content type")
-                BusinessDocumentDeserializer.deserializeAppRec(String(Base64.getDecoder().decode(it.businessDocument)))
+
+                val xml = String(Base64.getDecoder().decode(it.businessDocument))
+                val result = runCatching { BusinessDocumentDeserializer.deserializeAppRec(xml) }
+                messageHandlers.forEach { h -> h.onIncomingApplicationReceipt(id, xml, result) }
+                result.getOrThrow()
             }
     }
 
