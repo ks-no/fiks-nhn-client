@@ -10,16 +10,20 @@ import no.ks.fiks.nhn.flr.FastlegeregisteretService
 
 object ClientFactory {
 
-    fun createClient(configuration: Configuration): Client =
+    @JvmOverloads
+    fun createClient(configuration: Configuration, messageHandlers: List<MessageHandler> = emptyList()): Client =
         Client(
             internalClient = createMshInternalClient(configuration.helseId, configuration.mshBaseUrl, configuration.sourceSystem),
+            messageHandlers = messageHandlers,
         )
 
-    fun createClientWithFastlegeLookup(configuration: ConfigurationWithFastlegeLookup): ClientWithFastlegeLookup =
+    @JvmOverloads
+    fun createClientWithFastlegeLookup(configuration: ConfigurationWithFastlegeLookup, messageHandlers: List<MessageHandler> = emptyList()): ClientWithFastlegeLookup =
         ClientWithFastlegeLookup(
             internalClient = createMshInternalClient(configuration.helseId, configuration.mshBaseUrl, configuration.sourceSystem),
             flrClient = createFlrClient(configuration.fastlegeregister),
             arClient = createArClient(configuration.adresseregister),
+            messageHandlers = messageHandlers,
         )
 
     private fun createMshInternalClient(
