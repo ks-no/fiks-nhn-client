@@ -1,8 +1,10 @@
 package no.ks.fiks.nhn.msh
 
+import io.kotest.assertions.asClue
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldStartWith
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.coVerifySequence
@@ -60,7 +62,9 @@ class MessageHandlerTest : FreeSpec() {
                     coEvery { getBusinessDocument(any(), any()) } returns invalidBase64Response()
                 }, listOf(handler))
 
-                shouldThrow<Exception> { client.getBusinessDocument(id) }
+                shouldThrow<IllegalArgumentException> { client.getBusinessDocument(id) }.asClue {
+                    it.message shouldStartWith "Illegal base64 character"
+                }
 
                 coVerify {
                     handler.onIncomingBusinessDocumentDecodingFailed(id, any(), any())
@@ -72,14 +76,14 @@ class MessageHandlerTest : FreeSpec() {
             }
 
             "rawXml passed to handler matches decoded payload" {
+                val response = validMsgHeadResponse()
+                val expectedXml = String(Base64.getDecoder().decode(response.businessDocument))
                 var capturedRawXml: String? = null
                 val handler = object : MessageHandler {
                     override suspend fun onIncomingBusinessDocumentReceived(id: UUID, rawXml: String, document: IncomingBusinessDocument) {
                         capturedRawXml = rawXml
                     }
                 }
-                val response = validMsgHeadResponse()
-                val expectedXml = String(Base64.getDecoder().decode(response.businessDocument))
                 val client = Client(mockk {
                     coEvery { getBusinessDocument(any(), any()) } returns response
                 }, listOf(handler))
@@ -87,6 +91,25 @@ class MessageHandlerTest : FreeSpec() {
                 client.getBusinessDocument(UUID.randomUUID())
 
                 capturedRawXml shouldBe expectedXml
+            }
+
+            "rawBusinessDocument passed to decoding-failed handler matches original payload" {
+                val response = invalidBase64Response()
+                var capturedRawBusinessDocument: String? = null
+                val handler = object : MessageHandler {
+                    override suspend fun onIncomingBusinessDocumentDecodingFailed(id: UUID, rawBusinessDocument: String, exception: Throwable) {
+                        capturedRawBusinessDocument = rawBusinessDocument
+                    }
+                }
+                val client = Client(mockk {
+                    coEvery { getBusinessDocument(any(), any()) } returns response
+                }, listOf(handler))
+
+                shouldThrow<IllegalArgumentException> { client.getBusinessDocument(UUID.randomUUID()) }.asClue {
+                    it.message shouldStartWith "Illegal base64 character"
+                }
+
+                capturedRawBusinessDocument shouldBe response.businessDocument
             }
 
             "all handlers are called even if one throws" {
@@ -108,8 +131,10 @@ class MessageHandlerTest : FreeSpec() {
             }
 
             "a throwing handler does not prevent the result from being returned" {
-                val handler = mockk<MessageHandler>(relaxed = true) {
-                    coEvery { onIncomingBusinessDocumentReceived(any(), any(), any()) } throws RuntimeException("handler error")
+                val handler = object : MessageHandler {
+                    override suspend fun onIncomingBusinessDocumentReceived(id: UUID, rawXml: String, document: IncomingBusinessDocument) {
+                        throw RuntimeException("handler error")
+                    }
                 }
                 val client = Client(mockk {
                     coEvery { getBusinessDocument(any(), any()) } returns validMsgHeadResponse()
@@ -166,7 +191,9 @@ class MessageHandlerTest : FreeSpec() {
                     coEvery { getBusinessDocument(any(), any()) } returns invalidBase64Response()
                 }, listOf(handler))
 
-                shouldThrow<Exception> { client.getApplicationReceipt(id) }
+                shouldThrow<IllegalArgumentException> { client.getApplicationReceipt(id) }.asClue {
+                    it.message shouldStartWith "Illegal base64 character"
+                }
 
                 coVerify {
                     handler.onIncomingApplicationReceiptDecodingFailed(id, any(), any())
@@ -178,31 +205,33 @@ class MessageHandlerTest : FreeSpec() {
             }
 
             "rawBusinessDocument passed to decoding-failed handler matches original payload" {
+                val response = invalidBase64Response()
                 var capturedRawBusinessDocument: String? = null
                 val handler = object : MessageHandler {
                     override suspend fun onIncomingApplicationReceiptDecodingFailed(id: UUID, rawBusinessDocument: String, exception: Throwable) {
                         capturedRawBusinessDocument = rawBusinessDocument
                     }
                 }
-                val response = invalidBase64Response()
                 val client = Client(mockk {
                     coEvery { getBusinessDocument(any(), any()) } returns response
                 }, listOf(handler))
 
-                shouldThrow<Exception> { client.getApplicationReceipt(UUID.randomUUID()) }
+                shouldThrow<IllegalArgumentException> { client.getApplicationReceipt(UUID.randomUUID()) }.asClue {
+                    it.message shouldStartWith "Illegal base64 character"
+                }
 
                 capturedRawBusinessDocument shouldBe response.businessDocument
             }
 
             "rawXml passed to handler matches decoded payload" {
+                val response = validAppRecResponse()
+                val expectedXml = String(Base64.getDecoder().decode(response.businessDocument))
                 var capturedRawXml: String? = null
                 val handler = object : MessageHandler {
                     override suspend fun onIncomingApplicationReceiptReceived(id: UUID, rawXml: String, receipt: IncomingApplicationReceipt) {
                         capturedRawXml = rawXml
                     }
                 }
-                val response = validAppRecResponse()
-                val expectedXml = String(Base64.getDecoder().decode(response.businessDocument))
                 val client = Client(mockk {
                     coEvery { getBusinessDocument(any(), any()) } returns response
                 }, listOf(handler))
@@ -231,8 +260,10 @@ class MessageHandlerTest : FreeSpec() {
             }
 
             "a throwing handler does not prevent the result from being returned" {
-                val handler = mockk<MessageHandler>(relaxed = true) {
-                    coEvery { onIncomingApplicationReceiptReceived(any(), any(), any()) } throws RuntimeException("handler error")
+                val handler = object : MessageHandler {
+                    override suspend fun onIncomingApplicationReceiptReceived(id: UUID, rawXml: String, receipt: IncomingApplicationReceipt) {
+                        throw RuntimeException("handler error")
+                    }
                 }
                 val client = Client(mockk {
                     coEvery { getBusinessDocument(any(), any()) } returns validAppRecResponse()
@@ -265,5 +296,3 @@ private fun invalidBase64Response() = GetBusinessDocumentResponse().apply {
     contentType = "application/xml"
     contentTransferEncoding = "base64"
 }
-
-
