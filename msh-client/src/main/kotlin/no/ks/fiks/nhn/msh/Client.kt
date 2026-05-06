@@ -160,7 +160,7 @@ open class Client(
     private suspend fun notifyHandlers(block: suspend (MessageHandler) -> Unit) {
         messageHandlers.forEach { h ->
             runCatching { block(h) }
-                .onFailure { log.warn(it) { "Message handler '${h::class.qualifiedName}' threw an exception" } }
+                .onFailure { log.warn(it) { "Message handler '${h::class}' threw an exception" } }
         }
     }
 
