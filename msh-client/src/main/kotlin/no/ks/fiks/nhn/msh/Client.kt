@@ -1,5 +1,6 @@
 package no.ks.fiks.nhn.msh
 
+import mu.KotlinLogging
 import no.ks.fiks.hdir.FeilmeldingForApplikasjonskvittering
 import no.ks.fiks.hdir.StatusForMottakAvMelding
 import no.ks.fiks.nhn.edi.BusinessDocumentDeserializer
@@ -16,8 +17,11 @@ import no.nhn.msh.v2.model.AppRecStatus as NhnAppRecStatus
 private const val CONTENT_TYPE = "application/xml"
 private const val CONTENT_TRANSFER_ENCODING = "base64"
 
+private val log = KotlinLogging.logger {}
+
 open class Client(
     private val internalClient: MshInternalClient,
+    private val messageHandlers: List<MessageHandler> = emptyList(),
 ) {
 
     suspend fun sendMessage(
@@ -77,7 +81,14 @@ open class Client(
             .let {
                 if (it.contentTransferEncoding != CONTENT_TRANSFER_ENCODING) throw IllegalArgumentException("'${it.contentTransferEncoding}' is not a supported transfer encoding")
                 if (it.contentType != CONTENT_TYPE) throw IllegalArgumentException("'${it.contentType}' is not a supported content type")
-                BusinessDocumentDeserializer.deserializeMsgHead(String(Base64.getDecoder().decode(it.businessDocument)))
+
+                val xml = runCatching { String(Base64.getDecoder().decode(it.businessDocument)) }
+                    .onFailure { e -> notifyHandlers { h -> h.onIncomingBusinessDocumentDecodingFailed(id, it.businessDocument, e) } }
+                    .getOrThrow()
+                runCatching { BusinessDocumentDeserializer.deserializeMsgHead(xml) }
+                    .onSuccess { document -> notifyHandlers { h -> h.onIncomingBusinessDocumentReceived(id, xml, document) } }
+                    .onFailure { e -> notifyHandlers { h -> h.onIncomingBusinessDocumentDeserializationFailed(id, xml, e) } }
+                    .getOrThrow()
             }
     }
 
@@ -90,7 +101,14 @@ open class Client(
             .let {
                 if (it.contentTransferEncoding != CONTENT_TRANSFER_ENCODING) throw IllegalArgumentException("'${it.contentTransferEncoding}' is not a supported transfer encoding")
                 if (it.contentType != CONTENT_TYPE) throw IllegalArgumentException("'${it.contentType}' is not a supported content type")
-                BusinessDocumentDeserializer.deserializeAppRec(String(Base64.getDecoder().decode(it.businessDocument)))
+
+                val xml = runCatching { String(Base64.getDecoder().decode(it.businessDocument)) }
+                    .onFailure { e -> notifyHandlers { h -> h.onIncomingApplicationReceiptDecodingFailed(id, it.businessDocument, e) } }
+                    .getOrThrow()
+                runCatching { BusinessDocumentDeserializer.deserializeAppRec(xml) }
+                    .onSuccess { receipt -> notifyHandlers { h -> h.onIncomingApplicationReceiptReceived(id, xml, receipt) } }
+                    .onFailure { e -> notifyHandlers { h -> h.onIncomingApplicationReceiptDeserializationFailed(id, xml, e) } }
+                    .getOrThrow()
             }
     }
 
@@ -137,6 +155,13 @@ open class Client(
                 .appRecErrorList(receipt.errors?.toAppRecErrors()),
             requestParams = requestParameters,
         )
+    }
+
+    private suspend fun notifyHandlers(block: suspend (MessageHandler) -> Unit) {
+        messageHandlers.forEach { h ->
+            runCatching { block(h) }
+                .onFailure { log.warn(it) { "Message handler '${h::class}' threw an exception" } }
+        }
     }
 
     private fun StatusForMottakAvMelding.toAppRecStatus() = when (this) {
