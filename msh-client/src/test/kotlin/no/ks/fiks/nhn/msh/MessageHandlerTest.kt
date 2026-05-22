@@ -80,7 +80,7 @@ class MessageHandlerTest : FreeSpec() {
                 val expectedXml = String(Base64.getDecoder().decode(response.businessDocument))
                 var capturedRawXml: String? = null
                 val handler = object : MessageHandler {
-                    override suspend fun onIncomingBusinessDocumentReceived(id: UUID, rawXml: String, document: IncomingBusinessDocument) {
+                    override fun onIncomingBusinessDocumentReceived(id: UUID, rawXml: String, document: IncomingBusinessDocument) {
                         capturedRawXml = rawXml
                     }
                 }
@@ -97,7 +97,7 @@ class MessageHandlerTest : FreeSpec() {
                 val response = invalidBase64Response()
                 var capturedRawBusinessDocument: String? = null
                 val handler = object : MessageHandler {
-                    override suspend fun onIncomingBusinessDocumentDecodingFailed(id: UUID, rawBusinessDocument: String, exception: Throwable) {
+                    override fun onIncomingBusinessDocumentDecodingFailed(id: UUID, rawBusinessDocument: String, exception: Throwable) {
                         capturedRawBusinessDocument = rawBusinessDocument
                     }
                 }
@@ -132,7 +132,7 @@ class MessageHandlerTest : FreeSpec() {
 
             "a throwing handler does not prevent the result from being returned" {
                 val handler = object : MessageHandler {
-                    override suspend fun onIncomingBusinessDocumentReceived(id: UUID, rawXml: String, document: IncomingBusinessDocument) {
+                    override fun onIncomingBusinessDocumentReceived(id: UUID, rawXml: String, document: IncomingBusinessDocument) {
                         throw RuntimeException("handler error")
                     }
                 }
@@ -208,7 +208,7 @@ class MessageHandlerTest : FreeSpec() {
                 val response = invalidBase64Response()
                 var capturedRawBusinessDocument: String? = null
                 val handler = object : MessageHandler {
-                    override suspend fun onIncomingApplicationReceiptDecodingFailed(id: UUID, rawBusinessDocument: String, exception: Throwable) {
+                    override fun onIncomingApplicationReceiptDecodingFailed(id: UUID, rawBusinessDocument: String, exception: Throwable) {
                         capturedRawBusinessDocument = rawBusinessDocument
                     }
                 }
@@ -228,7 +228,7 @@ class MessageHandlerTest : FreeSpec() {
                 val expectedXml = String(Base64.getDecoder().decode(response.businessDocument))
                 var capturedRawXml: String? = null
                 val handler = object : MessageHandler {
-                    override suspend fun onIncomingApplicationReceiptReceived(id: UUID, rawXml: String, receipt: IncomingApplicationReceipt) {
+                    override fun onIncomingApplicationReceiptReceived(id: UUID, rawXml: String, receipt: IncomingApplicationReceipt) {
                         capturedRawXml = rawXml
                     }
                 }
@@ -261,7 +261,7 @@ class MessageHandlerTest : FreeSpec() {
 
             "a throwing handler does not prevent the result from being returned" {
                 val handler = object : MessageHandler {
-                    override suspend fun onIncomingApplicationReceiptReceived(id: UUID, rawXml: String, receipt: IncomingApplicationReceipt) {
+                    override fun onIncomingApplicationReceiptReceived(id: UUID, rawXml: String, receipt: IncomingApplicationReceipt) {
                         throw RuntimeException("handler error")
                     }
                 }

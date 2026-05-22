@@ -16,7 +16,7 @@ interface MessageHandler {
      * @param rawBusinessDocument the raw Base64-encoded payload that could not be decoded
      * @param exception the exception thrown during Base64 decoding
      */
-    suspend fun onIncomingBusinessDocumentDecodingFailed(id: UUID, rawBusinessDocument: String, exception: Throwable) {}
+    fun onIncomingBusinessDocumentDecodingFailed(id: UUID, rawBusinessDocument: String, exception: Throwable) {}
 
     /**
      * Called after a business document has been retrieved but deserialization failed.
@@ -25,7 +25,7 @@ interface MessageHandler {
      * @param rawXml the raw XML that was received
      * @param exception the exception thrown during deserialization
      */
-    suspend fun onIncomingBusinessDocumentDeserializationFailed(id: UUID, rawXml: String, exception: Throwable) {}
+    fun onIncomingBusinessDocumentDeserializationFailed(id: UUID, rawXml: String, exception: Throwable) {}
 
     /**
      * Called after a business document has been retrieved and successfully deserialized.
@@ -34,7 +34,7 @@ interface MessageHandler {
      * @param rawXml the raw XML that was received
      * @param document the successfully parsed [IncomingBusinessDocument]
      */
-    suspend fun onIncomingBusinessDocumentReceived(id: UUID, rawXml: String, document: IncomingBusinessDocument) {}
+    fun onIncomingBusinessDocumentReceived(id: UUID, rawXml: String, document: IncomingBusinessDocument) {}
 
     /**
      * Called when the Base64-encoded payload of an application receipt could not be decoded.
@@ -43,7 +43,7 @@ interface MessageHandler {
      * @param rawBusinessDocument the raw Base64-encoded payload that could not be decoded
      * @param exception the exception thrown during Base64 decoding
      */
-    suspend fun onIncomingApplicationReceiptDecodingFailed(id: UUID, rawBusinessDocument: String, exception: Throwable) {}
+    fun onIncomingApplicationReceiptDecodingFailed(id: UUID, rawBusinessDocument: String, exception: Throwable) {}
 
     /**
      * Called after an application receipt has been retrieved but deserialization failed.
@@ -52,7 +52,7 @@ interface MessageHandler {
      * @param rawXml the raw XML that was received
      * @param exception the exception thrown during deserialization
      */
-    suspend fun onIncomingApplicationReceiptDeserializationFailed(id: UUID, rawXml: String, exception: Throwable) {}
+    fun onIncomingApplicationReceiptDeserializationFailed(id: UUID, rawXml: String, exception: Throwable) {}
 
     /**
      * Called after an application receipt has been retrieved and successfully deserialized.
@@ -61,5 +61,5 @@ interface MessageHandler {
      * @param rawXml the raw XML that was received
      * @param receipt the successfully parsed [IncomingApplicationReceipt]
      */
-    suspend fun onIncomingApplicationReceiptReceived(id: UUID, rawXml: String, receipt: IncomingApplicationReceipt) {}
+    fun onIncomingApplicationReceiptReceived(id: UUID, rawXml: String, receipt: IncomingApplicationReceipt) {}
 }
