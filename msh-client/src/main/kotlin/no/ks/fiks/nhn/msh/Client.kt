@@ -19,7 +19,8 @@ private const val CONTENT_TRANSFER_ENCODING = "base64"
 
 private val log = KotlinLogging.logger {}
 
-open class Client(
+
+open class Client @JvmOverloads constructor(
     private val internalClient: MshInternalClient,
     private val messageHandlers: List<MessageHandler> = emptyList(),
 ) {
@@ -157,7 +158,7 @@ open class Client(
         )
     }
 
-    private suspend fun notifyHandlers(block: suspend (MessageHandler) -> Unit) {
+    private fun notifyHandlers(block: (MessageHandler) -> Unit) {
         messageHandlers.forEach { h ->
             runCatching { block(h) }
                 .onFailure { log.warn(it) { "Message handler '${h::class}' threw an exception" } }
