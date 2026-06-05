@@ -39,7 +39,7 @@ private const val INCLUDE_METADATA_PARAM = "includeMetadata"
 
 private val log = KotlinLogging.logger { }
 
-class MshInternalClient(
+class MshInternalClient @JvmOverloads constructor(
     private val baseUrl: String,
     private val sourceSystem: String,
     private val defaultTokenParams: HelseIdTokenParameters? = null,
