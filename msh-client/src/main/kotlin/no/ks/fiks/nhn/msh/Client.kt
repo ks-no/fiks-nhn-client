@@ -204,18 +204,18 @@ open class Client @JvmOverloads constructor(
         ).map { it.toStatusInfo() }
 
     private fun NhnMessage.toMessageInfo() = Message(
-        id = id,
-        receiverHerId = receiverHerId,
+        id = id ?: throw IllegalArgumentException("Message is missing id field"),
+        receiverHerId = receiverHerId ?: throw IllegalArgumentException("Message $id is missing receiverHerId field"),
     )
 
     private fun NhnMessage.toMessageInfoWithMetadata() = MessageWithMetadata(
-        id = id,
+        id = id ?: throw IllegalArgumentException("Message is missing id field"),
         contentType = contentType,
-        receiverHerId = receiverHerId,
-        senderHerId = senderHerId,
-        businessDocumentId = businessDocumentId,
+        receiverHerId = receiverHerId ?: throw IllegalArgumentException("Message $id is missing receiverHerId field"),
+        senderHerId = senderHerId ?: throw IllegalArgumentException("Message $id is missing senderHerId field"),
+        businessDocumentId = businessDocumentId ?: throw IllegalArgumentException("Message $id is missing businessDocumentId field"),
         businessDocumentDate = businessDocumentGenDate,
-        isAppRec = isAppRec,
+        isAppRec = isAppRec ?: throw IllegalArgumentException("Message $id is missing isAppRec field"),
     )
 
     private fun NhnStatusInfo.toStatusInfo() = StatusInfo(

@@ -640,9 +640,9 @@ class ClientTest : FreeSpec() {
 
                 requestSlot.captured.asClue { request ->
                     request.appRecStatus shouldBe AppRecStatus.OK_ERROR_IN_MESSAGE_PART
-                    request.appRecErrorList shouldHaveSize receipt.errors!!.size
+                    request.appRecErrorList!! shouldHaveSize receipt.errors!!.size
                     receipt.errors.forEach {
-                        request.appRecErrorList shouldContain AppRecError().apply {
+                        request.appRecErrorList!! shouldContain AppRecError().apply {
                             errorCode = it.type.verdi
                             description = it.type.navn
                             oid = it.type.kodeverk
@@ -672,9 +672,9 @@ class ClientTest : FreeSpec() {
 
                 requestSlot.captured.asClue { request ->
                     request.appRecStatus shouldBe AppRecStatus.REJECTED
-                    request.appRecErrorList shouldHaveSize receipt.errors!!.size
+                    request.appRecErrorList!! shouldHaveSize receipt.errors!!.size
                     receipt.errors.forEach {
-                        request.appRecErrorList shouldContain AppRecError().apply {
+                        request.appRecErrorList!! shouldContain AppRecError().apply {
                             errorCode = it.type.verdi
                             description = it.type.navn
                             oid = it.type.kodeverk

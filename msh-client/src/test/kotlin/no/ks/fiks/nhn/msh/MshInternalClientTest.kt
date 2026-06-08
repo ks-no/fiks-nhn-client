@@ -85,7 +85,7 @@ class MshInternalClientTest : FreeSpec() {
                         with(it.single()) {
                             receiverHerId shouldBe 42
                             appRecStatus shouldBe AppRecStatus.REJECTED
-                            appRecErrorList shouldHaveSize 1
+                            appRecErrorList!! shouldHaveSize 1
                             with(appRecErrorList!!.single()) {
                                 errorCode shouldBe "E10"
                                 details shouldBe "Ugyldig meldingsidentifikator"
@@ -104,7 +104,7 @@ class MshInternalClientTest : FreeSpec() {
                         with(it.single()) {
                             receiverHerId shouldBe 123456
                             appRecStatus shouldBe AppRecStatus.OK_ERROR_IN_MESSAGE_PART
-                            appRecErrorList shouldHaveSize 2
+                            appRecErrorList!! shouldHaveSize 2
                             with(appRecErrorList!![0]) {
                                 errorCode shouldBe "E31"
                                 details shouldBe "Pasientens fødselsnummer er feil"
@@ -127,7 +127,7 @@ class MshInternalClientTest : FreeSpec() {
                         with(it[0]) {
                             receiverHerId shouldBe 1111
                             appRecStatus shouldBe AppRecStatus.REJECTED
-                            appRecErrorList shouldHaveSize 1
+                            appRecErrorList!! shouldHaveSize 1
                             with(appRecErrorList!!.single()) {
                                 errorCode shouldBe "E10"
                                 details shouldBe "Ugyldig meldingsidentifikator"
@@ -136,7 +136,7 @@ class MshInternalClientTest : FreeSpec() {
                         with(it[1]) {
                             receiverHerId shouldBe 2222
                             appRecStatus shouldBe AppRecStatus.OK
-                            appRecErrorList shouldHaveSize 0
+                            appRecErrorList!! shouldHaveSize 0
                         }
                     }
             }
