@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- DETTE ER EN TESTMELDING MED FIKTIVE PERSONDATA -->
+<!-- Eksempel på helsefaglig dialog ettersending av informasjon vedr henvisning -->
+<MsgHead xmlns="http://www.kith.no/xmlstds/msghead/2006-05-24" xmlns:xsd="http://www.w3.org/2001/XMLSchema.xsd" xmlns:fk1="http://www.kith.no/xmlstds/felleskomponent1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.kith.no/xmlstds/msghead/2006-05-24 MsgHead-v1_2.xsd">
+    <MsgInfo>
+        <Type V="DIALOG_HELSEFAGLIG" DN="Helsefaglig dialog" />
+        <MIGversion>v1.2 2006-05-24</MIGversion>
+        <GenDate>2026-04-30T10:09:53</GenDate>
+        <MsgId>baec8639-fc76-4c6b-870c-787042e0ada7</MsgId>
+        <ProcessingStatus V="D" DN="Debugging" />
+        <Sender>
+            <Organisation>
+                <OrganisationName>NORSK HELSENETT SF</OrganisationName>
+                <Ident>
+                    <Id>112374</Id>
+                    <TypeId V="HER" DN="HER-id" S="2.16.578.1.12.4.1.1.9051" />
+                </Ident>
+                <Organisation>
+                    <OrganisationName>Meldingsvalidering</OrganisationName>
+                    <Ident>
+                        <Id>8094866</Id>
+                        <TypeId V="HER" DN="HER-id" S="2.16.578.1.12.4.1.1.9051" />
+                    </Ident>
+                </Organisation>
+            </Organisation>
+        </Sender>
+        <Receiver>
+            <Organisation>
+                <OrganisationName>KS-DIGITALE FELLESTJENESTER AS</OrganisationName>
+                <Ident>
+                    <Id>8142987</Id>
+                    <TypeId V="HER" DN="HER-id" S="2.16.578.1.12.4.1.1.9051" />
+                </Ident>
+                <HealthcareProfessional>
+                    <FamilyName>Lege</FamilyName>
+                    <GivenName>Løgnaktig</GivenName>
+                    <Ident>
+                        <Id>8144133</Id>
+                        <TypeId S="2.16.578.1.12.4.1.1.8116" V="HER" DN="HER-id" />
+                    </Ident>
+                </HealthcareProfessional>
+            </Organisation>
+        </Receiver>
+        <Patient>
+            <FamilyName>LENESTOL</FamilyName>
+            <GivenName>BRUN</GivenName>
+            <DateOfBirth>2002-07-15</DateOfBirth>
+            <Ident>
+                <Id>15720255178</Id>
+                <TypeId V="FNR" DN="Fødselsnummer" S="2.16.578.1.12.4.1.1.8116" />
+            </Ident>
+        </Patient>
+    </MsgInfo>
+    <Document>
+        <RefDoc>
+            <IssueDate V="2026-04-30T10:09:53" />
+            <MsgType V="XML" DN="XML-instans" />
+            <Content>
+                <Dialogmelding xmlns="http://www.kith.no/xmlstds/dialog/2013-01-23" xmlns:xsd="http://www.w3.org/2001/XMLSchema.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.kith.no/xmlstds/dialog/2013-01-23 dialogmelding-v1.1.xsd">
+                    <Notat>
+                        <TemaKodet V="8" DN="Forespørsel om helseopplysninger" S="2.16.578.1.12.4.1.1.7322" />
+                        <Tema>EKG tatt i dag</Tema>
+                        <TekstNotatInnhold>
+                            <div xmlns="http://www.w3.org/1999/xhtml">
+                                <h1>Test h1 xhtml</h1>
+                                <p>
+                                    <b>Test bold</b>
+                                </p>
+                                <h2>Test h2 ordered list</h2>
+                                <ol>
+                                    <li>Item
+
+                                    1</li>
+                                    <li>Item 2</li>
+                                    <li>Item 3</li>
+                                </ol>
+                                <table>
+                                    <TekstNotatInnhold>Test table caption</TekstNotatInnhold>
+                                    <tr>
+                                        <th>Heading 1</th>
+                                        <th>Heading 2</th>
+                                    </tr>
+                                    <tr>
+                                        <td>Data 1</td>
+                                        <td>Data 2</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Data 3</td>
+                                        <td>Data 4</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </TekstNotatInnhold>
+                        <RollerRelatertNotat>
+                            <RoleToPatient DN="Fastlege" V="6" S="2.16.578.1.12.4.1.1.9034" />
+                            <HealthcareProfessional>
+                                <FamilyName>Lege</FamilyName>
+                                <GivenName>Kunstig</GivenName>
+                                <Ident>
+                                    <fk1:Id>9144900</fk1:Id>
+                                    <fk1:TypeId V="HPR" DN="HPR-nummer" S="2.16.578.1.12.4.1.1.8116" />
+                                </Ident>
+                                <TeleCom>
+                                    <fk1:TeleAddress V="tel:12345678"></fk1:TeleAddress>
+                                </TeleCom>
+                            </HealthcareProfessional>
+                        </RollerRelatertNotat>
+                    </Notat>
+                </Dialogmelding>
+            </Content>
+        </RefDoc>
+    </Document>
+</MsgHead>
