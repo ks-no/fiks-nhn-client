@@ -10,11 +10,13 @@ import io.kotest.matchers.nulls.beNull
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNot
+import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.types.shouldBeInstanceOf
 import no.ks.fiks.hdir.*
 import no.ks.fiks.nhn.msh.*
 import no.ks.fiks.nhn.readResourceContent
 import no.ks.fiks.nhn.readResourceContentAsString
+import org.xml.sax.SAXParseException
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
@@ -534,6 +536,14 @@ class BusinessDocumentDeserializerTest : StringSpec({
 
             it.vedlegg should beNull()
         }
+    }
+
+    "Should throw an exception if TekstNotatInnhold content is invalid" {
+        shouldThrow<SAXParseException> {
+            BusinessDocumentDeserializer.deserializeMsgHead(
+                readResourceContentAsString("dialogmelding/1.1/helsefaglig-dialog/samsvar-test-message-invalid-xhtml.xml")
+            )
+        }.asClue { it.message shouldContain "must be terminated by the matching end-tag" }
     }
 
 })

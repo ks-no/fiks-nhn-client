@@ -61,35 +61,7 @@
                         <TemaKodet V="8" DN="Forespørsel om helseopplysninger" S="2.16.578.1.12.4.1.1.7322" />
                         <Tema>EKG tatt i dag</Tema>
                         <TekstNotatInnhold>
-                            <div xmlns="http://www.w3.org/1999/xhtml">
-                                <h1>Test h1 xhtml</h1>
-                                <p>
-                                    <b>Test bold</b>
-                                </p>
-                                <h2>Test h2 ordered list</h2>
-                                <ol>
-                                    <li>Item
-
-                                    1</li>
-                                    <li>Item 2</li>
-                                    <li>Item 3</li>
-                                </ol>
-                                <table>
-                                    <TekstNotatInnhold>Test table caption</TekstNotatInnhold>
-                                    <tr>
-                                        <th>Heading 1</th>
-                                        <th>Heading 2</th>
-                                    </tr>
-                                    <tr>
-                                        <td>Data 1</td>
-                                        <td>Data 2</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Data 3</td>
-                                        <td>Data 4</td>
-                                    </tr>
-                                </table>
-                            </div>
+                            <div xmlns="http://www.w3.org/1999/xhtml"><b></div></b>
                         </TekstNotatInnhold>
                         <RollerRelatertNotat>
                             <RoleToPatient DN="Fastlege" V="6" S="2.16.578.1.12.4.1.1.9034" />
