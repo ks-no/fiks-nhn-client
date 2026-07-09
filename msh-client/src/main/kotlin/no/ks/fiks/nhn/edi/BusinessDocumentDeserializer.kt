@@ -38,7 +38,10 @@ private val log = KotlinLogging.logger { }
 
 object BusinessDocumentDeserializer {
 
-    private val inputFactory = XMLInputFactory.newInstance()
+    private val inputFactory = XMLInputFactory.newInstance().apply {
+        setProperty(XMLInputFactory.SUPPORT_DTD, false)
+        setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, false)
+    }
 
     fun deserializeMsgHead(msgHeadXml: String): IncomingBusinessDocument {
         validateRootElement(msgHeadXml, MSG_HEAD_ROOT)
@@ -82,25 +85,33 @@ object BusinessDocumentDeserializer {
     private fun getVersion(xml: String): String? {
         val reader = inputFactory.createXMLStreamReader(StringReader(xml))
 
-        while (reader.hasNext()) {
-            if (reader.next() == XMLStreamConstants.START_ELEMENT) {
-                if (reader.localName == "MIGversion") {
-                    reader.next()
-                    return reader.text
+        try {
+            while (reader.hasNext()) {
+                if (reader.next() == XMLStreamConstants.START_ELEMENT) {
+                    if (reader.localName == "MIGversion") {
+                        reader.next()
+                        return reader.text
+                    }
                 }
             }
+            return null
+        } finally {
+            reader.close()
         }
-        return null
     }
 
     private fun getRootElement(xml: String): String? {
         val reader = inputFactory.createXMLStreamReader(StringReader(xml))
 
-        var iterations = 0
-        while (reader.hasNext() && reader.next() != XMLStreamConstants.START_ELEMENT && iterations < 100) {
-            iterations++
+        try {
+            var iterations = 0
+            while (reader.hasNext() && reader.next() != XMLStreamConstants.START_ELEMENT && iterations < 100) {
+                iterations++
+            }
+            return reader.localName
+        } finally {
+            reader.close()
         }
-        return reader.localName
     }
 
     private fun MsgHead.getType() = msgInfo.type.toMeldingensFunksjon()
