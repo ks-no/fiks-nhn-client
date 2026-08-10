@@ -10,7 +10,6 @@ import no.ks.fiks.hdir.*
 import no.ks.fiks.nhn.DEFAULT_ZONE
 import no.ks.fiks.nhn.msh.*
 import no.ks.fiks.nhn.parseOffsetDateTimeOrNull
-import org.w3c.dom.Node
 import java.io.ByteArrayInputStream
 import java.io.StringReader
 import java.util.*
@@ -33,11 +32,16 @@ private const val MSG_HEAD_VERSION = "v1.2 2006-05-24"
 private const val APPREC_VERSION_1_0 = "1.0 2004-11-21"
 private const val APPREC_VERSION_1_1 = "v1.1 2012-02-15"
 
+private const val TEKST_NOTAT_INNHOLD = "TekstNotatInnhold"
+
 private val log = KotlinLogging.logger { }
 
 object BusinessDocumentDeserializer {
 
-    private val factory = XMLInputFactory.newInstance()
+    private val inputFactory = XMLInputFactory.newInstance().apply {
+        setProperty(XMLInputFactory.SUPPORT_DTD, false)
+        setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, false)
+    }
 
     fun deserializeMsgHead(msgHeadXml: String): IncomingBusinessDocument {
         validateRootElement(msgHeadXml, MSG_HEAD_ROOT)
@@ -51,7 +55,7 @@ object BusinessDocumentDeserializer {
             type = msgHead.getType(),
             sender = msgHead.getSender(),
             receiver = msgHead.getReceiver(),
-            message = msgHead.getMessage(),
+            message = msgHead.getMessage(msgHeadXml),
             vedlegg = msgHead.getVedlegg(),
             conversationRef = msgHead.getConversationRef(),
         )
@@ -79,27 +83,35 @@ object BusinessDocumentDeserializer {
     }
 
     private fun getVersion(xml: String): String? {
-        val reader = factory.createXMLStreamReader(StringReader(xml))
+        val reader = inputFactory.createXMLStreamReader(StringReader(xml))
 
-        while (reader.hasNext()) {
-            if (reader.next() == XMLStreamConstants.START_ELEMENT) {
-                if (reader.localName == "MIGversion") {
-                    reader.next()
-                    return reader.text
+        try {
+            while (reader.hasNext()) {
+                if (reader.next() == XMLStreamConstants.START_ELEMENT) {
+                    if (reader.localName == "MIGversion") {
+                        reader.next()
+                        return reader.text
+                    }
                 }
             }
+            return null
+        } finally {
+            reader.close()
         }
-        return null
     }
 
     private fun getRootElement(xml: String): String? {
-        val reader = factory.createXMLStreamReader(StringReader(xml))
+        val reader = inputFactory.createXMLStreamReader(StringReader(xml))
 
-        var iterations = 0
-        while (reader.hasNext() && reader.next() != XMLStreamConstants.START_ELEMENT && iterations < 100) {
-            iterations++
+        try {
+            var iterations = 0
+            while (reader.hasNext() && reader.next() != XMLStreamConstants.START_ELEMENT && iterations < 100) {
+                iterations++
+            }
+            return reader.localName
+        } finally {
+            reader.close()
         }
-        return reader.localName
     }
 
     private fun MsgHead.getType() = msgInfo.type.toMeldingensFunksjon()
@@ -170,7 +182,7 @@ object BusinessDocumentDeserializer {
             )
         }
 
-    private fun MsgHead.getMessage(): Dialogmelding? =
+    private fun MsgHead.getMessage(msgHeadXml: String): Dialogmelding? =
         document.firstOrNull()
             ?.refDoc
             ?.content
@@ -178,20 +190,20 @@ object BusinessDocumentDeserializer {
             ?.singleOrNull()
             ?.let {
                 when (it) {
-                    is NhnDialogmelding1_0 -> it.convert()
-                    is NhnDialogmelding1_1 -> it.convert()
+                    is NhnDialogmelding1_0 -> it.convert(msgHeadXml)
+                    is NhnDialogmelding1_1 -> it.convert(msgHeadXml)
                     else -> throw IllegalArgumentException("Unsupported message type: $it")
                 }
             }
 
-    private fun NhnDialogmelding1_0.convert() = Dialogmelding(
+    private fun NhnDialogmelding1_0.convert(msgHeadXml: String) = Dialogmelding(
         foresporsel = readForesporsel(),
-        notat = readNotat(),
+        notat = readNotat(msgHeadXml),
     )
 
-    private fun NhnDialogmelding1_1.convert() = Dialogmelding(
+    private fun NhnDialogmelding1_1.convert(msgHeadXml: String) = Dialogmelding(
         foresporsel = readForesporsel(),
-        notat = readNotat(),
+        notat = readNotat(msgHeadXml),
     )
 
     private fun NhnDialogmelding1_0.readForesporsel(): Foresporsel? =
@@ -205,14 +217,14 @@ object BusinessDocumentDeserializer {
                 )
             }
 
-    private fun NhnDialogmelding1_0.readNotat(): Notat? =
+    private fun NhnDialogmelding1_0.readNotat(msgHeadXml: String): Notat? =
         notat
             ?.singleOrNull()
             ?.let { notat ->
                 Notat(
                     tema = KodeverkRegister.getKodeverk(notat.temaKodet.s, notat.temaKodet.v),
                     temaBeskrivelse = notat.tema,
-                    innhold = notat.tekstNotatInnhold.getText(),
+                    innhold = extractTekstNotatInnhold(msgHeadXml),
                     dato = notat.datoNotat?.toLocalDate(),
                 )
             }
@@ -224,23 +236,56 @@ object BusinessDocumentDeserializer {
                 Foresporsel(
                     type = TypeOpplysningPasientsamhandlingPleieOgOmsorg.entries.firstOrNull { it.verdi == foresporsel.typeForesp.v }
                         ?: throw IllegalArgumentException("Unknown type for typeForesp: ${foresporsel.typeForesp.v}, ${foresporsel.typeForesp.dn}, ${foresporsel.typeForesp.s}, ${foresporsel.typeForesp.ot}"),
-                    sporsmal = foresporsel.sporsmal as? String,
+                    sporsmal = foresporsel.sporsmal as? String, // TODO: anyType, may also be XHTML
                 )
             }
 
-    private fun NhnDialogmelding1_1.readNotat(): Notat? =
+    private fun NhnDialogmelding1_1.readNotat(msgHeadXml: String): Notat? =
         notat
             ?.singleOrNull()
             ?.let { notat ->
                 Notat(
                     tema = KodeverkRegister.getKodeverk(notat.temaKodet.s, notat.temaKodet.v),
                     temaBeskrivelse = notat.tema,
-                    innhold = notat.tekstNotatInnhold.getText(),
+                    innhold = extractTekstNotatInnhold(msgHeadXml),
                     dato = notat.datoNotat?.toLocalDate(),
                 )
             }
 
-    private fun Any?.getText() = (this as? Node)?.firstChild?.nodeValue
+    // Extract the raw XHTML inside the TekstNotatInnhold tag.
+    // No leading or trailing whitespace is removed, as it may be significant in the XHTML content. This also includes indentation.
+    private fun extractTekstNotatInnhold(msgHeadXml: String): String? {
+        val reader = inputFactory.createXMLStreamReader(StringReader(msgHeadXml))
+        try {
+            var depth = 0
+            var contentStart = -1
+            while (reader.hasNext()) {
+                val event = reader.next()
+
+                if (depth > 0 && contentStart < 0) { // We are inside TekstNotatInnhold for the first time
+                    contentStart = reader.location.characterOffset
+                }
+
+                when (event) {
+                    XMLStreamConstants.START_ELEMENT ->
+                        when {
+                            depth > 0 -> depth++ // This is a nested element inside TekstNotatInnhold
+                            reader.localName == TEKST_NOTAT_INNHOLD -> depth = 1 // This is the first TekstNotatInnhold element
+                        }
+
+                    XMLStreamConstants.END_ELEMENT ->
+                        if (depth > 0 && --depth == 0) { // Ignore elements until we are back at depth 0
+                            val contentEnd = reader.location.characterOffset
+                            return msgHeadXml.substring(contentStart, contentEnd)
+                                .takeIf { it.isNotEmpty() }
+                        }
+                }
+            }
+        } finally {
+            reader.close()
+        }
+        return null
+    }
 
     private fun XMLGregorianCalendar.toLocalDate() = toZonedDateTime().withZoneSameInstant(DEFAULT_ZONE).toLocalDate()
 

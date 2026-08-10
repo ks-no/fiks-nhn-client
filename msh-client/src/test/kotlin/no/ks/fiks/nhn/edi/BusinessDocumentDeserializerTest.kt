@@ -10,11 +10,13 @@ import io.kotest.matchers.nulls.beNull
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNot
+import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.types.shouldBeInstanceOf
 import no.ks.fiks.hdir.*
 import no.ks.fiks.nhn.msh.*
 import no.ks.fiks.nhn.readResourceContent
 import no.ks.fiks.nhn.readResourceContentAsString
+import org.xml.sax.SAXParseException
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
@@ -449,4 +451,101 @@ class BusinessDocumentDeserializerTest : StringSpec({
         }.asClue { it.message shouldBe "Unknown version for AppRec: 123" }
     }
 
+    "Should be able to deserialize Dialogmelding 1.1 Helsefaglig dialog with Notat with XHTML content" {
+        BusinessDocumentDeserializer.deserializeMsgHead(
+            readResourceContentAsString("dialogmelding/1.1/helsefaglig-dialog/samsvar-test-message-xhtml.xml")
+        ).asClue {
+            it.id shouldBe "baec8639-fc76-4c6b-870c-787042e0ada7"
+            it.type shouldBe MeldingensFunksjon.DIALOG_HELSEFAGLIG
+
+            with(it.sender) {
+                parent.name shouldBe "NORSK HELSENETT SF"
+                parent.ids.single().id shouldBe "112374"
+                parent.ids.single().type shouldBe OrganizationIdType.HER_ID
+
+                child.shouldBeInstanceOf<OrganizationCommunicationParty>()
+                with(child) {
+                    name shouldBe "Meldingsvalidering"
+                    ids.single().id shouldBe "8094866"
+                    ids.single().type shouldBe OrganizationIdType.HER_ID
+                }
+            }
+
+            with(it.receiver) {
+                parent.name shouldBe "KS-DIGITALE FELLESTJENESTER AS"
+                parent.ids.single().id shouldBe "8142987"
+                parent.ids.single().type shouldBe OrganizationIdType.HER_ID
+
+                child.shouldBeInstanceOf<PersonCommunicationParty>()
+                with(child) {
+                    firstName shouldBe "Løgnaktig"
+                    middleName should beNull()
+                    lastName shouldBe "Lege"
+                    ids.single().id shouldBe "8144133"
+                    ids.single().type shouldBe PersonIdType.HER_ID
+                }
+            }
+
+            it.message shouldNot beNull()
+            with(it.message!!) {
+                foresporsel should beNull()
+                notat shouldNot beNull()
+                with(notat!!) {
+                    tema shouldBe TemaForHelsefagligDialog.FORESPORSEL_HELSEOPPLYSNINGER
+                    temaBeskrivelse shouldBe "EKG tatt i dag"
+                    dato should beNull()
+
+                    innhold shouldBe """
+                            Leading text without tag
+                            <p>Notat <b>med</b> <i>viktig</i> innhold</p>
+                            <TekstNotatInnhold>
+                                <b>Tekst</b>
+                            </TekstNotatInnhold>
+                            <div xmlns="http://www.w3.org/1999/xhtml">
+                                <h1>Test h1 xhtml</h1>
+                                <p>
+                                    <b>Test bold</b>
+                                </p>
+                                <h2>Test h2 ordered list</h2>
+                                <ol>
+                                    <li>Item
+
+                                    1</li>
+                                    <li>Item 2</li>
+                                    <li>Item 3</li>
+                                </ol>
+                                <table>
+                                    <caption>Test table caption</caption>
+                                    <tr>
+                                        <th>Heading 1</th>
+                                        <th>Heading 2</th>
+                                    </tr>
+                                    <tr>
+                                        <td>Data 1</td>
+                                        <td>Data 2</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Data 3</td>
+                                        <td>Data 4</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        """
+                }
+            }
+
+            it.vedlegg should beNull()
+        }
+    }
+
+    "Should throw an exception if TekstNotatInnhold content is invalid" {
+        shouldThrow<SAXParseException> {
+            BusinessDocumentDeserializer.deserializeMsgHead(
+                readResourceContentAsString("dialogmelding/1.1/helsefaglig-dialog/samsvar-test-message-invalid-xhtml.xml")
+            )
+        }.asClue { it.message shouldContain "must be terminated by the matching end-tag" }
+    }
+
 })
+
+
