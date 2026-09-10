@@ -1,4 +1,4 @@
-package no.ks.fiks.nhn.ar
+package no.ks.fiks.nhn.ar.rest
 
 class AdresseregisteretClient @JvmOverloads constructor(
     private val service: AdresseregisteretRestService,

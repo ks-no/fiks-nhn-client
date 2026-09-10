@@ -16,9 +16,9 @@ It is intentionally kept separate from the existing SOAP-based `adresseregistere
 ## Example usage
 
 ```kotlin
-import no.ks.fiks.nhn.ar.AdresseregisteretClient
-import no.ks.fiks.nhn.ar.AdresseregisteretService
-import no.ks.fiks.nhn.ar.Credentials
+import no.ks.fiks.nhn.ar.rest.AdresseregisteretClient
+import no.ks.fiks.nhn.ar.rest.AdresseregisteretService
+import no.ks.fiks.nhn.ar.rest.Credentials
 
 val client = AdresseregisteretClient(
     service = AdresseregisteretService(

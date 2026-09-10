@@ -1,4 +1,4 @@
-package no.ks.fiks.nhn.ar
+package no.ks.fiks.nhn.ar.rest
 
 import com.github.benmanes.caffeine.cache.Caffeine
 import no.nhn.register.communicationparty.rest.model.CommunicationParty as GeneratedCommunicationParty

@@ -1,4 +1,4 @@
-package no.ks.fiks.nhn.ar
+package no.ks.fiks.nhn.ar.rest
 
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe

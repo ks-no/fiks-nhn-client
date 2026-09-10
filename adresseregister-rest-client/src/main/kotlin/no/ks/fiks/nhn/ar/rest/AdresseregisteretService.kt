@@ -1,4 +1,4 @@
-package no.ks.fiks.nhn.ar
+package no.ks.fiks.nhn.ar.rest
 
 class AdresseregisteretService(
     url: String,

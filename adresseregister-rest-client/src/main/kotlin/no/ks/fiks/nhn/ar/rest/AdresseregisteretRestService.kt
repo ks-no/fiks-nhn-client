@@ -1,4 +1,4 @@
-package no.ks.fiks.nhn.ar
+package no.ks.fiks.nhn.ar.rest
 
 import no.nhn.register.communicationparty.rest.api.CommunicationPartyApi
 import no.nhn.register.communicationparty.rest.invoker.ApiClient
