@@ -9,15 +9,12 @@
         <version>1.8.1-rest-SNAPSHOT</version>
     </parent>
 
-    <artifactId>msh-api-v2</artifactId>
+    <artifactId>adresseregister-rest-client</artifactId>
     <name>${project.groupId}:${project.artifactId}</name>
-    <description>Feign client generated from the MSH API v2 spec</description>
+    <description>REST client generated from the NHN Adresseregisteret OpenAPI spec</description>
 
     <properties>
-        <openapi-spec-name>${project.artifactId}</openapi-spec-name>
-        <openapi-spec-file>${openapi-spec-name}.json</openapi-spec-file>
-        <basePackage>${project.groupId}.stralfors</basePackage>
-
+        <openapi-generator.version>7.15.0</openapi-generator.version>
         <jakarta.annotation-api.version>3.0.0</jakarta.annotation-api.version>
         <feign.version>13.13</feign.version>
         <feign-form.version>3.8.0</feign-form.version>
@@ -28,6 +25,10 @@
             <groupId>jakarta.annotation</groupId>
             <artifactId>jakarta.annotation-api</artifactId>
             <version>${jakarta.annotation-api.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
@@ -62,6 +63,22 @@
             <artifactId>feign-form</artifactId>
             <version>${feign-form.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>io.kotest</groupId>
+            <artifactId>kotest-runner-junit6-jvm</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.kotest</groupId>
+            <artifactId>kotest-assertions-core-jvm</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.mockk</groupId>
+            <artifactId>mockk-jvm</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -69,8 +86,10 @@
             <plugin>
                 <groupId>org.openapitools</groupId>
                 <artifactId>openapi-generator-maven-plugin</artifactId>
+                <version>${openapi-generator.version}</version>
                 <configuration>
                     <generatorName>java</generatorName>
+                    <library>feign</library>
                     <configOptions>
                         <dateLibrary>java8</dateLibrary>
                         <feignVersion>10.x</feignVersion>
@@ -78,30 +97,29 @@
                         <useJakartaEe>true</useJakartaEe>
                         <openApiNullable>false</openApiNullable>
                     </configOptions>
-                    <generateApis>false</generateApis>
-                    <generateSupportingFiles>false</generateSupportingFiles>
+                    <generateApis>true</generateApis>
+                    <generateModels>true</generateModels>
+                    <generateSupportingFiles>true</generateSupportingFiles>
                     <generateApiTests>false</generateApiTests>
                     <generateModelTests>false</generateModelTests>
-                    <library>feign</library>
                     <addCompileSourceRoot>true</addCompileSourceRoot>
                 </configuration>
                 <executions>
                     <execution>
-                        <id>generate-msh-v2</id>
+                        <id>generate-adresseregister-rest</id>
+                        <phase>generate-sources</phase>
                         <goals>
                             <goal>generate</goal>
                         </goals>
-                        <phase>generate-sources</phase>
                         <configuration>
-                            <inputSpec>${project.basedir}/spec/msh-api-v2.json</inputSpec>
-                            <modelPackage>no.nhn.msh.v2.model</modelPackage>
-                            <apiPackage>no.nhn.msh.v2.api</apiPackage>
-                            <invokerPackage>no.nhn.msh.v2.invoker</invokerPackage>
+                            <inputSpec>${project.basedir}/adresseregister-spec.json</inputSpec>
+                            <modelPackage>no.nhn.register.communicationparty.rest.model</modelPackage>
+                            <apiPackage>no.nhn.register.communicationparty.rest.api</apiPackage>
+                            <invokerPackage>no.nhn.register.communicationparty.rest.invoker</invokerPackage>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
         </plugins>
     </build>
-
 </project>
