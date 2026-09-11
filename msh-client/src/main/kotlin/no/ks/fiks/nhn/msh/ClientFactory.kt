@@ -2,8 +2,8 @@ package no.ks.fiks.nhn.msh
 
 import no.ks.fiks.helseid.HelseIdClient
 import no.ks.fiks.helseid.dpop.ProofBuilder
-import no.ks.fiks.nhn.ar.AdresseregisteretClient
-import no.ks.fiks.nhn.ar.AdresseregisteretService
+import no.ks.fiks.nhn.ar.rest.AdresseregisteretClient
+import no.ks.fiks.nhn.ar.rest.AdresseregisteretService
 import no.ks.fiks.nhn.flr.Credentials
 import no.ks.fiks.nhn.flr.FastlegeregisteretClient
 import no.ks.fiks.nhn.flr.FastlegeregisteretService
@@ -60,7 +60,7 @@ object ClientFactory {
         AdresseregisteretService(
             url = configuration.url,
             credentials = configuration.credentials.let {
-                no.ks.fiks.nhn.ar.Credentials(
+                no.ks.fiks.nhn.ar.rest.Credentials(
                     username = it.username,
                     password = it.password,
                 )
