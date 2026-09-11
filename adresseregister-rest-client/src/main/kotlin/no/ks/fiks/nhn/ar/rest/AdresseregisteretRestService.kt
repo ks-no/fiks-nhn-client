@@ -8,10 +8,12 @@ open class AdresseregisteretRestService(
     url: String,
     credentials: Credentials,
 ) {
-    private val api: CommunicationPartyApi = ApiClient().apply {
-        setBasePath(url)
-        setCredentials(credentials.username, credentials.password)
-    }.buildClient(CommunicationPartyApi::class.java)
+    private val api by lazy {
+        ApiClient().apply {
+            setBasePath(url)
+            setCredentials(credentials.username, credentials.password)
+        }.buildClient(CommunicationPartyApi::class.java)
+    }
 
     open fun getCommunicationPartyDetails(herId: Int): GeneratedCommunicationParty? =
         api.apiV1CommunicationpartyHerIdGet(herId)
