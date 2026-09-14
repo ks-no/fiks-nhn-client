@@ -25,7 +25,6 @@ data class HelseIdConfiguration(
 
 data class AdresseregisterConfiguration(
     val url: String,
-    val credentials: Credentials,
 )
 
 data class FastlegeregisterConfiguration(

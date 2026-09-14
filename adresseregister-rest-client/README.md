@@ -16,17 +16,28 @@ It is intentionally kept separate from the existing SOAP-based `adresseregistere
 ## Example usage
 
 ```kotlin
+import no.ks.fiks.helseid.Configuration as HelseIdConfiguration
+import no.ks.fiks.helseid.Environment
+import no.ks.fiks.helseid.HelseIdClient
+import no.ks.fiks.helseid.dpop.ProofBuilder
 import no.ks.fiks.nhn.ar.rest.AdresseregisteretClient
 import no.ks.fiks.nhn.ar.rest.AdresseregisteretService
-import no.ks.fiks.nhn.ar.rest.Credentials
 
+val jwk = "<JWK string>"
 val client = AdresseregisteretClient(
     service = AdresseregisteretService(
         url = "https://cpapi.test.grunndata.nhn.no",
-        credentials = Credentials(
-            username = username,
-            password = password,
+        helseIdClient = HelseIdClient(
+            HelseIdConfiguration(
+                clientId = clientId,
+                jwk = jwk,
+                environment = Environment(
+                    issuer = issuer,
+                    audience = audience,
+                ),
+            ),
         ),
+        proofBuilder = ProofBuilder(jwk),
     ),
 )
 
