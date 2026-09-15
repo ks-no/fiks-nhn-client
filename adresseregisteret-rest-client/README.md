@@ -8,7 +8,7 @@ It is intentionally kept separate from the existing SOAP-based `adresseregistere
 ```xml
 <dependency>
     <groupId>no.ks.fiks</groupId>
-    <artifactId>adresseregister-rest-client</artifactId>
+    <artifactId>adresseregisteret-rest-client</artifactId>
     <version>${project.version}</version>
 </dependency>
 ```

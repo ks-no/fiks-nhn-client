@@ -9,7 +9,7 @@
         <version>1.8.1-rest-SNAPSHOT</version>
     </parent>
 
-    <artifactId>adresseregister-rest-client</artifactId>
+    <artifactId>adresseregisteret-rest-client</artifactId>
     <name>${project.groupId}:${project.artifactId}</name>
     <description>REST client generated from the NHN Adresseregisteret OpenAPI spec</description>
 

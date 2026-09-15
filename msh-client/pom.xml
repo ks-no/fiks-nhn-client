@@ -33,7 +33,7 @@
         </dependency>
         <dependency>
             <groupId>no.ks.fiks</groupId>
-            <artifactId>adresseregister-rest-client</artifactId>
+            <artifactId>adresseregisteret-rest-client</artifactId>
         </dependency>
         <dependency>
             <groupId>no.ks.fiks</groupId>
