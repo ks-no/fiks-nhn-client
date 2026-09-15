@@ -12,7 +12,7 @@
 
     <groupId>no.ks.fiks</groupId>
     <artifactId>nhn-client-parent</artifactId>
-    <version>1.8.1-SNAPSHOT</version>
+    <version>1.8.1-rest-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>${project.groupId}:${project.artifactId}</name>
     <description>Parent for clients communicating with different NHN services</description>
@@ -27,6 +27,7 @@
     <modules>
         <module>fastlegeregisteret-client</module>
         <module>adresseregisteret-client</module>
+        <module>adresseregisteret-rest-client</module>
         <module>msh-api-v2</module>
         <module>msh-client</module>
     </modules>
@@ -64,6 +65,11 @@
             <dependency>
                 <groupId>no.ks.fiks</groupId>
                 <artifactId>adresseregisteret-client</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>no.ks.fiks</groupId>
+                <artifactId>adresseregisteret-rest-client</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -141,6 +147,12 @@
                 <groupId>org.wiremock.integrations.testcontainers</groupId>
                 <artifactId>wiremock-testcontainers-module</artifactId>
                 <version>${wiremock-testcontainers.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>testcontainers</artifactId>
+                <version>2.0.5</version>
                 <scope>test</scope>
             </dependency>
         </dependencies>

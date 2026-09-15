@@ -60,10 +60,6 @@ class ClientFactoryTest : StringSpec() {
                     ),
                     adresseregister = AdresseregisterConfiguration(
                         url = "http://adresseregister:8080",
-                        credentials = Credentials(
-                            username = UUID.randomUUID().toString(),
-                            password = UUID.randomUUID().toString(),
-                        ),
                     ),
                     fastlegeregister = FastlegeregisterConfiguration(
                         url = "http://fastlegeregister:8080",

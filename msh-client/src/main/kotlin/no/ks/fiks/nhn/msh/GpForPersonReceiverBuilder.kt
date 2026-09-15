@@ -3,8 +3,8 @@ package no.ks.fiks.nhn.msh
 import no.ks.fiks.hdir.Adressetype
 import no.ks.fiks.hdir.OrganizationIdType
 import no.ks.fiks.hdir.PersonIdType
-import no.ks.fiks.nhn.ar.AdresseregisteretClient
-import no.ks.fiks.nhn.ar.PersonCommunicationParty
+import no.ks.fiks.nhn.ar.rest.AdresseregisteretClient
+import no.ks.fiks.nhn.ar.rest.PersonCommunicationParty
 import no.ks.fiks.nhn.flr.FastlegeregisteretClient
 
 class GpForPersonReceiverBuilder(

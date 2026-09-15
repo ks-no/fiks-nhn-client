@@ -1,9 +1,12 @@
 package no.ks.fiks.nhn.msh
 
+import no.ks.fiks.helseid.AccessTokenRequestBuilder
 import no.ks.fiks.helseid.HelseIdClient
+import no.ks.fiks.helseid.TenancyType
 import no.ks.fiks.helseid.dpop.ProofBuilder
-import no.ks.fiks.nhn.ar.AdresseregisteretClient
-import no.ks.fiks.nhn.ar.AdresseregisteretService
+import no.ks.fiks.helseid.Configuration as HelseIdClientConfiguration
+import no.ks.fiks.nhn.ar.rest.AdresseregisteretClient
+import no.ks.fiks.nhn.ar.rest.AdresseregisteretService
 import no.ks.fiks.nhn.flr.Credentials
 import no.ks.fiks.nhn.flr.FastlegeregisteretClient
 import no.ks.fiks.nhn.flr.FastlegeregisteretService
@@ -19,29 +22,27 @@ object ClientFactory {
 
     @JvmOverloads
     fun createClientWithFastlegeLookup(configuration: ConfigurationWithFastlegeLookup, messageHandlers: List<MessageHandler> = emptyList()): ClientWithFastlegeLookup =
-        ClientWithFastlegeLookup(
-            internalClient = createMshInternalClient(configuration.helseId, configuration.mshBaseUrl, configuration.sourceSystem),
-            flrClient = createFlrClient(configuration.fastlegeregister),
-            arClient = createArClient(configuration.adresseregister),
-            messageHandlers = messageHandlers,
-        )
+        HelseIdDependencies(configuration.helseId).let { helseId ->
+            ClientWithFastlegeLookup(
+                internalClient = createMshInternalClient(configuration.helseId, configuration.mshBaseUrl, configuration.sourceSystem, helseId.client, helseId.proofBuilder),
+                flrClient = createFlrClient(configuration.fastlegeregister),
+                arClient = createArClient(configuration.adresseregister, configuration.helseId),
+                messageHandlers = messageHandlers,
+            )
+        }
 
     private fun createMshInternalClient(
         helseIdConfiguration: HelseIdConfiguration,
         mshBaseUrl: String,
         sourceSystem: String,
+        helseIdClient: HelseIdClient = createHelseIdClient(helseIdConfiguration),
+        proofBuilder: ProofBuilder = ProofBuilder(helseIdConfiguration.jwk),
     ) = MshInternalClient(
         baseUrl = mshBaseUrl,
         sourceSystem = sourceSystem,
         defaultTokenParams = helseIdConfiguration.tokenParams,
-        helseIdClient = HelseIdClient(
-            no.ks.fiks.helseid.Configuration(
-                clientId = helseIdConfiguration.clientId,
-                jwk = helseIdConfiguration.jwk,
-                environment = helseIdConfiguration.environment,
-            ),
-        ),
-        proofBuilder = ProofBuilder(helseIdConfiguration.jwk),
+        helseIdClient = helseIdClient,
+        proofBuilder = proofBuilder,
     )
 
     fun createFlrClient(configuration: FastlegeregisterConfiguration) = FastlegeregisteretClient(
@@ -56,17 +57,52 @@ object ClientFactory {
         )
     )
 
-    fun createArClient(configuration: AdresseregisterConfiguration) = AdresseregisteretClient(
+    fun createArClient(
+        configuration: AdresseregisterConfiguration,
+        helseIdConfiguration: HelseIdConfiguration,
+    ) = AdresseregisteretClient(
         AdresseregisteretService(
             url = configuration.url,
-            credentials = configuration.credentials.let {
-                no.ks.fiks.nhn.ar.Credentials(
-                    username = it.username,
-                    password = it.password,
-                )
-            },
+            helseIdConfiguration = createHelseIdClientConfiguration(helseIdConfiguration),
+            accessTokenRequestBuilder = createAccessTokenRequestBuilder(helseIdConfiguration.tokenParams),
         )
     )
+
+    private fun createHelseIdClientConfiguration(helseIdConfiguration: HelseIdConfiguration) = HelseIdClientConfiguration(
+        clientId = helseIdConfiguration.clientId,
+        jwk = helseIdConfiguration.jwk,
+        environment = helseIdConfiguration.environment,
+    )
+
+    private fun createHelseIdClient(helseIdConfiguration: HelseIdConfiguration) = HelseIdClient(
+        createHelseIdClientConfiguration(helseIdConfiguration),
+    )
+
+    private fun createAccessTokenRequestBuilder(tokenParams: HelseIdTokenParameters?): AccessTokenRequestBuilder? =
+        tokenParams?.tenant?.let { tenant ->
+            AccessTokenRequestBuilder().apply {
+                when (tenant) {
+                    is SingleTenantHelseIdTokenParameters ->
+                        tenancyType(TenancyType.SINGLE)
+                            .childOrganizationNumber(tenant.childOrganization)
+
+                    is MultiTenantHelseIdTokenParameters ->
+                        tenancyType(TenancyType.MULTI)
+                            .parentOrganizationNumber(tenant.parentOrganization)
+                            .also { if (tenant.childOrganization != null) childOrganizationNumber(tenant.childOrganization) }
+                }
+            }
+        }
+
+    private data class HelseIdDependencies(
+        val client: HelseIdClient,
+        val proofBuilder: ProofBuilder,
+    ) {
+        constructor(configuration: HelseIdConfiguration) : this(
+            client = createHelseIdClient(configuration),
+            proofBuilder = ProofBuilder(configuration.jwk),
+        )
+    }
 
 
 }
