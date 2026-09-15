@@ -4,6 +4,7 @@ import no.ks.fiks.helseid.AccessTokenRequestBuilder
 import no.ks.fiks.helseid.HelseIdClient
 import no.ks.fiks.helseid.TenancyType
 import no.ks.fiks.helseid.dpop.ProofBuilder
+import no.ks.fiks.helseid.Configuration as HelseIdClientConfiguration
 import no.ks.fiks.nhn.ar.rest.AdresseregisteretClient
 import no.ks.fiks.nhn.ar.rest.AdresseregisteretService
 import no.ks.fiks.nhn.flr.Credentials
@@ -25,7 +26,7 @@ object ClientFactory {
             ClientWithFastlegeLookup(
                 internalClient = createMshInternalClient(configuration.helseId, configuration.mshBaseUrl, configuration.sourceSystem, helseId.client, helseId.proofBuilder),
                 flrClient = createFlrClient(configuration.fastlegeregister),
-                arClient = createArClient(configuration.adresseregister, configuration.helseId, helseId.client, helseId.proofBuilder),
+                arClient = createArClient(configuration.adresseregister, configuration.helseId),
                 messageHandlers = messageHandlers,
             )
         }
@@ -59,23 +60,22 @@ object ClientFactory {
     fun createArClient(
         configuration: AdresseregisterConfiguration,
         helseIdConfiguration: HelseIdConfiguration,
-        helseIdClient: HelseIdClient = createHelseIdClient(helseIdConfiguration),
-        proofBuilder: ProofBuilder = ProofBuilder(helseIdConfiguration.jwk),
     ) = AdresseregisteretClient(
         AdresseregisteretService(
             url = configuration.url,
-            helseIdClient = helseIdClient,
-            proofBuilder = proofBuilder,
+            helseIdConfiguration = createHelseIdClientConfiguration(helseIdConfiguration),
             accessTokenRequestBuilder = createAccessTokenRequestBuilder(helseIdConfiguration.tokenParams),
         )
     )
 
+    private fun createHelseIdClientConfiguration(helseIdConfiguration: HelseIdConfiguration) = HelseIdClientConfiguration(
+        clientId = helseIdConfiguration.clientId,
+        jwk = helseIdConfiguration.jwk,
+        environment = helseIdConfiguration.environment,
+    )
+
     private fun createHelseIdClient(helseIdConfiguration: HelseIdConfiguration) = HelseIdClient(
-        no.ks.fiks.helseid.Configuration(
-            clientId = helseIdConfiguration.clientId,
-            jwk = helseIdConfiguration.jwk,
-            environment = helseIdConfiguration.environment,
-        ),
+        createHelseIdClientConfiguration(helseIdConfiguration),
     )
 
     private fun createAccessTokenRequestBuilder(tokenParams: HelseIdTokenParameters?): AccessTokenRequestBuilder? =

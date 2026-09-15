@@ -1,12 +1,10 @@
 package no.ks.fiks.nhn.ar.rest
 
 import no.ks.fiks.helseid.AccessTokenRequestBuilder
-import no.ks.fiks.helseid.HelseIdClient
-import no.ks.fiks.helseid.dpop.ProofBuilder
+import no.ks.fiks.helseid.Configuration as HelseIdConfiguration
 
 class AdresseregisteretService(
     url: String,
-    helseIdClient: HelseIdClient,
-    proofBuilder: ProofBuilder,
+    helseIdConfiguration: HelseIdConfiguration,
     accessTokenRequestBuilder: AccessTokenRequestBuilder? = null,
-) : AdresseregisteretRestService(url, helseIdClient, proofBuilder, accessTokenRequestBuilder)
+) : AdresseregisteretRestService(url, helseIdConfiguration, accessTokenRequestBuilder)
