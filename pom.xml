@@ -38,6 +38,7 @@
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <enforcer.jdk.version>${java.version}</enforcer.jdk.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <central-publishing-maven-plugin.waitUntil>validated</central-publishing-maven-plugin.waitUntil>
 
         <helseid.version>1.5.0</helseid.version>
 
