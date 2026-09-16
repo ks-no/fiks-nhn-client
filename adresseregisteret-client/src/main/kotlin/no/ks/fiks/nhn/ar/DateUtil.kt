@@ -8,4 +8,4 @@ import javax.xml.datatype.XMLGregorianCalendar
 
 private val zoneOslo = ZoneId.of("Europe/Oslo")
 
-fun XMLGregorianCalendar.toOffsetDateTime(): OffsetDateTime = OffsetDateTime.ofInstant(toGregorianCalendar(TimeZone.getTimeZone(zoneOslo), null, null).toInstant(), zoneOslo)
+fun XMLGregorianCalendar.toOffsetDateTime(): OffsetDateTime = toGregorianCalendar(TimeZone.getTimeZone(zoneOslo), null, null).toZonedDateTime().toOffsetDateTime()
