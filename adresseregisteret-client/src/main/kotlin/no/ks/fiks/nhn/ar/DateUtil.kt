@@ -2,8 +2,10 @@ package no.ks.fiks.nhn.ar
 
 import java.time.OffsetDateTime
 import java.time.ZoneId
+import java.util.Locale
+import java.util.TimeZone
 import javax.xml.datatype.XMLGregorianCalendar
 
 private val zoneOslo = ZoneId.of("Europe/Oslo")
 
-fun XMLGregorianCalendar.toOffsetDateTime(): OffsetDateTime = OffsetDateTime.ofInstant(toGregorianCalendar().toInstant(), zoneOslo)
+fun XMLGregorianCalendar.toOffsetDateTime(): OffsetDateTime = OffsetDateTime.ofInstant(toGregorianCalendar(TimeZone.getTimeZone(zoneOslo), null, null).toInstant(), zoneOslo)
