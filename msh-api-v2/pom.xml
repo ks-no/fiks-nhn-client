@@ -6,7 +6,7 @@
     <parent>
         <groupId>no.ks.fiks</groupId>
         <artifactId>nhn-client-parent</artifactId>
-        <version>1.8.1-rest-SNAPSHOT</version>
+        <version>1.9.2-SNAPSHOT</version>
     </parent>
 
     <artifactId>msh-api-v2</artifactId>
@@ -19,7 +19,7 @@
         <basePackage>${project.groupId}.stralfors</basePackage>
 
         <jakarta.annotation-api.version>3.0.0</jakarta.annotation-api.version>
-        <feign.version>13.13</feign.version>
+        <feign.version>13.15</feign.version>
         <feign-form.version>3.8.0</feign-form.version>
     </properties>
 

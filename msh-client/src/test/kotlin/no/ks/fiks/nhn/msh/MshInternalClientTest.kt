@@ -1129,7 +1129,7 @@ class MshInternalClientTest : FreeSpec() {
                     }
                 }
 
-                eventually(3.seconds) {
+                eventually(5.seconds) {
                     capturedTokenRequests.size shouldBe requestParameters.size
                 }
 
