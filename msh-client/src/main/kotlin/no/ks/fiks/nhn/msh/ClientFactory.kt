@@ -4,9 +4,8 @@ import no.ks.fiks.helseid.AccessTokenRequestBuilder
 import no.ks.fiks.helseid.HelseIdClient
 import no.ks.fiks.helseid.TenancyType
 import no.ks.fiks.helseid.dpop.ProofBuilder
-import no.ks.fiks.helseid.Configuration as HelseIdClientConfiguration
 import no.ks.fiks.nhn.ar.rest.AdresseregisteretClient
-import no.ks.fiks.nhn.ar.rest.AdresseregisteretService
+import no.ks.fiks.nhn.ar.rest.AdresseregisteretRestService
 import no.ks.fiks.nhn.flr.Credentials
 import no.ks.fiks.nhn.flr.FastlegeregisteretClient
 import no.ks.fiks.nhn.flr.FastlegeregisteretService
@@ -61,22 +60,26 @@ object ClientFactory {
         configuration: AdresseregisterConfiguration,
         helseIdConfiguration: HelseIdConfiguration,
     ) = AdresseregisteretClient(
-        AdresseregisteretService(
+        AdresseregisteretRestService(
             url = configuration.url,
-            helseIdConfiguration = createHelseIdClientConfiguration(helseIdConfiguration),
+            helseIdClient = createHelseIdClient(helseIdConfiguration),
+            proofBuilder = ProofBuilder(helseIdConfiguration.jwk),
             accessTokenRequestBuilder = createAccessTokenRequestBuilder(helseIdConfiguration.tokenParams),
         )
     )
 
-    private fun createHelseIdClientConfiguration(helseIdConfiguration: HelseIdConfiguration) = HelseIdClientConfiguration(
-        clientId = helseIdConfiguration.clientId,
-        jwk = helseIdConfiguration.jwk,
-        environment = helseIdConfiguration.environment,
-    )
 
     private fun createHelseIdClient(helseIdConfiguration: HelseIdConfiguration) = HelseIdClient(
         createHelseIdClientConfiguration(helseIdConfiguration),
     )
+
+    private fun createHelseIdClientConfiguration(helseIdConfiguration: HelseIdConfiguration) =
+        no.ks.fiks.helseid.Configuration(
+            clientId = helseIdConfiguration.clientId,
+            jwk = helseIdConfiguration.jwk,
+            environment = helseIdConfiguration.environment,
+        )
+
 
     private fun createAccessTokenRequestBuilder(tokenParams: HelseIdTokenParameters?): AccessTokenRequestBuilder? =
         tokenParams?.tenant?.let { tenant ->
