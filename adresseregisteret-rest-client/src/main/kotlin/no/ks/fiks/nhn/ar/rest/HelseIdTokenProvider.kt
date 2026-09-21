@@ -47,6 +47,8 @@ private const val CLAIM_ASSERTION_DETAILS = "assertion_details"
 
 private val jwsHeaderType = JOSEObjectType(JWS_HEADER_TYPE_VALUE)
 private val jwtRequestLifetime = Duration.ofSeconds(5)
+private val accessTokenLifetime = Duration.ofMinutes(5)
+private val accessTokenRenewalThreshold = Duration.ofSeconds(30)
 private val log = KotlinLogging.logger {}
 
 private object FormFields {
@@ -73,7 +75,7 @@ class HelseIdTokenProvider(
         .findAndRegisterModules()
         .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
     private val tokenCache = Caffeine.newBuilder()
-        .expireAfterWrite(configuration.accessTokenLifetime.minus(configuration.accessTokenRenewalThreshold))
+        .expireAfterWrite(accessTokenLifetime.minus(accessTokenRenewalThreshold))
         .build<AccessTokenRequest, TokenResponse> { getNewAccessToken(it) }
 
     @JvmOverloads
