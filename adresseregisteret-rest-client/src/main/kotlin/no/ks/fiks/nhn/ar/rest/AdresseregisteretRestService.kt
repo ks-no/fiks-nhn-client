@@ -1,6 +1,7 @@
 package no.ks.fiks.nhn.ar.rest
 
 import no.ks.fiks.helseid.AccessTokenRequestBuilder
+import no.ks.fiks.helseid.Configuration as HelseIdConfiguration
 import no.ks.fiks.helseid.HelseIdClient
 import no.ks.fiks.helseid.TokenType
 import no.ks.fiks.helseid.dpop.ProofBuilder
@@ -10,15 +11,19 @@ import no.nhn.register.communicationparty.rest.model.CommunicationParty as Gener
 
 open class AdresseregisteretRestService(
     private val url: String,
-    helseIdClient: HelseIdClient,
-    proofBuilder: ProofBuilder,
+    helseIdConfiguration: HelseIdConfiguration,
     accessTokenRequestBuilder: AccessTokenRequestBuilder? = null,
 ) {
     private val accessTokenRequest = (accessTokenRequestBuilder ?: AccessTokenRequestBuilder())
         .tokenType(TokenType.DPOP)
         .build()
 
-    private val authInterceptor = DpopAuthInterceptor(url, helseIdClient, proofBuilder, accessTokenRequest)
+    private val authInterceptor = DpopAuthInterceptor(
+        baseUrl = url,
+        helseIdClient = HelseIdClient(helseIdConfiguration),
+        proofBuilder = ProofBuilder(helseIdConfiguration.jwk),
+        accessTokenRequest = accessTokenRequest,
+    )
 
     private val api =
         ApiClient().apply {

@@ -62,8 +62,7 @@ object ClientFactory {
     ) = AdresseregisteretRestClient(
         AdresseregisteretRestService(
             url = configuration.url,
-            helseIdClient = createHelseIdClient(helseIdConfiguration),
-            proofBuilder = ProofBuilder(helseIdConfiguration.jwk),
+            helseIdConfiguration = createHelseIdClientConfiguration(helseIdConfiguration),
             accessTokenRequestBuilder = createAccessTokenRequestBuilder(helseIdConfiguration.tokenParams),
         )
     )
