@@ -19,11 +19,11 @@ class AdresseregisteretRestClient @JvmOverloads constructor(
     fun lookupPostalAddress(herId: Int): PostalAddress =
         lookupHerId(herId)?.let { communicationParty ->
             if (communicationParty.physicalAddresses.isEmpty()) {
-                throw AddressNotFoundException("Could not find any physicalAdresses related to herId")
+                throw AddressNotFoundException("Could not find any physical addresses related to herId")
             }
             communicationParty.physicalAddresses.firstOrNull()
                 ?.toPostalAddress(communicationParty.name)
-                ?: throw AddressNotFoundException("Could not find any relevant physicalAdresses related to herId")
+                ?: throw AddressNotFoundException("Could not find any relevant physical addresses related to herId")
         } ?: throw AddressNotFoundException("Did not find any communication party related to herId")
 
     private fun lookupHerIdFromApi(herId: Int): CommunicationParty? =
