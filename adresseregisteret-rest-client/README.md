@@ -20,12 +20,12 @@ import no.ks.fiks.helseid.Configuration as HelseIdConfiguration
 import no.ks.fiks.helseid.Environment
 import no.ks.fiks.helseid.HelseIdClient
 import no.ks.fiks.helseid.dpop.ProofBuilder
-import no.ks.fiks.nhn.ar.rest.AdresseregisteretClient
-import no.ks.fiks.nhn.ar.rest.AdresseregisteretService
+import no.ks.fiks.nhn.ar.rest.AdresseregisteretRestClient
+import no.ks.fiks.nhn.ar.rest.AdresseregisteretRestService
 
 val jwk = "<JWK string>"
-val client = AdresseregisteretClient(
-    service = AdresseregisteretService(
+val client = AdresseregisteretRestClient(
+    service = AdresseregisteretRestService(
         url = "https://cpapi.test.grunndata.nhn.no",
         helseIdClient = HelseIdClient(
             HelseIdConfiguration(
@@ -48,5 +48,4 @@ val postalAddress = client.lookupPostalAddress(12345)
 ## Notes
 
 - The REST client is generated from `adresseregister-spec.json`.
-- The public Kotlin API is intentionally close to the existing SOAP client to minimize the migration effort.
-- Use the generated `AdresseregisteretRestService`/`AdresseregisteretRestClient` directly if you want to work closer to the generated OpenAPI types.
+- The public Kotlin API is intentionally direct: use `AdresseregisteretRestClient` for lookups and `AdresseregisteretRestService` for transport/auth wiring.

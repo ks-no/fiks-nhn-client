@@ -30,6 +30,8 @@ class AdresseregisteretRestClient @JvmOverloads constructor(
         try {
             service.getCommunicationPartyDetails(herId)
                 ?.let { it.convert() }
+        } catch (e: feign.FeignException.NotFound) {
+            throw AddressNotFoundException("Could not find any communication party related to herId")
         } catch (e: Exception) {
             throw AdresseregisteretException(
                 message = "Unknown error from Adresseregisteret REST API",

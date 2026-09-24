@@ -1,13 +1,13 @@
 package no.ks.fiks.nhn.msh
 
-import no.ks.fiks.nhn.ar.rest.AdresseregisteretClient
+import no.ks.fiks.nhn.ar.rest.AdresseregisteretRestClient
 import no.ks.fiks.nhn.flr.FastlegeregisteretClient
 import java.util.UUID
 
 open class ClientWithFastlegeLookup(
     internalClient: MshInternalClient,
     flrClient: FastlegeregisteretClient,
-    arClient: AdresseregisteretClient,
+    arClient: AdresseregisteretRestClient,
     messageHandlers: List<MessageHandler> = emptyList(),
 ) : Client(internalClient, messageHandlers) {
 

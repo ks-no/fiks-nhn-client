@@ -4,7 +4,7 @@ import no.ks.fiks.helseid.AccessTokenRequestBuilder
 import no.ks.fiks.helseid.HelseIdClient
 import no.ks.fiks.helseid.TenancyType
 import no.ks.fiks.helseid.dpop.ProofBuilder
-import no.ks.fiks.nhn.ar.rest.AdresseregisteretClient
+import no.ks.fiks.nhn.ar.rest.AdresseregisteretRestClient
 import no.ks.fiks.nhn.ar.rest.AdresseregisteretRestService
 import no.ks.fiks.nhn.flr.Credentials
 import no.ks.fiks.nhn.flr.FastlegeregisteretClient
@@ -59,7 +59,7 @@ object ClientFactory {
     fun createArClient(
         configuration: AdresseregisterConfiguration,
         helseIdConfiguration: HelseIdConfiguration,
-    ) = AdresseregisteretClient(
+    ) = AdresseregisteretRestClient(
         AdresseregisteretRestService(
             url = configuration.url,
             helseIdClient = createHelseIdClient(helseIdConfiguration),
