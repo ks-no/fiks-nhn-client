@@ -28,9 +28,8 @@ class AdresseregisteretRestClient @JvmOverloads constructor(
 
     private fun lookupHerIdFromApi(herId: Int): CommunicationParty? =
         try {
-            service.getCommunicationPartyDetails(herId)
-                ?.let { it.convert() }
-        } catch (e: feign.FeignException.NotFound) {
+            service.getCommunicationPartyDetails(herId)?.convert()
+        } catch (_: feign.FeignException.NotFound) {
             throw AddressNotFoundException("Could not find any communication party related to herId")
         } catch (e: Exception) {
             throw AdresseregisteretException(
@@ -54,9 +53,6 @@ class AdresseregisteretRestClient @JvmOverloads constructor(
             parent = personDetails?.parentOrganization?.toParent(),
             physicalAddresses = convertPhysicalAddresses(),
             electronicAddresses = convertElectronicAddresses(),
-            firstName = splitPersonName(name).first,
-            middleName = splitPersonName(name).second,
-            lastName = splitPersonName(name).third,
         )
         GeneratedCommunicationPartyType.SERVICE -> ServiceCommunicationParty(
             herId = herId,
@@ -94,16 +90,6 @@ class AdresseregisteretRestClient @JvmOverloads constructor(
         country = null,
     )
 
-    private fun splitPersonName(fullName: String?): Triple<String, String?, String> {
-        val name = fullName.orEmpty().trim()
-        if (name.isEmpty()) return Triple("", null, "")
-        val parts = name.split(Regex("\\s+"))
-        return when {
-            parts.size <= 1 -> Triple(parts.firstOrNull() ?: "", null, "")
-            parts.size == 2 -> Triple(parts[0], null, parts[1])
-            else -> Triple(parts.first(), parts.subList(1, parts.size - 1).joinToString(" "), parts.last())
-        }
-    }
 
     private fun interface Cache {
         fun get(herId: Int): CommunicationParty?

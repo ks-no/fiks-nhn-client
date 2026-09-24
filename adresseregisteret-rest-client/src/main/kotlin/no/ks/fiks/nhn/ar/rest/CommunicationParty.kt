@@ -30,13 +30,10 @@ class PersonCommunicationParty(
     parent: CommunicationPartyParent?,
     physicalAddresses: List<PhysicalAddress>,
     electronicAddresses: List<ElectronicAddress>,
-    val firstName: String,
-    val middleName: String?,
-    val lastName: String,
 ) : CommunicationParty(herId, name, parent, physicalAddresses, electronicAddresses) {
 
     override fun toString(): String {
-        return "PersonCommunicationParty(herId=$herId, parent=$parent, physicalAddresses=$physicalAddresses, firstName='$firstName', middleName=$middleName, lastName='$lastName')"
+        return "PersonCommunicationParty(herId=$herId, name='$name', parent=$parent, physicalAddresses=$physicalAddresses)"
     }
 }
 

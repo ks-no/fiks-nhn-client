@@ -59,9 +59,7 @@ class AdresseregisteretRestClientTest : StringSpec({
         val parent = result.parent!!
 
         result.herId shouldBe 456
-        result.firstName shouldBe "Ada"
-        result.middleName shouldBe "Maria"
-        result.lastName shouldBe "Lovelace"
+        result.name shouldBe "Ada Maria Lovelace"
         parent.herId shouldBe 321
         parent.name shouldBe "Parent Organization"
         parent.organizationNumber shouldBe "987654321"
@@ -160,7 +158,7 @@ class AdresseregisteretRestClientTest : StringSpec({
             client.lookupPostalAddress(654)
         }
 
-        exception.message shouldBe "Could not find any physicalAdresses related to herId"
+        exception.message shouldBe "Could not find any physical addresses related to herId"
     }
 
     "lookupHerId caches successful lookups when cache is enabled" {
