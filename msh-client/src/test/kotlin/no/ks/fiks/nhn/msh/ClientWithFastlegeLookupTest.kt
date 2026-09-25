@@ -9,12 +9,12 @@ import no.ks.fiks.hdir.Helsepersonell
 import no.ks.fiks.hdir.HelsepersonellsFunksjoner
 import no.ks.fiks.hdir.OrganizationIdType
 import no.ks.fiks.hdir.PersonIdType
-import no.ks.fiks.nhn.ar.rest.AdresseregisteretRestClient
-import no.ks.fiks.nhn.ar.rest.CommunicationPartyParent
-import no.ks.fiks.nhn.ar.rest.Country
-import no.ks.fiks.nhn.ar.rest.PersonCommunicationParty
-import no.ks.fiks.nhn.ar.rest.PhysicalAddress
-import no.ks.fiks.nhn.ar.rest.PostalAddressType
+import no.ks.fiks.nhn.ar.AdresseregisteretClient
+import no.ks.fiks.nhn.ar.CommunicationPartyParent
+import no.ks.fiks.nhn.ar.Country
+import no.ks.fiks.nhn.ar.PersonCommunicationParty as AdresseregisterPersonCommunicationParty
+import no.ks.fiks.nhn.ar.PhysicalAddress
+import no.ks.fiks.nhn.ar.PostalAddressType
 import no.ks.fiks.nhn.flr.FastlegeregisteretClient
 import no.ks.fiks.nhn.flr.PatientGP
 import no.ks.fiks.nhn.randomAddress
@@ -44,7 +44,7 @@ class ClientWithFastlegeLookupTest : FreeSpec() {
                 val requestSlot = slot<PostMessageRequest>()
                 val apiService = mockk<MshInternalClient> { coEvery { postMessage(capture(requestSlot), any()) } returns UUID.randomUUID() }
                 val flrClient = mockk<FastlegeregisteretClient> { every { getPatientGP(any()) } returns patientGP }
-                val arClient = mockk<AdresseregisteretRestClient> { every { lookupHerId(any()) } returns gpCommunicationParty }
+                val arClient = mockk<AdresseregisteretClient> { every { lookupHerId(any()) } returns gpCommunicationParty }
                 val client = ClientWithFastlegeLookup(apiService, flrClient, arClient)
 
                 client.sendMessageToGPForPerson(businessDocument)
@@ -116,7 +116,7 @@ class ClientWithFastlegeLookupTest : FreeSpec() {
                 coEvery { postMessage(any(), any()) } returns UUID.randomUUID()
             }
             val flrClient = mockk<FastlegeregisteretClient> { every { getPatientGP(any()) } returns randomPatientGP() }
-            val arClient = mockk<AdresseregisteretRestClient> { every { lookupHerId(any()) } returns randomPersonCommunicationParty() }
+            val arClient = mockk<AdresseregisteretClient> { every { lookupHerId(any()) } returns randomPersonCommunicationParty() }
             val client = ClientWithFastlegeLookup(internalClient, flrClient, arClient)
 
             client.sendMessageToGPForPerson(randomGPForPersonOutgoingBusinessDocument(), params)
@@ -175,7 +175,7 @@ private fun randomGPForPersonOutgoingBusinessDocument(
     )
 )
 
-private fun randomPersonCommunicationParty(): PersonCommunicationParty = PersonCommunicationParty(
+private fun randomPersonCommunicationParty(): AdresseregisterPersonCommunicationParty = AdresseregisterPersonCommunicationParty(
     herId = randomHerId(),
     name = randomString(),
     parent = CommunicationPartyParent(randomHerId(), randomString(), randomString()),

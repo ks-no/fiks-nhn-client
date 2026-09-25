@@ -4,8 +4,9 @@ import no.ks.fiks.helseid.AccessTokenRequestBuilder
 import no.ks.fiks.helseid.HelseIdClient
 import no.ks.fiks.helseid.TenancyType
 import no.ks.fiks.helseid.dpop.ProofBuilder
-import no.ks.fiks.nhn.ar.rest.AdresseregisteretRestClient
-import no.ks.fiks.nhn.ar.rest.AdresseregisteretRestService
+import no.ks.fiks.nhn.ar.AdresseregisteretClient
+import no.ks.fiks.nhn.ar.AdresseregisteretService
+import no.ks.fiks.nhn.ar.Credentials as AdresseregisterCredentials
 import no.ks.fiks.nhn.flr.Credentials
 import no.ks.fiks.nhn.flr.FastlegeregisteretClient
 import no.ks.fiks.nhn.flr.FastlegeregisteretService
@@ -25,7 +26,7 @@ object ClientFactory {
             ClientWithFastlegeLookup(
                 internalClient = createMshInternalClient(configuration.helseId, configuration.mshBaseUrl, configuration.sourceSystem, helseId.client, helseId.proofBuilder),
                 flrClient = createFlrClient(configuration.fastlegeregister),
-                arClient = createArClient(configuration.adresseregister, configuration.helseId),
+                arClient = createArClient(configuration.adresseregister),
                 messageHandlers = messageHandlers,
             )
         }
@@ -58,12 +59,13 @@ object ClientFactory {
 
     fun createArClient(
         configuration: AdresseregisterConfiguration,
-        helseIdConfiguration: HelseIdConfiguration,
-    ) = AdresseregisteretRestClient(
-        AdresseregisteretRestService(
+    ) = AdresseregisteretClient(
+        AdresseregisteretService(
             url = configuration.url,
-            helseIdConfiguration = createHelseIdClientConfiguration(helseIdConfiguration),
-            accessTokenRequestBuilder = createAccessTokenRequestBuilder(helseIdConfiguration.tokenParams),
+            credentials = AdresseregisterCredentials(
+                username = configuration.credentials.username,
+                password = configuration.credentials.password,
+            ),
         )
     )
 
