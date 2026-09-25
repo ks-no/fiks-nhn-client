@@ -19,8 +19,8 @@ class CreateClientWithFastlegeLookupTest : StringSpec({
                 adresseregister = AdresseregisterConfiguration(
                     url = "<Adresseregister URL>",
                     credentials = Credentials(
-                        username = "<Adresseregister username>",
-                        password = "<Adresseregister password>",
+                        username = "<AR username>",
+                        password = "<AR password>",
                     ),
                 ),
                 fastlegeregister = FastlegeregisterConfiguration(

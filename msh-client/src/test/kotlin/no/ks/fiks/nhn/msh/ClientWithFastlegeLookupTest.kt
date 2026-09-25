@@ -12,7 +12,7 @@ import no.ks.fiks.hdir.PersonIdType
 import no.ks.fiks.nhn.ar.AdresseregisteretClient
 import no.ks.fiks.nhn.ar.CommunicationPartyParent
 import no.ks.fiks.nhn.ar.Country
-import no.ks.fiks.nhn.ar.PersonCommunicationParty as AdresseregisterPersonCommunicationParty
+import no.ks.fiks.nhn.ar.PersonCommunicationParty
 import no.ks.fiks.nhn.ar.PhysicalAddress
 import no.ks.fiks.nhn.ar.PostalAddressType
 import no.ks.fiks.nhn.flr.FastlegeregisteretClient
@@ -175,7 +175,7 @@ private fun randomGPForPersonOutgoingBusinessDocument(
     )
 )
 
-private fun randomPersonCommunicationParty(): AdresseregisterPersonCommunicationParty = AdresseregisterPersonCommunicationParty(
+private fun randomPersonCommunicationParty(): PersonCommunicationParty = PersonCommunicationParty(
     herId = randomHerId(),
     name = randomString(),
     parent = CommunicationPartyParent(randomHerId(), randomString(), randomString()),

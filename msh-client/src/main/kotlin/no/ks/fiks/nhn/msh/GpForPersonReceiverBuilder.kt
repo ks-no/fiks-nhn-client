@@ -4,7 +4,7 @@ import no.ks.fiks.hdir.Adressetype
 import no.ks.fiks.hdir.OrganizationIdType
 import no.ks.fiks.hdir.PersonIdType
 import no.ks.fiks.nhn.ar.AdresseregisteretClient
-import no.ks.fiks.nhn.ar.PersonCommunicationParty as AdresseregisterPersonCommunicationParty
+import no.ks.fiks.nhn.ar.PersonCommunicationParty
 import no.ks.fiks.nhn.flr.FastlegeregisteretClient
 
 class GpForPersonReceiverBuilder(
@@ -58,12 +58,12 @@ class GpForPersonReceiverBuilder(
         )
     }
 
-    private fun lookupFastlege(personId: String): AdresseregisterPersonCommunicationParty =
+    private fun lookupFastlege(personId: String): PersonCommunicationParty =
         flrClient.getPatientGP(personId)
             ?.let { patientGP ->
                 arClient
                     .lookupHerId(patientGP.gpHerId ?: throw GpNotFoundException("GP does not have HER-id", personId))
-                    .let { it as? AdresseregisterPersonCommunicationParty ?: throw GpNotFoundException("Adresseregisteret returned a communication party that is not a person", personId) }
+                    .let { it as? PersonCommunicationParty ?: throw GpNotFoundException("Adresseregisteret returned a communication party that is not a person", personId) }
             }
             ?: throw GpNotFoundException("Could not find GP for person", personId)
 

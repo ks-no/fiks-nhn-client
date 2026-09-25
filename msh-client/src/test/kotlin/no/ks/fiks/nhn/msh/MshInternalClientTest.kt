@@ -1105,7 +1105,7 @@ class MshInternalClientTest : FreeSpec() {
                     mockGetMessage(it)
                 }
 
-                val capturedTokenRequests = Collections.synchronizedList(mutableListOf<AccessTokenRequest>())
+                val capturedTokenRequests = mutableListOf<AccessTokenRequest>()
                 val helseIdClient = mockk<HelseIdClient> {
                     every { getAccessToken(capture(capturedTokenRequests)) } returns TokenResponse(
                         UUID.randomUUID().toString(),
