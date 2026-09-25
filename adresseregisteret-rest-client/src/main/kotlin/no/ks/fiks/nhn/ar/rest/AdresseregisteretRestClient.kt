@@ -26,17 +26,22 @@ class AdresseregisteretRestClient @JvmOverloads constructor(
                 ?: throw AddressNotFoundException("Could not find any relevant physical addresses related to herId")
         } ?: throw AddressNotFoundException("Did not find any communication party related to herId")
 
-    private fun lookupHerIdFromApi(herId: Int): CommunicationParty? =
-        try {
-            service.getCommunicationPartyDetails(herId)?.convert()
-        } catch (_: feign.FeignException.NotFound) {
-            throw AddressNotFoundException("Could not find any communication party related to herId")
-        } catch (e: Exception) {
-            throw AdresseregisteretException(
-                message = "Unknown error from Adresseregisteret REST API",
-                cause = e,
-            )
-        }
+     private fun lookupHerIdFromApi(herId: Int): CommunicationParty? =
+         try {
+             service.getCommunicationPartyDetails(herId)?.convert()
+         } catch (e: feign.FeignException.NotFound) {
+             throw AddressNotFoundException("Could not find any communication party related to herId")
+         } catch (e: feign.FeignException) {
+             throw AdresseregisteretException(
+                 message = "Error from Adresseregisteret REST API: ${e.message}",
+                 cause = e,
+             )
+         } catch (e: Exception) {
+             throw AdresseregisteretException(
+                 message = "Unknown error from Adresseregisteret REST API",
+                 cause = e,
+             )
+         }
 
     private fun GeneratedCommunicationParty.convert() = when (type) {
         GeneratedCommunicationPartyType.ORGANIZATION -> OrganizationCommunicationParty(
