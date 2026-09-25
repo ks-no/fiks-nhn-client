@@ -25,7 +25,6 @@ object ClientFactory {
             arClient = createArClient(configuration.adresseregister),
             messageHandlers = messageHandlers,
         )
-        }
 
     private fun createMshInternalClient(
         helseIdConfiguration: HelseIdConfiguration,
@@ -68,4 +67,6 @@ object ClientFactory {
             },
         )
     )
+
+
 }
