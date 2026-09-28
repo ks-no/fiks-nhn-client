@@ -5,6 +5,3 @@ open class AdresseregisteretException(
     cause: Throwable? = null,
 ) : RuntimeException(message, cause)
 
-class AddressNotFoundException(
-    message: String?,
-) : AdresseregisteretException(message)

@@ -7,7 +7,12 @@ sealed class CommunicationParty(
     val name: String,
     val parent: CommunicationPartyParent?,
     val physicalAddresses: List<PhysicalAddress>,
-    val electronicAddresses: List<ElectronicAddress>,
+    val email: String?,
+    val homepageUrl: String?,
+    val phoneNumber: String?,
+    val faxNumber: String?,
+    val ediAddress: String?,
+    val fhirAddress: String?,
 )
 
 class OrganizationCommunicationParty(
@@ -15,9 +20,14 @@ class OrganizationCommunicationParty(
     name: String,
     parent: CommunicationPartyParent?,
     physicalAddresses: List<PhysicalAddress>,
-    electronicAddresses: List<ElectronicAddress>,
+    email: String?,
+    homepageUrl: String?,
+    phoneNumber: String?,
+    faxNumber: String?,
+    ediAddress: String?,
+    fhirAddress: String?,
     val organizationNumber: String?,
-) : CommunicationParty(herId, name, parent, physicalAddresses, electronicAddresses) {
+) : CommunicationParty(herId, name, parent, physicalAddresses, email, homepageUrl, phoneNumber, faxNumber, ediAddress, fhirAddress) {
 
     override fun toString(): String {
         return "OrganizationCommunicationParty(herId=$herId, parent=$parent, physicalAddresses=$physicalAddresses, organizationNumber=$organizationNumber)"
@@ -29,8 +39,13 @@ class PersonCommunicationParty(
     name: String,
     parent: CommunicationPartyParent?,
     physicalAddresses: List<PhysicalAddress>,
-    electronicAddresses: List<ElectronicAddress>,
-) : CommunicationParty(herId, name, parent, physicalAddresses, electronicAddresses) {
+    email: String?,
+    homepageUrl: String?,
+    phoneNumber: String?,
+    faxNumber: String?,
+    ediAddress: String?,
+    fhirAddress: String?,
+) : CommunicationParty(herId, name, parent, physicalAddresses, email, homepageUrl, phoneNumber, faxNumber, ediAddress, fhirAddress) {
 
     override fun toString(): String {
         return "PersonCommunicationParty(herId=$herId, name='$name', parent=$parent, physicalAddresses=$physicalAddresses)"
@@ -42,8 +57,13 @@ class ServiceCommunicationParty(
     name: String,
     parent: CommunicationPartyParent?,
     physicalAddresses: List<PhysicalAddress>,
-    electronicAddresses: List<ElectronicAddress>,
-) : CommunicationParty(herId, name, parent, physicalAddresses, electronicAddresses) {
+    email: String?,
+    homepageUrl: String?,
+    phoneNumber: String?,
+    faxNumber: String?,
+    ediAddress: String?,
+    fhirAddress: String?,
+) : CommunicationParty(herId, name, parent, physicalAddresses, email, homepageUrl, phoneNumber, faxNumber, ediAddress, fhirAddress) {
 
     override fun toString(): String {
         return "ServiceCommunicationParty(herId=$herId, parent=$parent, physicalAddresses=$physicalAddresses)"
@@ -79,12 +99,8 @@ data class Country(
     val name: String,
 )
 
-data class ElectronicAddress(
-    val type: AddressComponent?,
-    val address: String?,
-    val lastChanged: OffsetDateTime?,
-)
 
+// Kodeverk 3401
 enum class PostalAddressType(
     val code: String,
 ) {
@@ -108,54 +124,3 @@ fun PhysicalAddress.toPostalAddress(name: String) =
         country = country,
     )
 
-enum class AddressComponent(
-    val code: String,
-    val text: String,
-) {
-    FHIR_ENDEPUNKT("E_FHIR", "FHIR-Endepunkt"),
-    EDI("E_EDI", "EDI (Standardisert elektronisk melding)"),
-    EDI_WEBSERVICE("E_EDI_WS", "EDI Webservice (Standardisert elektronisk melding)"),
-    EDI_AMTRIX("E_AMT", "EDI Amtrix"),
-    EDI_BIZTALK("E_BIZ", "EDI BizTalk"),
-    NHN_SMTP("E_NSM", "NHN SMTP"),
-    EDI_SYNKRON_HTTP("E_EDI_HTTP_SYNC", "EDI-meldinger over synkron HTTP"),
-    EDI_ASYNKRON_HTTP("E_EDI_HTTP_ASYNC", "EDI-meldinger over asynkron HTTP"),
-    ASYNKRON_AMQP("E_SB_ASYNC", "Asynkron AMQP kø"),
-    FEILMELDING_AMQP("E_SB_ERROR", "Feilmelding AMQP kø"),
-    SYNKRON_AMQP("E_SB_SYNC", "Synkron AMQP kø"),
-    SYNKRON_SVAR_AMQP("E_SB_SYNCREPLY", "Synkron Svar AMQP kø"),
-    DIGITALT_SERTIFIKAT("E_DS", "Digital sertifikat"),
-    KRYPTERINGSSERTIFIKAT("E_KS", "Krypteringssertifikat"),
-    SIGNERINGSSERTIFIKAT("E_SS", "Signeringssertifikat"),
-    TELEFONNUMMER("E_TLF", "Telefonnummer"),
-    SENTRALBORDNUMMER("E_CEN", "Sentralbordnummer"),
-    DIREKTENUMMER("E_DIR", "Direktenummer"),
-    SAMHANDLINGSNUMMER_ICE("E_ICE", "Samhandlingsnummer ICE"),
-    MOBILTELEFONNUMMER("E_MOB", "Mobiltelefonnummer"),
-    TELEFONNUMMER_SENTRALBORD("E_SEN", "Telefonnumer sentralbord"),
-    EPOST("E_EPO", "Epost-adresse"),
-    FAXNUMMER("E_FAX", "Faxnummer"),
-    HJEMMESIDE("E_URL", "Hjemmeside"),
-    LOKAL_ELEKTRONISK_ADRESSE("E_LOK", "Lokal Elektronisk Adresse"),
-    MELDINGSINFOMRASJON("E_MLD", "Meldingsinformasjon"),
-    ADRESSELENKE_FOR_INNSYNRSRETT("E_PTL", "Adresselenke for innsynsrett"),
-    BREV_ELLER_ANNEN_UTSKRIFT("E_BRV", "Brev eller annen utskrift på et fysisk medium"),
-    ANNET("E_DIV", "Annet"),
-    BOLIGNUMMER("ADL", "Bolignummer"),
-    BYGNINGSNUMMER("BUI", "Bygning nummer"),
-    GATENUMMER("HNR", "Gatenummer"),
-    GATENAVN("STR", "Gatenavn"),
-    POSTBOKSNUMMER("POB", "Postboksnummer"),
-    POSTNUMMER("ZIP", "Postnummer"),
-    POSTKONTOR("POO", "Postkontor"),
-    POSTSTED("POP", "Poststed"),
-    GPS_KOORDINATER("GPS", "GPS-koordinater"),
-    NASJON("CNT", "Nasjon"),
-    BESKRIVELSE("DSC", "Beskrivelse");
-
-    companion object {
-        private val codeToType = entries.associateBy { it.code }
-
-        fun fromCode(code: String?): AddressComponent? = code?.let { codeToType[it] }
-    }
-}

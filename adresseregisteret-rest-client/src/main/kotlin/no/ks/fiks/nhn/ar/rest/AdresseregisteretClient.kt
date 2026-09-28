@@ -6,8 +6,8 @@ import no.nhn.register.communicationparty.rest.model.CommunicationPartyType as G
 import no.nhn.register.communicationparty.rest.model.ParentOrganization
 import no.nhn.register.communicationparty.rest.model.PostalAddress as GeneratedPostalAddress
 
-class AdresseregisteretRestClient @JvmOverloads constructor(
-    private val service: AdresseregisteretRestService,
+class AdresseregisteretClient @JvmOverloads constructor(
+    private val service: AdresseregisteretService,
     cacheConfig: CacheConfig? = null,
 ) {
     private val cache = cacheConfig
@@ -29,10 +29,11 @@ class AdresseregisteretRestClient @JvmOverloads constructor(
      private fun lookupHerIdFromApi(herId: Int): CommunicationParty? =
          try {
              service.getCommunicationPartyDetails(herId)?.convert()
-         } catch (e: feign.FeignException.NotFound) {
+         } catch (_: feign.FeignException.NotFound) {
              throw AddressNotFoundException("Could not find any communication party related to herId")
          } catch (e: feign.FeignException) {
-             throw AdresseregisteretException(
+             throw AdresseregisteretApiException(
+                 statusCode = e.status(),
                  message = "Error from Adresseregisteret REST API: ${e.message}",
                  cause = e,
              )
@@ -49,7 +50,12 @@ class AdresseregisteretRestClient @JvmOverloads constructor(
             name = name.orEmpty(),
             parent = null,
             physicalAddresses = convertPhysicalAddresses(),
-            electronicAddresses = convertElectronicAddresses(),
+            email = email,
+            homepageUrl = homepageUrl,
+            phoneNumber = phoneNumber,
+            faxNumber = faxNumber,
+            ediAddress = ediAddress,
+            fhirAddress = fhirAddress,
             organizationNumber = organizationDetails?.organizationNumber,
         )
         GeneratedCommunicationPartyType.PERSON -> PersonCommunicationParty(
@@ -57,28 +63,30 @@ class AdresseregisteretRestClient @JvmOverloads constructor(
             name = name.orEmpty(),
             parent = personDetails?.parentOrganization?.toParent(),
             physicalAddresses = convertPhysicalAddresses(),
-            electronicAddresses = convertElectronicAddresses(),
+            email = email,
+            homepageUrl = homepageUrl,
+            phoneNumber = phoneNumber,
+            faxNumber = faxNumber,
+            ediAddress = ediAddress,
+            fhirAddress = fhirAddress,
         )
         GeneratedCommunicationPartyType.SERVICE -> ServiceCommunicationParty(
             herId = herId,
             name = name.orEmpty(),
             parent = serviceDetails?.parentOrganization?.toParent(),
             physicalAddresses = convertPhysicalAddresses(),
-            electronicAddresses = convertElectronicAddresses(),
+            email = email,
+            homepageUrl = homepageUrl,
+            phoneNumber = phoneNumber,
+            faxNumber = faxNumber,
+            ediAddress = ediAddress,
+            fhirAddress = fhirAddress,
         )
     }
 
     private fun GeneratedCommunicationParty.convertPhysicalAddresses(): List<PhysicalAddress> =
         listOfNotNull(postalAddress?.toPhysicalAddress())
 
-    private fun GeneratedCommunicationParty.convertElectronicAddresses(): List<ElectronicAddress> = buildList {
-        email?.takeIf { it.isNotBlank() }?.let { add(ElectronicAddress(AddressComponent.EPOST, it, null)) }
-        homepageUrl?.takeIf { it.isNotBlank() }?.let { add(ElectronicAddress(AddressComponent.HJEMMESIDE, it, null)) }
-        phoneNumber?.takeIf { it.isNotBlank() }?.let { add(ElectronicAddress(AddressComponent.TELEFONNUMMER, it, null)) }
-        faxNumber?.takeIf { it.isNotBlank() }?.let { add(ElectronicAddress(AddressComponent.FAXNUMMER, it, null)) }
-        ediAddress?.takeIf { it.isNotBlank() }?.let { add(ElectronicAddress(AddressComponent.EDI, it, null)) }
-        fhirAddress?.takeIf { it.isNotBlank() }?.let { add(ElectronicAddress(AddressComponent.FHIR_ENDEPUNKT, it, null)) }
-    }
 
     private fun ParentOrganization.toParent() = CommunicationPartyParent(
         herId = herId,
@@ -112,3 +120,4 @@ class AdresseregisteretRestClient @JvmOverloads constructor(
         override fun get(herId: Int) = cache.get(herId)
     }
 }
+

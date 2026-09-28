@@ -16,6 +16,7 @@ import no.ks.fiks.helseid.TokenType
 import no.ks.fiks.helseid.dpop.Endpoint
 import no.ks.fiks.helseid.dpop.HttpMethod
 import no.ks.fiks.helseid.dpop.ProofBuilder
+import java.util.UUID
 
 class DpopAuthInterceptorTest : StringSpec({
     "apply adds DPoP headers and builds endpoint URL" {
@@ -25,14 +26,16 @@ class DpopAuthInterceptorTest : StringSpec({
             .tokenType(TokenType.DPOP)
             .build()
         val endpoint = slot<Endpoint>()
+        val accessToken = UUID.randomUUID().toString()
+        val proofToken = UUID.randomUUID().toString()
 
         every { helseIdClient.getAccessToken(accessTokenRequest) } returns TokenResponse(
-            "access-token",
+            accessToken,
             3600,
             "DPoP",
             "scope",
         )
-        every { proofBuilder.buildProof(capture(endpoint), null, "access-token") } returns "proof-token"
+        every { proofBuilder.buildProof(capture(endpoint), null, accessToken) } returns proofToken
 
         val interceptor = DpopAuthInterceptor(
             baseUrl = "https://example.com/",
@@ -50,10 +53,10 @@ class DpopAuthInterceptorTest : StringSpec({
             method = HttpMethod.GET,
             url = "https://example.com/api/v1/communicationparty/123",
         )
-        template.headers()["Authorization"]?.single() shouldBe "DPoP access-token"
-        template.headers()["DPoP"]?.single() shouldBe "proof-token"
+        template.headers()["Authorization"]?.single() shouldBe "DPoP $accessToken"
+        template.headers()["DPoP"]?.single() shouldBe proofToken
         verify(exactly = 1) { helseIdClient.getAccessToken(accessTokenRequest) }
-        verify(exactly = 1) { proofBuilder.buildProof(any(), null, "access-token") }
+        verify(exactly = 1) { proofBuilder.buildProof(any(), null, accessToken) }
     }
 
     "apply rethrows exceptions from token lookup" {

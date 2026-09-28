@@ -18,12 +18,12 @@ It is intentionally kept separate from the existing SOAP-based `adresseregistere
 ```kotlin
 import no.ks.fiks.helseid.Configuration as HelseIdConfiguration
 import no.ks.fiks.helseid.Environment
-import no.ks.fiks.nhn.ar.rest.AdresseregisteretRestClient
-import no.ks.fiks.nhn.ar.rest.AdresseregisteretRestService
+import no.ks.fiks.nhn.ar.rest.AdresseregisteretClient
+import no.ks.fiks.nhn.ar.rest.AdresseregisteretService
 
 val jwk = "<JWK string>"
-val client = AdresseregisteretRestClient(
-    service = AdresseregisteretRestService(
+val client = AdresseregisteretClient(
+    service = AdresseregisteretService(
         url = "https://cpapi.test.grunndata.nhn.no",
         helseIdConfiguration = HelseIdConfiguration(
             clientId = clientId,
@@ -43,4 +43,3 @@ val postalAddress = client.lookupPostalAddress(12345)
 ## Notes
 
 - The REST client is generated from `openapi/adresseregister-spec.json`.
-- The public Kotlin API is intentionally direct: use `AdresseregisteretRestClient` for lookups and `AdresseregisteretRestService` for transport/auth wiring.

@@ -9,7 +9,7 @@ import no.nhn.register.communicationparty.rest.api.CommunicationPartyApi
 import no.nhn.register.communicationparty.rest.invoker.ApiClient
 import no.nhn.register.communicationparty.rest.model.CommunicationParty as GeneratedCommunicationParty
 
-open class AdresseregisteretRestService(
+open class AdresseregisteretService(
     private val url: String,
     helseIdConfiguration: HelseIdConfiguration,
     accessTokenRequestBuilder: AccessTokenRequestBuilder? = null,
@@ -34,4 +34,5 @@ open class AdresseregisteretRestService(
     open fun getCommunicationPartyDetails(herId: Int): GeneratedCommunicationParty? =
         api.apiV1CommunicationpartyHerIdGet(herId)
 }
+
 
