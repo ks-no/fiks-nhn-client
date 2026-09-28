@@ -42,5 +42,5 @@ val postalAddress = client.lookupPostalAddress(12345)
 
 ## Notes
 
-- The REST client is generated from `adresseregister-spec.json`.
+- The REST client is generated from `openapi/adresseregister-spec.json`.
 - The public Kotlin API is intentionally direct: use `AdresseregisteretRestClient` for lookups and `AdresseregisteretRestService` for transport/auth wiring.

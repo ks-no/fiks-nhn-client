@@ -6,7 +6,7 @@
     <parent>
         <groupId>no.ks.fiks</groupId>
         <artifactId>nhn-client-parent</artifactId>
-        <version>1.9.2-rest2-SNAPSHOT</version>
+        <version>1.9.2-SNAPSHOT</version>
     </parent>
 
     <artifactId>adresseregisteret-rest-client</artifactId>
@@ -116,7 +116,7 @@
                             <goal>generate</goal>
                         </goals>
                         <configuration>
-                            <inputSpec>${project.basedir}/adresseregister-spec.json</inputSpec>
+                            <inputSpec>${project.basedir}/openapi/adresseregister-spec.json</inputSpec>
                             <modelPackage>no.nhn.register.communicationparty.rest.model</modelPackage>
                             <apiPackage>no.nhn.register.communicationparty.rest.api</apiPackage>
                             <invokerPackage>no.nhn.register.communicationparty.rest.invoker</invokerPackage>
