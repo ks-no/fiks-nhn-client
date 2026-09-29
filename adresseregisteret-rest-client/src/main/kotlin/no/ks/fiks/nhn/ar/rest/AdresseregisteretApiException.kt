@@ -1,6 +1,6 @@
 package no.ks.fiks.nhn.ar.rest
 
-class AdresseregisteretApiException(
+open class AdresseregisteretApiException(
     val statusCode: Int,
     message: String?,
     cause: Throwable? = null,

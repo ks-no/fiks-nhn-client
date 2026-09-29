@@ -2,5 +2,5 @@ package no.ks.fiks.nhn.ar.rest
 
 class AddressNotFoundException(
     message: String?,
-) : AdresseregisteretException(message)
+) : AdresseregisteretApiException(404, message, null)
 
