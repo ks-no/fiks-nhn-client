@@ -1,8 +1,8 @@
 package no.ks.fiks.nhn.ar.rest
 
 import com.github.benmanes.caffeine.cache.Caffeine
-import no.ks.fiks.ar.rest.model.CommunicationParty
-import no.ks.fiks.ar.rest.model.PostalAddress
+import no.ks.fiks.nhn.ar.rest.model.CommunicationParty
+import no.ks.fiks.nhn.ar.rest.model.PostalAddress
 
 class AdresseregisteretClient @JvmOverloads constructor(
     private val service: AdresseregisteretService,

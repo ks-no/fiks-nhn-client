@@ -5,9 +5,9 @@ import no.ks.fiks.helseid.Configuration as HelseIdConfiguration
 import no.ks.fiks.helseid.HelseIdClient
 import no.ks.fiks.helseid.TokenType
 import no.ks.fiks.helseid.dpop.ProofBuilder
-import no.ks.fiks.ar.rest.api.CommunicationPartyApi
-import no.ks.fiks.ar.rest.invoker.ApiClient
-import no.ks.fiks.ar.rest.model.CommunicationParty
+import no.ks.fiks.nhn.ar.rest.api.CommunicationPartyApi
+import no.ks.fiks.nhn.ar.rest.invoker.ApiClient
+import no.ks.fiks.nhn.ar.rest.model.CommunicationParty
 
 open class AdresseregisteretService(
     private val url: String,

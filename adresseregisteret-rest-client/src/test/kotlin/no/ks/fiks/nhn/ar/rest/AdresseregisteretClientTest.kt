@@ -7,14 +7,14 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import java.time.Duration
-import no.ks.fiks.ar.rest.model.AdministrativeCode
-import no.ks.fiks.ar.rest.model.CommunicationParty
-import no.ks.fiks.ar.rest.model.CommunicationPartyType
-import no.ks.fiks.ar.rest.model.OrganizationDetails
-import no.ks.fiks.ar.rest.model.ParentOrganization
-import no.ks.fiks.ar.rest.model.PersonDetails
-import no.ks.fiks.ar.rest.model.PostalAddress
-import no.ks.fiks.ar.rest.model.ServiceDetails
+import no.ks.fiks.nhn.ar.rest.model.AdministrativeCode
+import no.ks.fiks.nhn.ar.rest.model.CommunicationParty
+import no.ks.fiks.nhn.ar.rest.model.CommunicationPartyType
+import no.ks.fiks.nhn.ar.rest.model.OrganizationDetails
+import no.ks.fiks.nhn.ar.rest.model.ParentOrganization
+import no.ks.fiks.nhn.ar.rest.model.PersonDetails
+import no.ks.fiks.nhn.ar.rest.model.PostalAddress
+import no.ks.fiks.nhn.ar.rest.model.ServiceDetails
 
 class AdresseregisteretClientTest : FreeSpec({
     "lookupHerId" - {
@@ -222,7 +222,7 @@ class AdresseregisteretClientTest : FreeSpec({
                 client.lookupPostalAddress(654)
             }
 
-            exception.message shouldBe "Could not find any physical addresses related to herId"
+            exception.message shouldBe "Could not find any postal addresses related to herId"
         }
     }
 })

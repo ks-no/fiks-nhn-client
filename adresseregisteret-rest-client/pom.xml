@@ -117,9 +117,9 @@
                         </goals>
                         <configuration>
                             <inputSpec>${project.basedir}/openapi/adresseregister-spec.json</inputSpec>
-                            <modelPackage>no.ks.fiks.ar.rest.model</modelPackage>
-                            <apiPackage>no.ks.fiks.ar.rest.api</apiPackage>
-                            <invokerPackage>no.ks.fiks.ar.rest.invoker</invokerPackage>
+                            <modelPackage>no.ks.fiks.nhn.ar.rest.model</modelPackage>
+                            <apiPackage>no.ks.fiks.nhn.ar.rest.api</apiPackage>
+                            <invokerPackage>no.ks.fiks.nhn.ar.rest.invoker</invokerPackage>
                         </configuration>
                     </execution>
                 </executions>
