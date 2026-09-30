@@ -8,6 +8,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import java.time.Duration
 import java.time.OffsetDateTime
+import no.ks.fiks.nhn.ar.rest.model.AmqpTransportStatus
 import no.ks.fiks.nhn.ar.rest.model.CertificateMetadata
 import no.ks.fiks.nhn.ar.rest.model.AdministrativeCode
 import no.ks.fiks.nhn.ar.rest.model.CommunicationParty
@@ -26,8 +27,12 @@ class AdresseregisteretClientTest : FreeSpec({
                 .herId(123)
                 .name("Test Organisasjon")
                 .type(CommunicationPartyType.ORGANIZATION)
+                .amqpTransportStatus(AmqpTransportStatus.DISABLED)
                 .organizationDetails(
                     OrganizationDetails()
+                        .businessType(administrativeCode("ORG", "Organization"))
+                        .persons(emptyList())
+                        .services(emptyList())
                         .organizationNumber("123456789")
                 )
                 .postalAddress(postalAddress())
@@ -51,6 +56,7 @@ class AdresseregisteretClientTest : FreeSpec({
                 .herId(456)
                 .name("Ada Maria Lovelace")
                 .type(CommunicationPartyType.PERSON)
+                .amqpTransportStatus(AmqpTransportStatus.DISABLED)
                 .personDetails(
                     PersonDetails()
                         .hprNumber(78910)
@@ -77,9 +83,10 @@ class AdresseregisteretClientTest : FreeSpec({
                 .herId(789)
                 .name("Laboratorietjeneste")
                 .type(CommunicationPartyType.SERVICE)
+                .amqpTransportStatus(AmqpTransportStatus.DISABLED)
                 .serviceDetails(
                     ServiceDetails()
-                        .serviceType(AdministrativeCode().value("LAB").name("Laboratory"))
+                        .serviceType(administrativeCode("LAB", "Laboratory"))
                         .parentOrganization(parentOrganization())
                 )
                 .postalAddress(postalAddress())
@@ -163,6 +170,7 @@ class AdresseregisteretClientTest : FreeSpec({
             every { service.getCommunicationPartyDetails(778) } returns organizationResponse(778)
                 .organizationDetails(
                     OrganizationDetails()
+                        .businessType(administrativeCode("ORG", "Organization"))
                         .organizationNumber("123456789")
                         .persons(listOf(10, 11))
                         .services(listOf(20, 21))
@@ -296,8 +304,12 @@ private fun organizationResponse(herId: Int) = CommunicationParty()
     .herId(herId)
     .name("Test Organisasjon")
     .type(CommunicationPartyType.ORGANIZATION)
+    .amqpTransportStatus(AmqpTransportStatus.DISABLED)
     .organizationDetails(
         OrganizationDetails()
+            .businessType(administrativeCode("ORG", "Organization"))
+            .persons(emptyList())
+            .services(emptyList())
             .organizationNumber("123456789")
     )
     .postalAddress(postalAddress())
@@ -312,4 +324,9 @@ private fun parentOrganization() = ParentOrganization()
     .herId(321)
     .name("Parent Organization")
     .organizationNumber("987654321")
+
+private fun administrativeCode(value: String, name: String) = AdministrativeCode()
+    .codeListId("3401")
+    .value(value)
+    .name(name)
 

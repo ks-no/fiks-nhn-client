@@ -1,10 +1,16 @@
 package no.ks.fiks.nhn.ar.rest
 
 import com.github.benmanes.caffeine.cache.Caffeine
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import no.ks.fiks.nhn.ar.rest.model.AdministrativeCode
+import no.ks.fiks.nhn.ar.rest.model.AmqpAddress
+import no.ks.fiks.nhn.ar.rest.model.CertificateMetadata
 import no.ks.fiks.nhn.ar.rest.model.CommunicationParty
+import no.ks.fiks.nhn.ar.rest.model.InterMunicipalityCoverageArea
+import no.ks.fiks.nhn.ar.rest.model.OrganizationDetails
+import no.ks.fiks.nhn.ar.rest.model.ParentOrganization
+import no.ks.fiks.nhn.ar.rest.model.PersonDetails
 import no.ks.fiks.nhn.ar.rest.model.PostalAddress
+import no.ks.fiks.nhn.ar.rest.model.ServiceDetails
 
 class AdresseregisteretClient @JvmOverloads constructor(
     private val service: AdresseregisteretService,
@@ -58,11 +64,112 @@ class AdresseregisteretClient @JvmOverloads constructor(
     }
 }
 
-private val copyMapper = ObjectMapper()
-    .registerModule(JavaTimeModule())
-    .disable(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-    .disable(com.fasterxml.jackson.databind.DeserializationFeature.ADJUST_DATES_TO_CONTEXT_TIME_ZONE)
-
 private fun CommunicationParty.deepCopy(): CommunicationParty =
-    copyMapper.readValue(copyMapper.writeValueAsBytes(this), CommunicationParty::class.java)
+    let { source ->
+        CommunicationParty().apply {
+            herId(source.herId)
+            name(source.name)
+            displayName(source.displayName)
+            type(source.type)
+            organizationDetails(source.organizationDetails?.deepCopy())
+            personDetails(source.personDetails?.deepCopy())
+            serviceDetails(source.serviceDetails?.deepCopy())
+            currentSigningCertificate(source.currentSigningCertificate?.deepCopy())
+            currentEncryptionCertificate(source.currentEncryptionCertificate?.deepCopy())
+            email(source.email)
+            homepageUrl(source.homepageUrl)
+            phoneNumber(source.phoneNumber)
+            faxNumber(source.faxNumber)
+            ediAddress(source.ediAddress)
+            fhirAddress(source.fhirAddress)
+            postalAddress(source.postalAddress?.deepCopy())
+            amqpTransportStatus(source.amqpTransportStatus)
+            amqpAddress(source.amqpAddress?.deepCopy())
+            validFrom(source.validFrom)
+            validTo(source.validTo)
+        }
+    }
+
+private fun OrganizationDetails.deepCopy(): OrganizationDetails =
+    let { source ->
+        OrganizationDetails().apply {
+            organizationNumber(source.organizationNumber)
+            businessType(source.businessType.deepCopy())
+            persons(source.persons?.toList())
+            services(source.services?.toList())
+        }
+    }
+
+private fun PersonDetails.deepCopy(): PersonDetails =
+    let { source ->
+        PersonDetails().apply {
+            hprNumber(source.hprNumber)
+            parentOrganization(source.parentOrganization.deepCopy())
+        }
+    }
+
+private fun ServiceDetails.deepCopy(): ServiceDetails =
+    let { source ->
+        ServiceDetails().apply {
+            serviceType(source.serviceType.deepCopy())
+            interMunicipalityCoverageArea(source.interMunicipalityCoverageArea?.deepCopy())
+            serviceSpecification(source.serviceSpecification)
+            parentOrganization(source.parentOrganization.deepCopy())
+        }
+    }
+
+private fun ParentOrganization.deepCopy(): ParentOrganization =
+    let { source ->
+        ParentOrganization().apply {
+            name(source.name)
+            herId(source.herId)
+            organizationNumber(source.organizationNumber)
+        }
+    }
+
+private fun PostalAddress.deepCopy(): PostalAddress =
+    let { source ->
+        PostalAddress().apply {
+            address(source.address)
+            postalBox(source.postalBox)
+            postalCode(source.postalCode)
+            city(source.city)
+        }
+    }
+
+private fun AdministrativeCode.deepCopy(): AdministrativeCode =
+    let { source ->
+        AdministrativeCode().apply {
+            codeListId(source.codeListId)
+            value(source.value)
+            name(source.name)
+            url(source.url)
+        }
+    }
+
+private fun CertificateMetadata.deepCopy(): CertificateMetadata =
+    let { source ->
+        CertificateMetadata().apply {
+            thumbprint(source.thumbprint)
+            validFrom(source.validFrom)
+            validTo(source.validTo)
+        }
+    }
+
+private fun AmqpAddress.deepCopy(): AmqpAddress =
+    let { source ->
+        AmqpAddress().apply {
+            amqpSyncQueue(source.amqpSyncQueue)
+            amqpSyncReplyQueue(source.amqpSyncReplyQueue)
+            amqpAsyncQueue(source.amqpAsyncQueue)
+            amqpErrorQueue(source.amqpErrorQueue)
+        }
+    }
+
+private fun InterMunicipalityCoverageArea.deepCopy(): InterMunicipalityCoverageArea =
+    let { source ->
+        InterMunicipalityCoverageArea().apply {
+            municipalityHerIds(source.municipalityHerIds?.toList())
+        }
+    }
 
