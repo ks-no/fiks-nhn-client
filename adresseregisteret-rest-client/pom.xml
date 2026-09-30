@@ -14,7 +14,7 @@
     <description>REST client generated from the NHN Adresseregisteret OpenAPI spec</description>
 
     <properties>
-        <openapi-generator.version>7.15.0</openapi-generator.version>
+        <openapi-generator.version>7.25.0</openapi-generator.version>
         <jakarta.annotation-api.version>3.0.0</jakarta.annotation-api.version>
         <feign.version>13.13</feign.version>
         <feign-form.version>3.8.0</feign-form.version>
