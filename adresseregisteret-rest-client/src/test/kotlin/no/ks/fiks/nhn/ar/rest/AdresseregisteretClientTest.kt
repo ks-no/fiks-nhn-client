@@ -3,23 +3,22 @@ package no.ks.fiks.nhn.ar.rest
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.assertions.throwables.shouldThrow
-import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import java.time.Duration
-import no.nhn.register.communicationparty.rest.model.AdministrativeCode
-import no.nhn.register.communicationparty.rest.model.CommunicationParty
-import no.nhn.register.communicationparty.rest.model.CommunicationPartyType
-import no.nhn.register.communicationparty.rest.model.OrganizationDetails
-import no.nhn.register.communicationparty.rest.model.ParentOrganization
-import no.nhn.register.communicationparty.rest.model.PersonDetails
-import no.nhn.register.communicationparty.rest.model.PostalAddress
-import no.nhn.register.communicationparty.rest.model.ServiceDetails
+import no.ks.fiks.ar.rest.model.AdministrativeCode
+import no.ks.fiks.ar.rest.model.CommunicationParty
+import no.ks.fiks.ar.rest.model.CommunicationPartyType
+import no.ks.fiks.ar.rest.model.OrganizationDetails
+import no.ks.fiks.ar.rest.model.ParentOrganization
+import no.ks.fiks.ar.rest.model.PersonDetails
+import no.ks.fiks.ar.rest.model.PostalAddress
+import no.ks.fiks.ar.rest.model.ServiceDetails
 
 class AdresseregisteretClientTest : FreeSpec({
     "lookupHerId" - {
-        "maps organization responses to domain model" {
+        "returns organization responses in spec format" {
             val service = mockk<AdresseregisteretService>()
             every { service.getCommunicationPartyDetails(123) } returns CommunicationParty()
                 .herId(123)
@@ -32,17 +31,19 @@ class AdresseregisteretClientTest : FreeSpec({
                 .postalAddress(postalAddress())
 
             val client = AdresseregisteretClient(service)
-            val result = client.lookupHerId(123).shouldBeInstanceOf<OrganizationCommunicationParty>()
+            val result = client.lookupHerId(123)!!
 
+            result.herId shouldBe 123
             result.name shouldBe "Test Organisasjon"
-            result.organizationNumber shouldBe "123456789"
-            result.physicalAddresses.single().streetAddress shouldBe "Testgata 1"
-            result.physicalAddresses.single().postbox shouldBe "Postboks 2"
-            result.physicalAddresses.single().postalCode shouldBe "0123"
-            result.physicalAddresses.single().city shouldBe "Oslo"
+            result.type shouldBe CommunicationPartyType.ORGANIZATION
+            result.organizationDetails!!.organizationNumber shouldBe "123456789"
+            result.postalAddress!!.address shouldBe "Testgata 1"
+            result.postalAddress!!.postalBox shouldBe "Postboks 2"
+            result.postalAddress!!.postalCode shouldBe "0123"
+            result.postalAddress!!.city shouldBe "Oslo"
         }
 
-        "maps person responses to domain model" {
+        "returns person responses in spec format" {
             val service = mockk<AdresseregisteretService>()
             every { service.getCommunicationPartyDetails(456) } returns CommunicationParty()
                 .herId(456)
@@ -56,18 +57,19 @@ class AdresseregisteretClientTest : FreeSpec({
                 .postalAddress(postalAddress())
 
             val client = AdresseregisteretClient(service)
-            val result = client.lookupHerId(456).shouldBeInstanceOf<PersonCommunicationParty>()
-            val parent = result.parent!!
+            val result = client.lookupHerId(456)!!
+            val parent = result.personDetails!!.parentOrganization
 
             result.herId shouldBe 456
             result.name shouldBe "Ada Maria Lovelace"
+            result.type shouldBe CommunicationPartyType.PERSON
             parent.herId shouldBe 321
             parent.name shouldBe "Parent Organization"
             parent.organizationNumber shouldBe "987654321"
-            result.physicalAddresses.single().postalCode shouldBe "0123"
+            result.postalAddress!!.postalCode shouldBe "0123"
         }
 
-        "maps service responses to domain model" {
+        "returns service responses in spec format" {
             val service = mockk<AdresseregisteretService>()
             every { service.getCommunicationPartyDetails(789) } returns CommunicationParty()
                 .herId(789)
@@ -81,15 +83,16 @@ class AdresseregisteretClientTest : FreeSpec({
                 .postalAddress(postalAddress())
 
             val client = AdresseregisteretClient(service)
-            val result = client.lookupHerId(789).shouldBeInstanceOf<ServiceCommunicationParty>()
-            val parent = result.parent!!
+            val result = client.lookupHerId(789)!!
+            val parent = result.serviceDetails!!.parentOrganization
 
             result.herId shouldBe 789
             result.name shouldBe "Laboratorietjeneste"
+            result.type shouldBe CommunicationPartyType.SERVICE
             parent.herId shouldBe 321
             parent.name shouldBe "Parent Organization"
             parent.organizationNumber shouldBe "987654321"
-            result.physicalAddresses.single().streetAddress shouldBe "Testgata 1"
+            result.postalAddress!!.address shouldBe "Testgata 1"
         }
 
         "throws AddressNotFoundException when API returns not found" {
@@ -182,19 +185,17 @@ class AdresseregisteretClientTest : FreeSpec({
     }
 
     "lookupPostalAddress" - {
-        "returns postal address on happy path" {
+        "returns generated postal address on happy path" {
             val service = mockk<AdresseregisteretService>()
             every { service.getCommunicationPartyDetails(123) } returns organizationResponse(123)
 
             val client = AdresseregisteretClient(service)
             val result = client.lookupPostalAddress(123)
 
-            result.name shouldBe "Test Organisasjon"
-            result.streetAddress shouldBe "Testgata 1"
-            result.postbox shouldBe "Postboks 2"
+            result.address shouldBe "Testgata 1"
+            result.postalBox shouldBe "Postboks 2"
             result.postalCode shouldBe "0123"
             result.city shouldBe "Oslo"
-            result.country shouldBe null
         }
 
         "throws AddressNotFoundException when no communication party exists" {

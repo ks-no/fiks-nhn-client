@@ -18,6 +18,8 @@ It is intentionally kept separate from the existing SOAP-based `adresseregistere
 ```kotlin
 import no.ks.fiks.helseid.Configuration as HelseIdConfiguration
 import no.ks.fiks.helseid.Environment
+import no.ks.fiks.ar.rest.model.CommunicationParty
+import no.ks.fiks.ar.rest.model.PostalAddress
 import no.ks.fiks.nhn.ar.rest.AdresseregisteretClient
 import no.ks.fiks.nhn.ar.rest.AdresseregisteretService
 
@@ -36,10 +38,11 @@ val client = AdresseregisteretClient(
     ),
 )
 
-val party = client.lookupHerId(12345)
-val postalAddress = client.lookupPostalAddress(12345)
+val party: CommunicationParty? = client.lookupHerId(12345)
+val postalAddress: PostalAddress = client.lookupPostalAddress(12345)
 ```
 
 ## Notes
 
 - The REST client is generated from `openapi/adresseregister-spec.json`.
+- `lookupHerId` and `lookupPostalAddress` return the generated OpenAPI models directly.
