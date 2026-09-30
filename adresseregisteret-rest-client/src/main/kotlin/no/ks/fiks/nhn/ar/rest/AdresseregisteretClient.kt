@@ -1,6 +1,8 @@
 package no.ks.fiks.nhn.ar.rest
 
 import com.github.benmanes.caffeine.cache.Caffeine
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import no.ks.fiks.nhn.ar.rest.model.CommunicationParty
 import no.ks.fiks.nhn.ar.rest.model.PostalAddress
 
@@ -10,7 +12,7 @@ class AdresseregisteretClient @JvmOverloads constructor(
 ) {
     private val cache = cacheConfig
         ?.let { CaffeineCache(config = cacheConfig, loader = ::lookupHerIdFromApi) }
-        ?: Cache { herId: Int -> lookupHerIdFromApi(herId) }
+        ?: Cache { herId: Int -> lookupHerIdFromApi(herId)?.deepCopy() }
 
     fun lookupHerId(herId: Int): CommunicationParty? = cache.get(herId)
 
@@ -50,9 +52,15 @@ class AdresseregisteretClient @JvmOverloads constructor(
         private val cache = Caffeine.newBuilder()
             .maximumSize(config.maxSize)
             .expireAfterWrite(config.cacheTtl)
-            .build<Int, CommunicationParty?> { herId -> loader.invoke(herId) }
+            .build<Int, CommunicationParty?> { herId -> loader.invoke(herId)?.deepCopy() }
 
-        override fun get(herId: Int) = cache.get(herId)
+        override fun get(herId: Int) = cache.get(herId)?.deepCopy()
     }
 }
+
+private val copyMapper = ObjectMapper()
+    .registerModule(JavaTimeModule())
+
+private fun CommunicationParty.deepCopy(): CommunicationParty =
+    copyMapper.readValue(copyMapper.writeValueAsBytes(this), CommunicationParty::class.java)
 

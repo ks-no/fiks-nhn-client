@@ -156,6 +156,32 @@ class AdresseregisteretClientTest : FreeSpec({
             verify(exactly = 1) { service.getCommunicationPartyDetails(777) }
         }
 
+        "returns independent copies for cached lookups" {
+            val service = mockk<AdresseregisteretService>()
+            every { service.getCommunicationPartyDetails(778) } returns organizationResponse(778)
+                .organizationDetails(
+                    OrganizationDetails()
+                        .organizationNumber("123456789")
+                        .persons(listOf(10, 11))
+                        .services(listOf(20, 21))
+                )
+
+            val client = AdresseregisteretClient(
+                service = service,
+                cacheConfig = CacheConfig(cacheTtl = Duration.ofMinutes(1)),
+            )
+
+            val first = client.lookupHerId(778)!!
+            first.name("Mutated name")
+            first.postalAddress!!.address("Changed address")
+
+            val second = client.lookupHerId(778)!!
+
+            second.name shouldBe "Test Organisasjon"
+            second.postalAddress!!.address shouldBe "Testgata 1"
+            verify(exactly = 1) { service.getCommunicationPartyDetails(778) }
+        }
+
         "does not cache when cache is disabled" {
             val service = mockk<AdresseregisteretService>()
             every { service.getCommunicationPartyDetails(888) } returns organizationResponse(888)
