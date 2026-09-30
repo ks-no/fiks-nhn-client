@@ -7,6 +7,8 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import java.time.Duration
+import java.time.OffsetDateTime
+import no.ks.fiks.nhn.ar.rest.model.CertificateMetadata
 import no.ks.fiks.nhn.ar.rest.model.AdministrativeCode
 import no.ks.fiks.nhn.ar.rest.model.CommunicationParty
 import no.ks.fiks.nhn.ar.rest.model.CommunicationPartyType
@@ -180,6 +182,43 @@ class AdresseregisteretClientTest : FreeSpec({
             second.name shouldBe "Test Organisasjon"
             second.postalAddress!!.address shouldBe "Testgata 1"
             verify(exactly = 1) { service.getCommunicationPartyDetails(778) }
+        }
+
+        "preserves offset date fields when returning cached copies" {
+            val service = mockk<AdresseregisteretService>()
+            val validFrom = OffsetDateTime.parse("2026-09-30T12:34:56+05:30")
+            val validTo = OffsetDateTime.parse("2026-10-01T01:02:03-04:00")
+            val signingValidFrom = OffsetDateTime.parse("2026-09-15T08:00:00+02:00")
+            val signingValidTo = OffsetDateTime.parse("2027-09-15T08:00:00+02:00")
+
+            every { service.getCommunicationPartyDetails(779) } returns organizationResponse(779)
+                .validFrom(validFrom)
+                .validTo(validTo)
+                .currentSigningCertificate(
+                    CertificateMetadata()
+                        .thumbprint("thumbprint-1")
+                        .validFrom(signingValidFrom)
+                        .validTo(signingValidTo)
+                )
+
+            val client = AdresseregisteretClient(
+                service = service,
+                cacheConfig = CacheConfig(cacheTtl = Duration.ofMinutes(1)),
+            )
+
+            val first = client.lookupHerId(779)!!
+            val second = client.lookupHerId(779)!!
+
+            first.validFrom shouldBe validFrom
+            first.validTo shouldBe validTo
+            first.currentSigningCertificate!!.validFrom shouldBe signingValidFrom
+            first.currentSigningCertificate!!.validTo shouldBe signingValidTo
+
+            second.validFrom shouldBe validFrom
+            second.validTo shouldBe validTo
+            second.currentSigningCertificate!!.validFrom shouldBe signingValidFrom
+            second.currentSigningCertificate!!.validTo shouldBe signingValidTo
+            verify(exactly = 1) { service.getCommunicationPartyDetails(779) }
         }
 
         "does not cache when cache is disabled" {

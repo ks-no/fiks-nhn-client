@@ -52,7 +52,7 @@ class AdresseregisteretClient @JvmOverloads constructor(
         private val cache = Caffeine.newBuilder()
             .maximumSize(config.maxSize)
             .expireAfterWrite(config.cacheTtl)
-            .build<Int, CommunicationParty?> { herId -> loader.invoke(herId)?.deepCopy() }
+            .build<Int, CommunicationParty?> { herId -> loader.invoke(herId) }
 
         override fun get(herId: Int) = cache.get(herId)?.deepCopy()
     }
@@ -60,6 +60,8 @@ class AdresseregisteretClient @JvmOverloads constructor(
 
 private val copyMapper = ObjectMapper()
     .registerModule(JavaTimeModule())
+    .disable(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+    .disable(com.fasterxml.jackson.databind.DeserializationFeature.ADJUST_DATES_TO_CONTEXT_TIME_ZONE)
 
 private fun CommunicationParty.deepCopy(): CommunicationParty =
     copyMapper.readValue(copyMapper.writeValueAsBytes(this), CommunicationParty::class.java)
