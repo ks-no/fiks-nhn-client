@@ -45,7 +45,7 @@
 
         <kotlin.version>2.4.20</kotlin.version>
         <kotlin-logging.version>3.0.5</kotlin-logging.version>
-        <nimbus-jose-jwt.version>10.9.1</nimbus-jose-jwt.version>
+        <nimbus-jose-jwt.version>10.10</nimbus-jose-jwt.version>
         <jackson.version>2.22.3</jackson.version>
         <caffeine.version>3.3.0</caffeine.version>
 
@@ -54,7 +54,7 @@
         <wiremock.version>3.13.2</wiremock.version>
         <wiremock-testcontainers.version>1.0-alpha-15</wiremock-testcontainers.version>
         <testcontainers.version>2.0.5</testcontainers.version>
-        <ktor-client.version>3.5.2</ktor-client.version>
+        <ktor-client.version>3.6.0</ktor-client.version>
     </properties>
 
     <dependencyManagement>
