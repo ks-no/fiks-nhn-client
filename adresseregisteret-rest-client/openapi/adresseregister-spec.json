@@ -1,0 +1,1460 @@
+{
+  "openapi": "3.0.4",
+  "info": {
+    "title": "CommunicationParty Api",
+    "description": "Lookup and export of communication party details, certificates, and events on changes",
+    "license": {
+      "name": "For more information see the documentation.",
+      "url": "https://utviklerportal.nhn.no/informasjonstjenester/virksomhetstjenester/adresseregisteret/communicationparty-api/docs/apimd"
+    },
+    "version": "v1"
+  },
+  "paths": {
+    "/api/v1/certificate/{herId}": {
+      "get": {
+        "tags": [
+          "Certificate"
+        ],
+        "summary": "Get the signing and encryption certificates for a communication party",
+        "description": "if includeHistoric is set to true, the response will include up to two historic signing and encryption certificates",
+        "parameters": [
+          {
+            "name": "herId",
+            "in": "path",
+            "description": "the communication party herId",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "includeHistoric",
+            "in": "query",
+            "description": "if historic signing and encryption certificates should be included in the response",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CertificatePairInfo"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CertificatePairInfo"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CertificatePairInfo"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/certificate/{herId}/signing": {
+      "get": {
+        "tags": [
+          "Certificate"
+        ],
+        "summary": "Get the current signing certificate for a communication party",
+        "parameters": [
+          {
+            "name": "herId",
+            "in": "path",
+            "description": "the communication party herId",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the signing certificate",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Certificate"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Certificate"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Certificate"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Returned when the signing certificate was not found"
+          }
+        }
+      }
+    },
+    "/api/v1/certificate/{herId}/encryption": {
+      "get": {
+        "tags": [
+          "Certificate"
+        ],
+        "summary": "Get the current encryption certificate for a communication party",
+        "parameters": [
+          {
+            "name": "herId",
+            "in": "path",
+            "description": "the communication party herId",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the encryption certificate",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Certificate"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Certificate"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Certificate"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Returned when the encryption certificate was not found"
+          }
+        }
+      }
+    },
+    "/api/v1/communicationparty/{herId}": {
+      "get": {
+        "tags": [
+          "CommunicationParty"
+        ],
+        "summary": "Get a communication party by herId",
+        "parameters": [
+          {
+            "name": "herId",
+            "in": "path",
+            "description": "HerId of wanted communicationParty",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns a single CommunicationParty",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommunicationParty"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommunicationParty"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommunicationParty"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Returned when the communication party was not found"
+          }
+        }
+      }
+    },
+    "/api/v1/communicationparty": {
+      "post": {
+        "tags": [
+          "CommunicationParty"
+        ],
+        "summary": "Get list of communication parties by posting a list of herIds",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HerIdInputCollection"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HerIdInputCollection"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/HerIdInputCollection"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Returns a list of communicationParties",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CommunicationParty"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CommunicationParty"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CommunicationParty"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/communicationparty/{herId}/legacy": {
+      "get": {
+        "tags": [
+          "CommunicationParty"
+        ],
+        "summary": "Get a communication party by herId, returned with the legacy datamodel",
+        "parameters": [
+          {
+            "name": "herId",
+            "in": "path",
+            "description": "HerId of wanted communicationParty",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns a single CommunicationParty with the legacy datamodel",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommunicationParty_Legacy"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommunicationParty_Legacy"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommunicationParty_Legacy"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Returned when the communication party was not found"
+          }
+        },
+        "deprecated": true
+      }
+    },
+    "/api/v1/communicationparty/search": {
+      "post": {
+        "tags": [
+          "CommunicationParty"
+        ],
+        "summary": "Get all communication parties matching the search",
+        "parameters": [
+          {
+            "name": "Page",
+            "in": "query",
+            "description": "The page number to retrieve",
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "Size",
+            "in": "query",
+            "description": "The number of entries on each page.",
+            "schema": {
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SearchParameters"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SearchParameters"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/SearchParameters"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/communicationparty/export": {
+      "get": {
+        "tags": [
+          "CommunicationParty"
+        ],
+        "summary": "Exports all CommunicationParties HerIds",
+        "description": "Returns a list of all active HerIds\n\nThe result contains an eventId and last updated datetime, which can be used to query /CommunicationPartyEvents",
+        "parameters": [
+          {
+            "name": "includeDeactivated",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns a list of HerIds",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommunicationPartyExport"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommunicationPartyExport"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommunicationPartyExport"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/event": {
+      "get": {
+        "tags": [
+          "Event"
+        ],
+        "summary": "Get all events from (and including) a given sequence number",
+        "parameters": [
+          {
+            "name": "fromSequenceNumber",
+            "in": "query",
+            "description": "the starting sequence number",
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "type": "integer",
+              "format": "int64",
+              "default": 1
+            }
+          },
+          {
+            "name": "maxEvents",
+            "in": "query",
+            "description": "the max number of events to return",
+            "schema": {
+              "maximum": 1000,
+              "minimum": 1,
+              "type": "integer",
+              "format": "int32",
+              "default": 1000
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns an event response",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventsResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventsResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/event/latest": {
+      "get": {
+        "tags": [
+          "Event"
+        ],
+        "summary": "Get the latest event",
+        "responses": {
+          "200": {
+            "description": "Returns the latest event",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Event"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Event"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Event"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Returned if no events where found"
+          }
+        }
+      }
+    },
+    "/api/v1/organization/{organizationNumber}": {
+      "get": {
+        "tags": [
+          "Organization"
+        ],
+        "summary": "Get a communication party by Organization number",
+        "parameters": [
+          {
+            "name": "organizationNumber",
+            "in": "path",
+            "description": "OrganizationNumber of wanted communicationParty",
+            "required": true,
+            "schema": {
+              "pattern": "^\\d{9}$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns a single CommunicationParty",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommunicationParty"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommunicationParty"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommunicationParty"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Returned when the communication party was not found"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AdministrativeCode": {
+        "required": [
+          "codeListId",
+          "value"
+        ],
+        "type": "object",
+        "properties": {
+          "codeListId": {
+            "type": "string",
+            "nullable": true
+          },
+          "value": {
+            "type": "string",
+            "nullable": true
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "url": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "AmqpAddress": {
+        "type": "object",
+        "properties": {
+          "amqpSyncQueue": {
+            "type": "string",
+            "nullable": true
+          },
+          "amqpSyncReplyQueue": {
+            "type": "string",
+            "nullable": true
+          },
+          "amqpAsyncQueue": {
+            "type": "string",
+            "nullable": true
+          },
+          "amqpErrorQueue": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "AmqpTransportStatus": {
+        "enum": [
+          "Inherited",
+          "Disabled",
+          "Enabled"
+        ],
+        "type": "string"
+      },
+      "Certificate": {
+        "required": [
+          "certificateValue",
+          "thumbprint"
+        ],
+        "type": "object",
+        "properties": {
+          "thumbprint": {
+            "type": "string",
+            "nullable": true
+          },
+          "validFrom": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "validTo": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "certificateValue": {
+            "type": "string",
+            "format": "byte",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CertificateMetadata": {
+        "required": [
+          "thumbprint"
+        ],
+        "type": "object",
+        "properties": {
+          "thumbprint": {
+            "type": "string",
+            "nullable": true
+          },
+          "validFrom": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "validTo": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CertificatePairInfo": {
+        "type": "object",
+        "properties": {
+          "isCurrent": {
+            "type": "boolean"
+          },
+          "signingCertificate": {
+            "$ref": "#/components/schemas/CertificateMetadata"
+          },
+          "encryptionCertificate": {
+            "$ref": "#/components/schemas/CertificateMetadata"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Code": {
+        "type": "object",
+        "properties": {
+          "OID": {
+            "type": "integer",
+            "description": "OID som brukes for denne koden.",
+            "format": "int32"
+          },
+          "SimpleType": {
+            "type": "string",
+            "description": "Navn på OID/type.",
+            "nullable": true
+          },
+          "CodeValue": {
+            "type": "string",
+            "description": "Verdien for koden, hentet fra OID.",
+            "nullable": true
+          },
+          "CodeText": {
+            "type": "string",
+            "description": "Beskrivelse av kodeverdien.",
+            "nullable": true
+          },
+          "Active": {
+            "type": "boolean",
+            "description": "Indicates wherever this code should no longer be used on new items."
+          },
+          "LongDescription": {
+            "type": "string",
+            "description": "A more elaborate description of the code value.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": {},
+        "description": "En kode hentet fra et kodeverk."
+      },
+      "CommunicationParty": {
+        "required": [
+          "amqpTransportStatus",
+          "herId",
+          "type"
+        ],
+        "type": "object",
+        "properties": {
+          "herId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "displayName": {
+            "type": "string",
+            "nullable": true
+          },
+          "type": {
+            "$ref": "#/components/schemas/CommunicationPartyType"
+          },
+          "organizationDetails": {
+            "$ref": "#/components/schemas/OrganizationDetails"
+          },
+          "personDetails": {
+            "$ref": "#/components/schemas/PersonDetails"
+          },
+          "serviceDetails": {
+            "$ref": "#/components/schemas/ServiceDetails"
+          },
+          "currentSigningCertificate": {
+            "$ref": "#/components/schemas/CertificateMetadata"
+          },
+          "currentEncryptionCertificate": {
+            "$ref": "#/components/schemas/CertificateMetadata"
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "homepageUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "phoneNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "faxNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "ediAddress": {
+            "type": "string",
+            "nullable": true
+          },
+          "fhirAddress": {
+            "type": "string",
+            "nullable": true
+          },
+          "postalAddress": {
+            "$ref": "#/components/schemas/PostalAddress"
+          },
+          "amqpTransportStatus": {
+            "$ref": "#/components/schemas/AmqpTransportStatus"
+          },
+          "amqpAddress": {
+            "$ref": "#/components/schemas/AmqpAddress"
+          },
+          "validFrom": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "validTo": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CommunicationPartyExport": {
+        "type": "object",
+        "properties": {
+          "lastSequenceNumber": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "count": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "communicationParties": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CommunicationPartyType": {
+        "enum": [
+          "Organization",
+          "Person",
+          "Service"
+        ],
+        "type": "string"
+      },
+      "CommunicationPartyTypeLegacy": {
+        "enum": [
+          "None",
+          "Person",
+          "Organization",
+          "Service",
+          "All"
+        ],
+        "type": "string"
+      },
+      "CommunicationParty_Legacy": {
+        "type": "object",
+        "properties": {
+          "LastChanged": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "deprecated": true
+          },
+          "HerId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Type": {
+            "$ref": "#/components/schemas/CommunicationPartyTypeLegacy"
+          },
+          "Name": {
+            "type": "string",
+            "nullable": true
+          },
+          "DisplayName": {
+            "type": "string",
+            "nullable": true
+          },
+          "ParentHerId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "ParentName": {
+            "type": "string",
+            "nullable": true
+          },
+          "ParentOrganizationNumber": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "ParentBusinessType": {
+            "$ref": "#/components/schemas/Code"
+          },
+          "PhysicalAddresses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PhysicalAddress"
+            },
+            "nullable": true
+          },
+          "ElectronicAddresses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ElectronicAddress"
+            },
+            "nullable": true
+          },
+          "FutureElectronicAddresses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FutureElectronicAddress"
+            },
+            "nullable": true
+          },
+          "Municipality": {
+            "$ref": "#/components/schemas/Code"
+          },
+          "Valid": {
+            "$ref": "#/components/schemas/Period"
+          },
+          "IsValidCommunicationParty": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "CoverageAreaType": {
+            "$ref": "#/components/schemas/Code"
+          },
+          "OrganizationNumber": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "IndustryCodes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Code"
+            },
+            "nullable": true
+          },
+          "BusinessType": {
+            "$ref": "#/components/schemas/Code"
+          },
+          "Properties": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Code"
+            },
+            "nullable": true
+          },
+          "Code": {
+            "$ref": "#/components/schemas/Code"
+          },
+          "LocationDescription": {
+            "type": "string",
+            "nullable": true
+          },
+          "CoverageAreas": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CoverageInfo"
+            },
+            "nullable": true
+          },
+          "Description": {
+            "type": "string",
+            "nullable": true
+          },
+          "Person": {
+            "$ref": "#/components/schemas/Person"
+          },
+          "Title": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": {}
+      },
+      "CoverageInfo": {
+        "type": "object",
+        "properties": {
+          "OrganizationNumber": {
+            "type": "integer",
+            "description": "Organisasjonsnummeret til dekningsområdet.",
+            "format": "int32"
+          },
+          "HerId": {
+            "type": "integer",
+            "description": "HerId-en til dekningsområdet.",
+            "format": "int32"
+          },
+          "Name": {
+            "type": "string",
+            "description": "Navnet til dekningsområdet (organisasjonsnavnet).",
+            "nullable": true
+          },
+          "DisplayName": {
+            "type": "string",
+            "description": "Visningsnvanvet til dekningsområdet.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": {},
+        "description": "Informasjon om dekningsområde."
+      },
+      "ElectronicAddress": {
+        "required": [
+          "Address"
+        ],
+        "type": "object",
+        "properties": {
+          "LastChanged": {
+            "type": "string",
+            "description": "Dato og tid for siste endring til objektet",
+            "format": "date-time",
+            "deprecated": true
+          },
+          "TypeCodeValue": {
+            "type": "string",
+            "description": "OBSOLETE: Bruk Type istedet.\n\nType elektronisk adresse\n\nGyldige verdier: OID 9044 (verdiene som starter med E_)",
+            "nullable": true,
+            "deprecated": true
+          },
+          "Type": {
+            "$ref": "#/components/schemas/Code"
+          },
+          "Address": {
+            "minLength": 1,
+            "type": "string",
+            "description": "Verdien den elektroniske adressen er satt til."
+          },
+          "Inherited": {
+            "type": "boolean",
+            "description": "Indikerer om adressen er arvet fra overliggende enhet(er).\n\nDersom Inherited settes til true vil adressen foreldreenheten har, hvor kodeverdien for adressen er den samme, benyttes.\n\nEventuelt innhold som sendes inn i Address blir ignorert.\n\nHvis foreldreenheten ikke har en adresse med den angitte kodetypen vil elementet bli nullet ut/ikke satt for denne enheten (uavhengig av om en verdi blir sendt inn i Address)."
+          }
+        },
+        "additionalProperties": {},
+        "description": "Elektronisk adresse, f.eks. EDI, sertifikatpeker, telefonnummer, faxnummer, epost adresse."
+      },
+      "Event": {
+        "type": "object",
+        "properties": {
+          "sequenceNumber": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "herId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "eventType": {
+            "$ref": "#/components/schemas/EventType"
+          },
+          "eventTimestamp": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "EventType": {
+        "enum": [
+          "CommunicationPartyCreated",
+          "CommunicationPartyUpdated"
+        ],
+        "type": "string"
+      },
+      "EventsResponse": {
+        "required": [
+          "results"
+        ],
+        "type": "object",
+        "properties": {
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Event"
+            },
+            "description": "The list of events",
+            "nullable": true
+          },
+          "count": {
+            "type": "integer",
+            "description": "The number of events in the response",
+            "format": "int32",
+            "readOnly": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Events response object, with the list of matched events and the number of events"
+      },
+      "FutureElectronicAddress": {
+        "required": [
+          "Address",
+          "ValidFrom"
+        ],
+        "type": "object",
+        "properties": {
+          "LastChanged": {
+            "type": "string",
+            "description": "Dato og tid for siste endring til objektet",
+            "format": "date-time",
+            "deprecated": true
+          },
+          "TypeCodeValue": {
+            "type": "string",
+            "description": "OBSOLETE: Bruk Type istedet.\n\nType elektronisk adresse\n\nGyldige verdier: OID 9044 (verdiene som starter med E_)",
+            "nullable": true,
+            "deprecated": true
+          },
+          "Type": {
+            "$ref": "#/components/schemas/Code"
+          },
+          "Address": {
+            "minLength": 1,
+            "type": "string",
+            "description": "Verdien den elektroniske adressen er satt til."
+          },
+          "Inherited": {
+            "type": "boolean",
+            "description": "Indikerer om adressen er arvet fra overliggende enhet(er).\n\nDersom Inherited settes til true vil adressen foreldreenheten har, hvor kodeverdien for adressen er den samme, benyttes.\n\nEventuelt innhold som sendes inn i Address blir ignorert.\n\nHvis foreldreenheten ikke har en adresse med den angitte kodetypen vil elementet bli nullet ut/ikke satt for denne enheten (uavhengig av om en verdi blir sendt inn i Address)."
+          },
+          "ValidFrom": {
+            "type": "string",
+            "description": "Dato adressen er gyldig fra.",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": {},
+        "description": "Elektronisk adresse med starttidspunkt frem i tid, dvs. at den vil gjøres gjeldende fra og med den gitte datoen."
+      },
+      "HPRInformation": {
+        "type": "object",
+        "properties": {
+          "HPRNumber": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": {}
+      },
+      "HerIdInputCollection": {
+        "type": "object",
+        "properties": {
+          "herIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "description": "The list of HerIds",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "InterMunicipalityCoverageArea": {
+        "required": [
+          "municipalityHerIds"
+        ],
+        "type": "object",
+        "properties": {
+          "municipalityHerIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "OrganizationDetails": {
+        "required": [
+          "businessType",
+          "persons",
+          "services"
+        ],
+        "type": "object",
+        "properties": {
+          "organizationNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "businessType": {
+            "$ref": "#/components/schemas/AdministrativeCode"
+          },
+          "persons": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          },
+          "services": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "OrganizationSearchParameters": {
+        "type": "object",
+        "properties": {
+          "businessTypeCodeListId": {
+            "type": "string",
+            "nullable": true
+          },
+          "businessTypeCodeValue": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ParentOrganization": {
+        "required": [
+          "herId",
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "herId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "organizationNumber": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Period": {
+        "type": "object",
+        "properties": {
+          "From": {
+            "type": "string",
+            "description": "Fra",
+            "format": "date-time"
+          },
+          "To": {
+            "type": "string",
+            "description": "Til",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": {},
+        "description": "En tidsperiode."
+      },
+      "Person": {
+        "type": "object",
+        "properties": {
+          "HPRInformation": {
+            "$ref": "#/components/schemas/HPRInformation"
+          }
+        },
+        "additionalProperties": {}
+      },
+      "PersonDetails": {
+        "required": [
+          "hprNumber",
+          "parentOrganization"
+        ],
+        "type": "object",
+        "properties": {
+          "hprNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "parentOrganization": {
+            "$ref": "#/components/schemas/ParentOrganization"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PersonSearchParameters": {
+        "type": "object",
+        "properties": {
+          "hprNumber": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "PhysicalAddress": {
+        "type": "object",
+        "properties": {
+          "LastChanged": {
+            "type": "string",
+            "description": "Dato og tid for siste endring til objektet",
+            "format": "date-time",
+            "deprecated": true
+          },
+          "Type": {
+            "$ref": "#/components/schemas/Code"
+          },
+          "TypeCodeValue": {
+            "type": "string",
+            "description": "Type adresse, f.eks. besøks-, post- eller fakturaadresse.\n\nGyldige verdier: OID 3401",
+            "nullable": true,
+            "deprecated": true
+          },
+          "Postbox": {
+            "type": "string",
+            "description": "Postboks",
+            "nullable": true
+          },
+          "StreetAddress": {
+            "type": "string",
+            "description": "Gateadresse",
+            "nullable": true
+          },
+          "PostalCode": {
+            "type": "integer",
+            "description": "Postkode",
+            "format": "int32"
+          },
+          "City": {
+            "type": "string",
+            "description": "Poststed",
+            "nullable": true
+          },
+          "Description": {
+            "type": "string",
+            "description": "Fritekst felt for ekstra beskrivelse. For eksempel ”Samme inngang som ICA, ta innerste dør til venstre”",
+            "nullable": true
+          },
+          "Inherited": {
+            "type": "boolean",
+            "description": "Indikerer om adressen er arvet fra overliggende enhet(er).\n\nDersom Inherited settes til true vil adressen foreldreenheten har, hvor kodeverdien for adressen er den samme, benyttes.\n\nEventuelt innhold som sendes inn i Address blir ignorert.\n\nHvis foreldreenheten ikke har en adresse med den angitte kodetypen vil elementet bli nullet ut/ikke satt for denne enheten (uavhengig av om en verdi blir sendt inn i Address)."
+          },
+          "Country": {
+            "$ref": "#/components/schemas/Code"
+          }
+        },
+        "additionalProperties": {},
+        "description": "Fysisk adresse, f.eks. besøks-, post- eller fakturaadresse."
+      },
+      "PostalAddress": {
+        "required": [
+          "city",
+          "postalCode"
+        ],
+        "type": "object",
+        "properties": {
+          "address": {
+            "type": "string",
+            "nullable": true
+          },
+          "postalBox": {
+            "type": "string",
+            "nullable": true
+          },
+          "postalCode": {
+            "pattern": "^\\d{4}$",
+            "type": "string",
+            "nullable": true
+          },
+          "city": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "SearchParameters": {
+        "type": "object",
+        "properties": {
+          "organizationSearchParameters": {
+            "$ref": "#/components/schemas/OrganizationSearchParameters"
+          },
+          "personSearchParameters": {
+            "$ref": "#/components/schemas/PersonSearchParameters"
+          },
+          "serviceSearchParameters": {
+            "$ref": "#/components/schemas/ServiceSearchParameters"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "SearchResponse": {
+        "required": [
+          "communicationParties"
+        ],
+        "type": "object",
+        "properties": {
+          "communicationParties": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CommunicationParty"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ServiceDetails": {
+        "required": [
+          "parentOrganization",
+          "serviceType"
+        ],
+        "type": "object",
+        "properties": {
+          "serviceType": {
+            "$ref": "#/components/schemas/AdministrativeCode"
+          },
+          "interMunicipalityCoverageArea": {
+            "$ref": "#/components/schemas/InterMunicipalityCoverageArea"
+          },
+          "serviceSpecification": {
+            "type": "string",
+            "nullable": true
+          },
+          "parentOrganization": {
+            "$ref": "#/components/schemas/ParentOrganization"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ServiceSearchParameters": {
+        "type": "object",
+        "properties": {
+          "serviceTypeCodeListId": {
+            "type": "string",
+            "nullable": true
+          },
+          "serviceTypeCodeValue": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Certificate"
+    },
+    {
+      "name": "CommunicationParty"
+    },
+    {
+      "name": "Event"
+    },
+    {
+      "name": "Organization"
+    }
+  ],
+  "servers": [
+    {
+      "url": "https://cpapi.test.grunndata.nhn.no"
+    }
+  ]
+}
