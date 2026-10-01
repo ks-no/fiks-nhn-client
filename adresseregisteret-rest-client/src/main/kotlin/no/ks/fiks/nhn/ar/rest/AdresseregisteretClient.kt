@@ -14,11 +14,9 @@ import no.ks.fiks.nhn.ar.rest.model.ServiceDetails
 
 class AdresseregisteretClient @JvmOverloads constructor(
     private val service: AdresseregisteretService,
-    cacheConfig: CacheConfig? = null,
+    cacheConfig: CacheConfig,
 ) {
-    private val cache = cacheConfig
-        ?.let { CaffeineCache(config = cacheConfig, loader = ::lookupHerIdFromApi) }
-        ?: Cache { herId: Int -> lookupHerIdFromApi(herId)?.deepCopy() }
+    private val cache = CaffeineCache(config = cacheConfig, loader = ::lookupHerIdFromApi)
 
     fun lookupHerId(herId: Int): CommunicationParty? = cache.get(herId)
 
