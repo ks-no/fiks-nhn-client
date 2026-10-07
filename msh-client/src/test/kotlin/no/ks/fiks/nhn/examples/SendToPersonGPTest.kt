@@ -77,11 +77,13 @@ class SendToPersonGPTest : StringSpec({
                         type = Helsepersonell.LEGE, // Professional group of the healthcare professional recieving the message
                     )
                 ),
-                vedlegg = OutgoingVedlegg(
-                    // Only PDF is supported
-                    date = OffsetDateTime.now(), // Creation time for the attachment
-                    description = "<Description of the attachment>",
-                    data = ClassLoader.getSystemResourceAsStream("small.pdf")!!, // InputStream containing the bytes for the attached PDF
+                vedlegg = listOf(
+                    OutgoingVedlegg(
+                        // Only PDF is supported; add more entries for more attachments
+                        date = OffsetDateTime.now(), // Creation time for the attachment
+                        description = "<Description of the attachment>",
+                        data = ClassLoader.getSystemResourceAsStream("small.pdf")!!, // InputStream containing the bytes for the attached PDF
+                    )
                 ),
                 version = DialogmeldingVersion.V1_1, // 1.0 is also supported, but 1.1 is preferred and will be the main focus
                 conversationRef = ConversationRef( // Should be set if this message is part of a dialogue
