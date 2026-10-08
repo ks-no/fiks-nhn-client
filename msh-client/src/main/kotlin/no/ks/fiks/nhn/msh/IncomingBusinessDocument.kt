@@ -13,7 +13,7 @@ data class IncomingBusinessDocument(
     val sender: Sender,
     val receiver: Receiver,
     val message: Dialogmelding?,
-    val vedlegg: IncomingVedlegg?,
+    val vedlegg: List<IncomingVedlegg>,
     val conversationRef: ConversationRef?,
 )
 

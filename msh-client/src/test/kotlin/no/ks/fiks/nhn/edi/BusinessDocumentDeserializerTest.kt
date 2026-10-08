@@ -20,6 +20,7 @@ import org.xml.sax.SAXParseException
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
+import java.util.Base64
 
 class BusinessDocumentDeserializerTest : StringSpec({
 
@@ -74,8 +75,8 @@ class BusinessDocumentDeserializerTest : StringSpec({
                 notat should beNull()
             }
 
-            it.vedlegg shouldNot beNull()
-            with(it.vedlegg!!) {
+            it.vedlegg shouldHaveSize 1
+            with(it.vedlegg.single()) {
                 date shouldBe OffsetDateTime.parse("2025-05-13T11:51:01.5833859Z")
                 description shouldBe "small2.pdf"
                 mimeType shouldBe "application/pdf"
@@ -148,7 +149,7 @@ class BusinessDocumentDeserializerTest : StringSpec({
                 }
             }
 
-            doc.vedlegg should beNull()
+            doc.vedlegg.shouldBeEmpty()
 
             doc.conversationRef shouldNot beNull()
             with(doc.conversationRef!!) {
@@ -220,7 +221,7 @@ class BusinessDocumentDeserializerTest : StringSpec({
                 }
             }
 
-            doc.vedlegg should beNull()
+            doc.vedlegg.shouldBeEmpty()
 
             doc.conversationRef shouldNot beNull()
             with(doc.conversationRef!!) {
@@ -275,8 +276,8 @@ class BusinessDocumentDeserializerTest : StringSpec({
                 }
             }
 
-            it.vedlegg shouldNot beNull()
-            with(it.vedlegg!!) {
+            it.vedlegg shouldHaveSize 1
+            with(it.vedlegg.single()) {
                 date shouldBe OffsetDateTime.parse("2025-05-13T11:56:21.7607390Z")
                 description shouldBe "small2.pdf"
                 mimeType shouldBe "application/pdf"
@@ -286,45 +287,92 @@ class BusinessDocumentDeserializerTest : StringSpec({
         }
     }
 
+    "Should deserialize all vedlegg in order and skip other document references" {
+        val secondBytes = "Second attachment".toByteArray()
+        val thirdBytes = byteArrayOf(0, 1, 2, 127, -1)
+
+        val xml = readResourceContentAsString("dialogmelding/1.0/foresporsel-og-svar/dialog-foresporsel-samsvar-test.xml")
+            .replace("</MsgHead>", """
+                ${documentXml("REF", "Other reference", "2025-05-14T10:00:00Z", byteArrayOf(42))}
+                ${documentXml("A", "second.pdf", "2025-05-15T10:00:00+02:00", secondBytes)}
+                ${documentXml("A", "third.pdf", "2025-05-16T10:00:00Z", thirdBytes)}
+                </MsgHead>
+            """.trimIndent())
+
+        BusinessDocumentDeserializer.deserializeMsgHead(xml).asClue { document ->
+            document.vedlegg shouldHaveSize 3
+            with(document.vedlegg[0]) {
+                description shouldBe "small2.pdf"
+                data!!.readAllBytes() shouldBe readResourceContent("small.pdf")
+            }
+            with(document.vedlegg[1]) {
+                date shouldBe OffsetDateTime.parse("2025-05-15T10:00:00+02:00")
+                description shouldBe "second.pdf"
+                mimeType shouldBe "application/pdf"
+                data!!.readAllBytes() shouldBe secondBytes
+            }
+            with(document.vedlegg[2]) {
+                date shouldBe OffsetDateTime.parse("2025-05-16T10:00:00Z")
+                description shouldBe "third.pdf"
+                mimeType shouldBe "application/pdf"
+                data!!.readAllBytes() shouldBe thirdBytes
+            }
+        }
+    }
+
+    "Should return no vedlegg when all document references are unsupported" {
+        val xml = readResourceContentAsString("dialogmelding/1.0/foresporsel-og-svar/dialog-svar-webmed-test.xml")
+            .replace("</MsgHead>", """
+                ${documentXml("REF", "First reference", "2025-06-10T10:00:00Z", byteArrayOf(1))}
+                ${documentXml("REF", "Second reference", "2025-06-11T10:00:00Z", byteArrayOf(2))}
+                </MsgHead>
+            """.trimIndent())
+
+        BusinessDocumentDeserializer.deserializeMsgHead(xml).asClue { document ->
+            document.message shouldNot beNull()
+            document.vedlegg.shouldBeEmpty()
+        }
+    }
+
     "Vedlegg date with UTC offset should be parsed correctly" {
         BusinessDocumentDeserializer.deserializeMsgHead(
             readResourceContentAsString("dialogmelding/1.0/foresporsel-og-svar/dialog-foresporsel-samsvar-test.xml")
-        ).asClue { it.vedlegg!!.date shouldBe OffsetDateTime.parse("2025-05-13T11:51:01.5833859Z") }
+        ).asClue { it.vedlegg.single().date shouldBe OffsetDateTime.parse("2025-05-13T11:51:01.5833859Z") }
     }
 
     "Vedlegg date with specific positive offset should be parsed correctly" {
         BusinessDocumentDeserializer.deserializeMsgHead(
             readResourceContentAsString("dialogmelding/1.0/foresporsel-og-svar/dialog-foresporsel-samsvar-test.xml")
                 .replace("2025-05-13T11:51:01.5833859Z", "2025-06-14T01:02:03.123+05:00")
-        ).asClue { it.vedlegg!!.date shouldBe OffsetDateTime.of(2025, 6, 14, 1, 2, 3, 123000000, ZoneOffset.ofHours(5)) }
+        ).asClue { it.vedlegg.single().date shouldBe OffsetDateTime.of(2025, 6, 14, 1, 2, 3, 123000000, ZoneOffset.ofHours(5)) }
     }
 
     "Vedlegg date with specific negative offset should be parsed correctly" {
         BusinessDocumentDeserializer.deserializeMsgHead(
             readResourceContentAsString("dialogmelding/1.0/foresporsel-og-svar/dialog-foresporsel-samsvar-test.xml")
                 .replace("2025-05-13T11:51:01.5833859Z", "2025-06-14T01:02:03-04:00")
-        ).asClue { it.vedlegg!!.date shouldBe OffsetDateTime.of(2025, 6, 14, 1, 2, 3, 0, ZoneOffset.ofHours(-4)) }
+        ).asClue { it.vedlegg.single().date shouldBe OffsetDateTime.of(2025, 6, 14, 1, 2, 3, 0, ZoneOffset.ofHours(-4)) }
     }
 
     "Vedlegg date without offset should be interpreted as Norwegian timezone (UTC+1 in winter)" {
         BusinessDocumentDeserializer.deserializeMsgHead(
             readResourceContentAsString("dialogmelding/1.0/foresporsel-og-svar/dialog-foresporsel-samsvar-test.xml")
                 .replace("2025-05-13T11:51:01.5833859Z", "2025-01-02T23:22:21")
-        ).asClue { it.vedlegg!!.date shouldBe OffsetDateTime.of(2025, 1, 2, 23, 22, 21, 0, ZoneOffset.ofHours(1)) }
+        ).asClue { it.vedlegg.single().date shouldBe OffsetDateTime.of(2025, 1, 2, 23, 22, 21, 0, ZoneOffset.ofHours(1)) }
     }
 
     "Vedlegg date without offset should be interpreted as Norwegian timezone (UTC+2 in summer)" {
         BusinessDocumentDeserializer.deserializeMsgHead(
             readResourceContentAsString("dialogmelding/1.0/foresporsel-og-svar/dialog-foresporsel-samsvar-test.xml")
                 .replace("2025-05-13T11:51:01.5833859Z", "2025-05-13T11:51:01")
-        ).asClue { it.vedlegg!!.date shouldBe OffsetDateTime.of(2025, 5, 13, 11, 51, 1, 0, ZoneOffset.ofHours(2)) }
+        ).asClue { it.vedlegg.single().date shouldBe OffsetDateTime.of(2025, 5, 13, 11, 51, 1, 0, ZoneOffset.ofHours(2)) }
     }
 
     "Invalid vedlegg date should give null" {
         BusinessDocumentDeserializer.deserializeMsgHead(
             readResourceContentAsString("dialogmelding/1.0/foresporsel-og-svar/dialog-foresporsel-samsvar-test.xml")
                 .replace("2025-05-13T11:51:01.5833859Z", "2025")
-        ).asClue { it.vedlegg!!.date should beNull() }
+        ).asClue { it.vedlegg.single().date should beNull() }
     }
 
     "Should throw exception if version is invalid" {
@@ -534,7 +582,7 @@ class BusinessDocumentDeserializerTest : StringSpec({
                 }
             }
 
-            it.vedlegg should beNull()
+            it.vedlegg.shouldBeEmpty()
         }
     }
 
@@ -548,4 +596,16 @@ class BusinessDocumentDeserializerTest : StringSpec({
 
 })
 
-
+private fun documentXml(type: String, description: String, date: String, bytes: ByteArray) = """
+            <Document>
+                <RefDoc>
+                    <IssueDate V="$date" />
+                    <MsgType V="$type" />
+                    <MimeType>application/pdf</MimeType>
+                    <Description>$description</Description>
+                    <Content>
+                        <Base64Container xmlns="http://www.kith.no/xmlstds/base64container">${Base64.getEncoder().encodeToString(bytes)}</Base64Container>
+                    </Content>
+                </RefDoc>
+            </Document>
+        """.trimIndent()
