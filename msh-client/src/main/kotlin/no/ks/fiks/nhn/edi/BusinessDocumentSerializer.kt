@@ -6,7 +6,6 @@ import no.kith.xmlstds.msghead._2006_05_24.HealthcareProfessional
 import no.ks.fiks.hdir.*
 import no.ks.fiks.nhn.msh.*
 import no.ks.fiks.nhn.msh.Address
-import java.io.InputStream
 import java.io.StringWriter
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -32,10 +31,7 @@ object BusinessDocumentSerializer {
     fun serializeNhnMessage(businessDocument: OutgoingBusinessDocument): String {
         val msgHead = buildMsgHead(businessDocument)
             .apply {
-                document = listOfNotNull(
-                    buildDialogmeldingDocument(businessDocument),
-                    buildVedleggDocument(businessDocument.vedlegg),
-                )
+                document = listOf(buildDialogmeldingDocument(businessDocument)) + buildVedleggDocuments(businessDocument.vedlegg)
             }
 
         return StringWriter()
@@ -181,7 +177,19 @@ object BusinessDocumentSerializer {
             }
         }
 
-    private fun buildVedleggDocument(vedlegg: OutgoingVedlegg) = Document().apply {
+    private fun buildVedleggDocuments(vedlegg: List<OutgoingVedlegg>): List<Document> {
+        var remainingBytes = VEDLEGG_MAX_BYTES
+        return vedlegg.map { attachment ->
+            val bytes = attachment.data.readNBytes(remainingBytes)
+            if (bytes.size == remainingBytes && attachment.data.read() != -1) {
+                throw VedleggSizeException("The total size of vedlegg exceeds the max size of $VEDLEGG_MAX_BYTES bytes")
+            }
+            remainingBytes -= bytes.size
+            buildVedleggDocument(attachment, bytes)
+        }
+    }
+
+    private fun buildVedleggDocument(vedlegg: OutgoingVedlegg, bytes: ByteArray) = Document().apply {
         refDoc = RefDoc().apply {
             issueDate = TS().apply {
                 v = DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(vedlegg.date.truncatedTo(ChronoUnit.SECONDS))
@@ -191,18 +199,11 @@ object BusinessDocumentSerializer {
             description = vedlegg.description
             content = RefDoc.Content().apply {
                 any = listOf(
-                    buildContainer(vedlegg.data)
+                    Base64Container().apply { value = bytes }
                 )
             }
         }
     }
-
-    private fun buildContainer(data: InputStream) =
-        Base64Container().apply {
-            value = data.readNBytes(VEDLEGG_MAX_BYTES).also {
-                if (it.size == VEDLEGG_MAX_BYTES && data.read() != -1) throw VedleggSizeException("The size of vedlegg exceeds the max size of $VEDLEGG_MAX_BYTES bytes")
-            }
-        }
 
 }
 
