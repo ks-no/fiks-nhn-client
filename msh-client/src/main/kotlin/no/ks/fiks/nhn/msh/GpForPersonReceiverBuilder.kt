@@ -36,7 +36,7 @@ class GpForPersonReceiverBuilder(
                 ),
                 address = fastlege.postalAddress?.let {
                     Address(
-                        type = null,
+                        type = Adressetype.POSTADRESSE,
                         streetAdr = it.address,
                         postalCode = it.postalCode,
                         city = it.city,
