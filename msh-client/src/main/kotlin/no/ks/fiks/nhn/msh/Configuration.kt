@@ -1,5 +1,6 @@
 package no.ks.fiks.nhn.msh
 
+import no.ks.fiks.nhn.ar.rest.CacheConfig
 import no.ks.fiks.helseid.Environment as HelseIdEnvironment
 
 data class Configuration(
@@ -25,6 +26,7 @@ data class HelseIdConfiguration(
 
 data class AdresseregisterConfiguration(
     val url: String,
+    val cacheConfig: CacheConfig = CacheConfig(),
 )
 
 data class FastlegeregisterConfiguration(

@@ -19,6 +19,8 @@ Four different clients are provided:
 The clients support using access tokens with organization numbers for use with single-/multi-tenancy as discussed [here](https://utviklerportal.nhn.no/informasjonstjenester/helseid/bruksmoenstre-og-eksempelkode/bruk-av-helseid/docs/tekniske-mekanismer/organisasjonsnumre_enmd).
 These organization numbers can be configured at the client level, but can also be provided per request by using the `RequestParameters` parameter.
 
+When using `ClientWithFastlegeLookup`, caching for Adresseregisteret lookups can be configured through `AdresseregisterConfiguration.cacheConfig`.
+
 
 ### Import using Maven
 ```xml

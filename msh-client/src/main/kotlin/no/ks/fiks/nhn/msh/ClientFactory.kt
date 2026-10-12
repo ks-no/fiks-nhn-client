@@ -4,7 +4,6 @@ import no.ks.fiks.helseid.HelseIdClient
 import no.ks.fiks.helseid.dpop.ProofBuilder
 import no.ks.fiks.nhn.ar.rest.AdresseregisteretClient
 import no.ks.fiks.nhn.ar.rest.AdresseregisteretService
-import no.ks.fiks.nhn.ar.rest.CacheConfig
 import no.ks.fiks.nhn.flr.Credentials
 import no.ks.fiks.nhn.flr.FastlegeregisteretClient
 import no.ks.fiks.nhn.flr.FastlegeregisteretService
@@ -66,7 +65,7 @@ object ClientFactory {
                 environment = helseIdConfiguration.environment,
             ),
         ),
-        cacheConfig = CacheConfig(),
+        cacheConfig = configuration.cacheConfig,
     )
 
 
