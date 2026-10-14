@@ -4,6 +4,15 @@ This repository provides clients for communicating with the following NHN servic
 - Fastlegeregisteret ([README](fastlegeregisteret-client/README.md))
 - Meldingstjener API - EDI 2.0 ([README](msh-client/README.md))
 
+## Development
+
+This repository uses the `fiks-nhn-specs` git submodule for shared NHN API specifications.
+Initialize submodules before building from a fresh clone:
+
+```bash
+git submodule update --init --recursive
+```
+
 ## Documentation
 
 Validator: https://samsvar.nhn.no/validering/xml

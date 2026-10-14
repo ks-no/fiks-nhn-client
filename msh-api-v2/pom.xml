@@ -93,7 +93,7 @@
                         </goals>
                         <phase>generate-sources</phase>
                         <configuration>
-                            <inputSpec>${project.basedir}/spec/msh-api-v2.json</inputSpec>
+                            <inputSpec>${project.basedir}/../fiks-nhn-specs/specs/msh-api-v2.json</inputSpec>
                             <modelPackage>no.nhn.msh.v2.model</modelPackage>
                             <apiPackage>no.nhn.msh.v2.api</apiPackage>
                             <invokerPackage>no.nhn.msh.v2.invoker</invokerPackage>
