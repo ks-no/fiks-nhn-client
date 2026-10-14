@@ -1,0 +1,3 @@
+[submodule "fiks-nhn-specs"]
+	path = fiks-nhn-specs
+	url = https://github.com/ks-no/fiks-nhn-specs.git

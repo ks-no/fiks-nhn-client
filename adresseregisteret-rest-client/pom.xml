@@ -116,7 +116,7 @@
                             <goal>generate</goal>
                         </goals>
                         <configuration>
-                            <inputSpec>${project.basedir}/openapi/adresseregister-spec.json</inputSpec>
+                            <inputSpec>${project.basedir}/../fiks-nhn-specs/specs/adresseregister-v1.json</inputSpec>
                             <modelPackage>no.ks.fiks.nhn.ar.rest.model</modelPackage>
                             <apiPackage>no.ks.fiks.nhn.ar.rest.api</apiPackage>
                             <invokerPackage>no.ks.fiks.nhn.ar.rest.invoker</invokerPackage>
