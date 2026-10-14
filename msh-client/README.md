@@ -16,6 +16,11 @@ Four different clients are provided:
 - `BlockingClient` - Provides the same functionality as `Client`, but all functions are blocking
 - `BlockingClientWithFastlegeLookup` - Provides the same functionality as `ClientWithFastlegeLookup`, but all functions are blocking
 
+## Notes
+
+- The generated `msh-api-v2` client models are sourced from `../fiks-nhn-specs/specs/msh-api-v2.json`.
+- Initialize/update git submodules before regenerating sources or building from a fresh clone.
+
 The clients support using access tokens with organization numbers for use with single-/multi-tenancy as discussed [here](https://utviklerportal.nhn.no/informasjonstjenester/helseid/bruksmoenstre-og-eksempelkode/bruk-av-helseid/docs/tekniske-mekanismer/organisasjonsnumre_enmd).
 These organization numbers can be configured at the client level, but can also be provided per request by using the `RequestParameters` parameter.
 
