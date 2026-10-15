@@ -1,6 +1,7 @@
 package no.ks.fiks.nhn.msh
 
 import io.kotest.assertions.asClue
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.shouldBe
 import io.mockk.*
@@ -42,7 +43,7 @@ class ClientWithFastlegeLookupTest : FreeSpec() {
                 )
                 val patientGP = randomPatientGP()
                 val gpCommunicationParty = randomCommunicationPartyPerson()
-                val (gpFirstName, gpLastName) = splitName(gpCommunicationParty.name)
+                val (gpFirstName, gpLastName) = gpCommunicationParty.name?.split(" ")!!
 
                 val requestSlot = slot<PostMessageRequest>()
                 val apiService = mockk<MshInternalClient> { coEvery { postMessage(capture(requestSlot), any()) } returns UUID.randomUUID() }
@@ -113,6 +114,49 @@ class ClientWithFastlegeLookupTest : FreeSpec() {
             }
         }
 
+        "Throws when GP name is invalid" - {
+            "The lookup should fail if Addresseregisteret returns a GP name that cannot be split into first and last name" {
+                val businessDocument = randomGPForPersonOutgoingBusinessDocument()
+                val patientGP = randomPatientGP()
+                val gpCommunicationParty = randomCommunicationPartyPerson().name(randomString())
+
+                val apiService = mockk<MshInternalClient> { coEvery { postMessage(any(), any()) } returns UUID.randomUUID() }
+                val flrClient = mockk<FastlegeregisteretClient> { every { getPatientGP(any()) } returns patientGP }
+                val arClient = mockk<AdresseregisteretClient> { every { lookupHerId(any()) } returns gpCommunicationParty }
+                val client = ClientWithFastlegeLookup(apiService, flrClient, arClient)
+
+                shouldThrow<GpNotFoundException> {
+                    client.sendMessageToGPForPerson(businessDocument)
+                }
+            }
+        }
+
+        "Throws when parent organization name is empty" - {
+            "The lookup should fail if the parent organization has no usable name" {
+                val businessDocument = randomGPForPersonOutgoingBusinessDocument()
+                val patientGP = randomPatientGP()
+                val gpCommunicationParty = randomCommunicationPartyPerson().personDetails(
+                    no.ks.fiks.nhn.ar.rest.model.PersonDetails()
+                        .hprNumber(nextInt(10000, 99999))
+                        .parentOrganization(
+                            no.ks.fiks.nhn.ar.rest.model.ParentOrganization()
+                                .herId(randomHerId())
+                                .name("   ")
+                                .organizationNumber(randomString())
+                        )
+                )
+
+                val apiService = mockk<MshInternalClient> { coEvery { postMessage(any(), any()) } returns UUID.randomUUID() }
+                val flrClient = mockk<FastlegeregisteretClient> { every { getPatientGP(any()) } returns patientGP }
+                val arClient = mockk<AdresseregisteretClient> { every { lookupHerId(any()) } returns gpCommunicationParty }
+                val client = ClientWithFastlegeLookup(apiService, flrClient, arClient)
+
+                shouldThrow<GpNotFoundException> {
+                    client.sendMessageToGPForPerson(businessDocument)
+                }
+            }
+        }
+
         "Params should be passed on" {
             val params = RequestParameters(HelseIdTokenParameters(SingleTenantHelseIdTokenParameters(randomHerId().toString())))
 
@@ -179,7 +223,7 @@ private fun randomGPForPersonOutgoingBusinessDocument(
 
 private fun randomCommunicationPartyPerson(): CommunicationParty = CommunicationParty()
     .herId(randomHerId())
-    .name(randomString())
+    .name("${randomString()} ${randomString()}")
     .type(no.ks.fiks.nhn.ar.rest.model.CommunicationPartyType.PERSON)
     .amqpTransportStatus(no.ks.fiks.nhn.ar.rest.model.AmqpTransportStatus.DISABLED)
     .personDetails(
@@ -201,18 +245,3 @@ private fun randomCommunicationPartyPerson(): CommunicationParty = Communication
     )
 
 private fun randomPatientGP(): PatientGP = PatientGP(randomString(), randomHerId())
-
-private fun splitName(fullName: String?): Pair<String, String> {
-    val nameParts = fullName
-        ?.trim()
-        ?.split(Regex("\\s+"))
-        ?.filter { it.isNotBlank() }
-        .orEmpty()
-
-    return when {
-        nameParts.isEmpty() -> "" to ""
-        nameParts.size == 1 -> "" to nameParts.single()
-        else -> nameParts.dropLast(1).joinToString(" ") to nameParts.last()
-    }
-}
-

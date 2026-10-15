@@ -15,7 +15,7 @@ class GpForPersonReceiverBuilder(
     fun buildGpForPersonReceiver(person: Person): Receiver {
         val fastlege = lookupFastlege(person.fnr)
         val parent = fastlege.personDetails?.parentOrganization ?: throw GpNotFoundException("GP does not have a parent", person.fnr)
-        val gpName = splitName(fastlege.name)
+        val gpName = splitName(fastlege.name, person.fnr)
 
         return Receiver(
             parent = OrganizationCommunicationParty(
@@ -26,7 +26,8 @@ class GpForPersonReceiverBuilder(
                     )
                 ),
                 address = null,
-                name = parent.name ?: "",
+                name = parent.name?.takeIf { it.isNotBlank() }
+                    ?: throw GpNotFoundException("GP does not have a valid parent name", person.fnr),
             ),
             child = PersonCommunicationParty(
                 ids = listOf(
@@ -69,21 +70,21 @@ class GpForPersonReceiverBuilder(
             }
             ?: throw GpNotFoundException("Could not find GP for person", personId)
 
-    private fun splitName(fullName: String?): ParsedName {
+    private fun splitName(fullName: String?, personId: String): ParsedName {
         val nameParts = fullName
             ?.trim()
             ?.split(Regex("\\s+"))
             ?.filter { it.isNotBlank() }
             .orEmpty()
 
-        return when {
-            nameParts.isEmpty() -> ParsedName(firstName = "", lastName = "")
-            nameParts.size == 1 -> ParsedName(firstName = "", lastName = nameParts.single())
-            else -> ParsedName(
-                firstName = nameParts.dropLast(1).joinToString(" "),
-                lastName = nameParts.last(),
-            )
+        if (nameParts.size < 2) {
+            throw GpNotFoundException("GP does not have a valid name", personId)
         }
+
+        return ParsedName(
+            firstName = nameParts.dropLast(1).joinToString(" "),
+            lastName = nameParts.last(),
+        )
     }
 
     private data class ParsedName(
