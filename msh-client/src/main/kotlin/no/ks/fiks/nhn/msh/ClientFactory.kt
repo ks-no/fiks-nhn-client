@@ -2,8 +2,8 @@ package no.ks.fiks.nhn.msh
 
 import no.ks.fiks.helseid.HelseIdClient
 import no.ks.fiks.helseid.dpop.ProofBuilder
-import no.ks.fiks.nhn.ar.AdresseregisteretClient
-import no.ks.fiks.nhn.ar.AdresseregisteretService
+import no.ks.fiks.nhn.ar.rest.AdresseregisteretClient
+import no.ks.fiks.nhn.ar.rest.AdresseregisteretService
 import no.ks.fiks.nhn.flr.Credentials
 import no.ks.fiks.nhn.flr.FastlegeregisteretClient
 import no.ks.fiks.nhn.flr.FastlegeregisteretService
@@ -22,7 +22,7 @@ object ClientFactory {
         ClientWithFastlegeLookup(
             internalClient = createMshInternalClient(configuration.helseId, configuration.mshBaseUrl, configuration.sourceSystem),
             flrClient = createFlrClient(configuration.fastlegeregister),
-            arClient = createArClient(configuration.adresseregister),
+            arClient = createArClient(configuration.adresseregister, configuration.helseId),
             messageHandlers = messageHandlers,
         )
 
@@ -56,16 +56,16 @@ object ClientFactory {
         )
     )
 
-    fun createArClient(configuration: AdresseregisterConfiguration) = AdresseregisteretClient(
+    fun createArClient(configuration: AdresseregisterConfiguration, helseIdConfiguration: HelseIdConfiguration) = AdresseregisteretClient(
         AdresseregisteretService(
             url = configuration.url,
-            credentials = configuration.credentials.let {
-                no.ks.fiks.nhn.ar.Credentials(
-                    username = it.username,
-                    password = it.password,
-                )
-            },
-        )
+            helseIdConfiguration = no.ks.fiks.helseid.Configuration(
+                clientId = helseIdConfiguration.clientId,
+                jwk = helseIdConfiguration.jwk,
+                environment = helseIdConfiguration.environment,
+            ),
+        ),
+        cacheConfig = configuration.cacheConfig,
     )
 
 

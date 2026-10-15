@@ -5,7 +5,9 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.throwable.shouldHaveMessage
 import no.ks.fiks.helseid.Environment
+import no.ks.fiks.nhn.ar.rest.CacheConfig
 import java.text.ParseException
+import java.time.Duration
 import java.util.*
 
 class ClientFactoryTest : StringSpec() {
@@ -60,9 +62,9 @@ class ClientFactoryTest : StringSpec() {
                     ),
                     adresseregister = AdresseregisterConfiguration(
                         url = "http://adresseregister:8080",
-                        credentials = Credentials(
-                            username = UUID.randomUUID().toString(),
-                            password = UUID.randomUUID().toString(),
+                        cacheConfig = CacheConfig(
+                            maxSize = 10,
+                            cacheTtl = Duration.ofMinutes(5),
                         ),
                     ),
                     fastlegeregister = FastlegeregisterConfiguration(

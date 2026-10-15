@@ -26,7 +26,6 @@
 
     <modules>
         <module>fastlegeregisteret-client</module>
-        <module>adresseregisteret-client</module>
         <module>adresseregisteret-rest-client</module>
         <module>msh-api-v2</module>
         <module>msh-client</module>
@@ -62,11 +61,6 @@
             <dependency>
                 <groupId>no.ks.fiks</groupId>
                 <artifactId>fastlegeregisteret-client</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>no.ks.fiks</groupId>
-                <artifactId>adresseregisteret-client</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

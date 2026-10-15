@@ -2,7 +2,9 @@ package no.ks.fiks.nhn.examples
 
 import io.kotest.core.spec.style.StringSpec
 import no.ks.fiks.helseid.Environment
+import no.ks.fiks.nhn.ar.rest.CacheConfig
 import no.ks.fiks.nhn.msh.*
+import java.time.Duration
 
 class CreateClientWithFastlegeLookupTest : StringSpec({
     "! Create client with fastlege lookup using factory" {
@@ -18,9 +20,9 @@ class CreateClientWithFastlegeLookupTest : StringSpec({
                 ),
                 adresseregister = AdresseregisterConfiguration(
                     url = "<Adresseregister URL>",
-                    credentials = Credentials(
-                        username = "<AR username>",
-                        password = "<AR password>",
+                    cacheConfig = CacheConfig(
+                        maxSize = 500,
+                        cacheTtl = Duration.ofHours(12),
                     ),
                 ),
                 fastlegeregister = FastlegeregisterConfiguration(
