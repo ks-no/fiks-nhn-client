@@ -15,6 +15,7 @@ class GpForPersonReceiverBuilder(
     fun buildGpForPersonReceiver(person: Person): Receiver {
         val fastlege = lookupFastlege(person.fnr)
         val parent = fastlege.personDetails?.parentOrganization ?: throw GpNotFoundException("GP does not have a parent", person.fnr)
+        val gpName = splitName(fastlege.name)
 
         return Receiver(
             parent = OrganizationCommunicationParty(
@@ -45,9 +46,9 @@ class GpForPersonReceiverBuilder(
                         country = null
                     )
                 },
-                firstName = "",
+                firstName = gpName.firstName,
                 middleName = null,
-                lastName = fastlege.name ?: "",
+                lastName = gpName.lastName,
             ),
             patient = Patient(
                 fnr = person.fnr,
@@ -67,6 +68,28 @@ class GpForPersonReceiverBuilder(
                     ?: throw GpNotFoundException("Adresseregisteret returned a communication party that is not a person", personId)
             }
             ?: throw GpNotFoundException("Could not find GP for person", personId)
+
+    private fun splitName(fullName: String?): ParsedName {
+        val nameParts = fullName
+            ?.trim()
+            ?.split(Regex("\\s+"))
+            ?.filter { it.isNotBlank() }
+            .orEmpty()
+
+        return when {
+            nameParts.isEmpty() -> ParsedName(firstName = "", lastName = "")
+            nameParts.size == 1 -> ParsedName(firstName = "", lastName = nameParts.single())
+            else -> ParsedName(
+                firstName = nameParts.dropLast(1).joinToString(" "),
+                lastName = nameParts.last(),
+            )
+        }
+    }
+
+    private data class ParsedName(
+        val firstName: String,
+        val lastName: String,
+    )
 
 
 }

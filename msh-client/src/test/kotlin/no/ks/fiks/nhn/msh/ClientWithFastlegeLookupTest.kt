@@ -42,6 +42,7 @@ class ClientWithFastlegeLookupTest : FreeSpec() {
                 )
                 val patientGP = randomPatientGP()
                 val gpCommunicationParty = randomCommunicationPartyPerson()
+                val (gpFirstName, gpLastName) = splitName(gpCommunicationParty.name)
 
                 val requestSlot = slot<PostMessageRequest>()
                 val apiService = mockk<MshInternalClient> { coEvery { postMessage(capture(requestSlot), any()) } returns UUID.randomUUID() }
@@ -88,9 +89,9 @@ class ClientWithFastlegeLookupTest : FreeSpec() {
                                             country = null,
                                         )
                                     },
-                                    firstName = "",
+                                    firstName = gpFirstName,
                                     middleName = "",
-                                    lastName = gpCommunicationParty.name ?: ""
+                                    lastName = gpLastName
                                 ),
                                 patient = Patient(
                                     fnr = businessDocument.person.fnr,
@@ -201,3 +202,18 @@ private fun randomCommunicationPartyPerson(): CommunicationParty = Communication
     )
 
 private fun randomPatientGP(): PatientGP = PatientGP(randomString(), randomHerId())
+
+private fun splitName(fullName: String?): Pair<String, String> {
+    val nameParts = fullName
+        ?.trim()
+        ?.split(Regex("\\s+"))
+        ?.filter { it.isNotBlank() }
+        .orEmpty()
+
+    return when {
+        nameParts.isEmpty() -> "" to ""
+        nameParts.size == 1 -> "" to nameParts.single()
+        else -> nameParts.dropLast(1).joinToString(" ") to nameParts.last()
+    }
+}
+
