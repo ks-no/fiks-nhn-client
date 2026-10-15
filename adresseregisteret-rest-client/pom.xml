@@ -6,7 +6,7 @@
     <parent>
         <groupId>no.ks.fiks</groupId>
         <artifactId>nhn-client-parent</artifactId>
-        <version>2.0.1-SNAPSHOT</version>
+        <version>3.0.1-SNAPSHOT</version>
     </parent>
 
     <artifactId>adresseregisteret-rest-client</artifactId>
@@ -14,9 +14,9 @@
     <description>REST client generated from the NHN Adresseregisteret OpenAPI spec</description>
 
     <properties>
-        <openapi-generator.version>7.25.0</openapi-generator.version>
+        <openapi-generator.version>7.26.0</openapi-generator.version>
         <jakarta.annotation-api.version>3.0.0</jakarta.annotation-api.version>
-        <feign.version>13.15</feign.version>
+        <feign.version>13.17</feign.version>
         <feign-form.version>3.8.0</feign-form.version>
     </properties>
 
@@ -116,7 +116,7 @@
                             <goal>generate</goal>
                         </goals>
                         <configuration>
-                            <inputSpec>${project.basedir}/openapi/adresseregister-spec.json</inputSpec>
+                            <inputSpec>${project.basedir}/../fiks-nhn-specs/specs/adresseregister-v1.json</inputSpec>
                             <modelPackage>no.ks.fiks.nhn.ar.rest.model</modelPackage>
                             <apiPackage>no.ks.fiks.nhn.ar.rest.api</apiPackage>
                             <invokerPackage>no.ks.fiks.nhn.ar.rest.invoker</invokerPackage>

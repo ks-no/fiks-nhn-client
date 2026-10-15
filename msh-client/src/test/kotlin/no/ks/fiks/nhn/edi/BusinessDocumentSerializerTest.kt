@@ -27,7 +27,7 @@ class BusinessDocumentSerializerTest : StringSpec({
         val document = randomOutgoingBusinessDocument(DialogmeldingVersion.V1_0, vedleggBytes, senderChild = randomPersonCommunicationParty())
 
         BusinessDocumentSerializer.serializeNhnMessage(document)
-            .validateXmlAgainst(start, document, vedleggBytes)
+            .validateXmlAgainst(start, document, listOf(vedleggBytes))
     }
 
     "Test serialization of Dialogmelding 1.0 message with organization sender child" {
@@ -36,7 +36,7 @@ class BusinessDocumentSerializerTest : StringSpec({
         val document = randomOutgoingBusinessDocument(DialogmeldingVersion.V1_0, vedleggBytes, senderChild = randomOrganizationCommunicationParty())
 
         BusinessDocumentSerializer.serializeNhnMessage(document)
-            .validateXmlAgainst(start, document, vedleggBytes)
+            .validateXmlAgainst(start, document, listOf(vedleggBytes))
     }
 
     "Test serialization of Dialogmelding 1.0 message with person receiver child" {
@@ -45,7 +45,7 @@ class BusinessDocumentSerializerTest : StringSpec({
         val document = randomOutgoingBusinessDocument(DialogmeldingVersion.V1_0, vedleggBytes, receiverChild = randomPersonCommunicationParty())
 
         BusinessDocumentSerializer.serializeNhnMessage(document)
-            .validateXmlAgainst(start, document, vedleggBytes)
+            .validateXmlAgainst(start, document, listOf(vedleggBytes))
     }
 
     "Test serialization of Dialogmelding 1.0 message with organization receiver child" {
@@ -54,7 +54,7 @@ class BusinessDocumentSerializerTest : StringSpec({
         val document = randomOutgoingBusinessDocument(DialogmeldingVersion.V1_0, vedleggBytes, receiverChild = randomOrganizationCommunicationParty())
 
         BusinessDocumentSerializer.serializeNhnMessage(document)
-            .validateXmlAgainst(start, document, vedleggBytes)
+            .validateXmlAgainst(start, document, listOf(vedleggBytes))
     }
 
     "Test serialization of Dialogmelding 1.1 message with person sender child" {
@@ -63,7 +63,7 @@ class BusinessDocumentSerializerTest : StringSpec({
         val document = randomOutgoingBusinessDocument(DialogmeldingVersion.V1_1, vedleggBytes, senderChild = randomPersonCommunicationParty())
 
         BusinessDocumentSerializer.serializeNhnMessage(document)
-            .validateXmlAgainst(start, document, vedleggBytes)
+            .validateXmlAgainst(start, document, listOf(vedleggBytes))
     }
 
     "Test serialization of Dialogmelding 1.1 message with organization sender child" {
@@ -72,7 +72,7 @@ class BusinessDocumentSerializerTest : StringSpec({
         val document = randomOutgoingBusinessDocument(DialogmeldingVersion.V1_1, vedleggBytes, senderChild = randomOrganizationCommunicationParty())
 
         BusinessDocumentSerializer.serializeNhnMessage(document)
-            .validateXmlAgainst(start, document, vedleggBytes)
+            .validateXmlAgainst(start, document, listOf(vedleggBytes))
     }
 
     "Test serialization of Dialogmelding 1.1 message with person receiver child" {
@@ -81,7 +81,7 @@ class BusinessDocumentSerializerTest : StringSpec({
         val document = randomOutgoingBusinessDocument(DialogmeldingVersion.V1_1, vedleggBytes, receiverChild = randomPersonCommunicationParty())
 
         BusinessDocumentSerializer.serializeNhnMessage(document)
-            .validateXmlAgainst(start, document, vedleggBytes)
+            .validateXmlAgainst(start, document, listOf(vedleggBytes))
     }
 
     "Test serialization of Dialogmelding 1.1 message with organization receiver child" {
@@ -90,7 +90,7 @@ class BusinessDocumentSerializerTest : StringSpec({
         val document = randomOutgoingBusinessDocument(DialogmeldingVersion.V1_1, vedleggBytes, receiverChild = randomOrganizationCommunicationParty())
 
         BusinessDocumentSerializer.serializeNhnMessage(document)
-            .validateXmlAgainst(start, document, vedleggBytes)
+            .validateXmlAgainst(start, document, listOf(vedleggBytes))
     }
 
     "A vedlegg of size 18 MB should be accepted" {
@@ -104,8 +104,57 @@ class BusinessDocumentSerializerTest : StringSpec({
         val vedleggBytes = nextBytes(18000001)
         val document = randomOutgoingBusinessDocument(DialogmeldingVersion.V1_1, vedleggBytes, randomOrganizationCommunicationParty())
 
-        shouldThrow<VedleggSizeException> {  BusinessDocumentSerializer.serializeNhnMessage(document) }.asClue {
-            it.message shouldBe "The size of vedlegg exceeds the max size of 18000000 bytes"
+        shouldThrow<VedleggSizeException> { BusinessDocumentSerializer.serializeNhnMessage(document) }.asClue {
+            it.message shouldBe "The total size of vedlegg exceeds the max size of 18000000 bytes"
+        }
+    }
+
+    "Multiple vedlegg are serialized in order" {
+        val start = OffsetDateTime.now().minusSeconds(1)
+        val bytes = List(3) { nextBytes(nextInt(100, 1000)) }
+        val document = randomOutgoingBusinessDocument(DialogmeldingVersion.V1_1, bytes.first()).copy(
+            vedlegg = bytes.mapIndexed { index, data ->
+                OutgoingVedlegg(
+                    date = OffsetDateTime.now().plusDays(index.toLong()),
+                    description = "Vedlegg $index",
+                    data = ByteArrayInputStream(data),
+                )
+            }
+        )
+
+        BusinessDocumentSerializer.serializeNhnMessage(document)
+            .validateXmlAgainst(start, document, bytes)
+    }
+
+    "A message can have no vedlegg" {
+        val start = OffsetDateTime.now().minusSeconds(1)
+        val document = randomOutgoingBusinessDocument(DialogmeldingVersion.V1_0, byteArrayOf()).copy(vedlegg = emptyList())
+
+        BusinessDocumentSerializer.serializeNhnMessage(document)
+            .validateXmlAgainst(start, document, emptyList())
+    }
+
+    "The combined size of vedlegg can be exactly 18 MB" {
+        val bytes = listOf(nextBytes(10000000), nextBytes(8000000))
+        val document = randomOutgoingBusinessDocument(DialogmeldingVersion.V1_1, byteArrayOf()).copy(
+            vedlegg = bytes.mapIndexed { index, data ->
+                OutgoingVedlegg(OffsetDateTime.now(), "Vedlegg $index", ByteArrayInputStream(data))
+            }
+        )
+
+        BusinessDocumentSerializer.serializeNhnMessage(document)
+    }
+
+    "The combined size limit applies across all vedlegg" {
+        val document = randomOutgoingBusinessDocument(DialogmeldingVersion.V1_1, byteArrayOf()).copy(
+            vedlegg = listOf(
+                OutgoingVedlegg(OffsetDateTime.now(), "first", ByteArrayInputStream(nextBytes(10000000))),
+                OutgoingVedlegg(OffsetDateTime.now(), "over remaining budget", ByteArrayInputStream(nextBytes(8000001))),
+            )
+        )
+
+        shouldThrow<VedleggSizeException> { BusinessDocumentSerializer.serializeNhnMessage(document) }.asClue {
+            it.message shouldBe "The total size of vedlegg exceeds the max size of 18000000 bytes"
         }
     }
 
@@ -146,10 +195,12 @@ private fun randomOutgoingBusinessDocument(
         ),
         recipientContact = RecipientContact(Helsepersonell.entries.random()),
     ),
-    vedlegg = OutgoingVedlegg(
-        date = OffsetDateTime.now(),
-        description = UUID.randomUUID().toString() + "\n" + UUID.randomUUID().toString(),
-        data = ByteArrayInputStream(vedleggBytes),
+    vedlegg = listOf(
+        OutgoingVedlegg(
+            date = OffsetDateTime.now(),
+            description = UUID.randomUUID().toString() + "\n" + UUID.randomUUID().toString(),
+            data = ByteArrayInputStream(vedleggBytes),
+        )
     ),
     version = version,
     conversationRef = ConversationRef(

@@ -44,5 +44,6 @@ val postalAddress: PostalAddress = client.lookupPostalAddress(12345)
 
 ## Notes
 
-- The REST client is generated from `openapi/adresseregister-spec.json`.
+- The REST client is generated from `../fiks-nhn-specs/specs/adresseregister-v1.json`.
+- Initialize/update git submodules before regenerating sources or building from a fresh clone.
 - `lookupHerId` and `lookupPostalAddress` return the generated OpenAPI models directly.

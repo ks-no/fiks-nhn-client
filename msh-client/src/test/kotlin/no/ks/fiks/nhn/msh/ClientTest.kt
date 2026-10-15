@@ -63,7 +63,7 @@ class ClientTest : FreeSpec() {
                     xml.validateXmlAgainst(
                         startTime = startTime,
                         document = businessDocument,
-                        vedleggBytes = vedleggBytes,
+                        vedleggBytes = listOf(vedleggBytes),
                     )
                 }
             }
@@ -875,10 +875,12 @@ private fun randomOutgoingBusinessDocument(
             type = Helsepersonell.entries.random(),
         ),
     ),
-    vedlegg = OutgoingVedlegg(
-        date = OffsetDateTime.now(),
-        description = randomString(),
-        data = ByteArrayInputStream(vedleggBytes),
+    vedlegg = listOf(
+        OutgoingVedlegg(
+            date = OffsetDateTime.now(),
+            description = randomString(),
+            data = ByteArrayInputStream(vedleggBytes),
+        )
     ),
     version = DialogmeldingVersion.entries.random(),
     conversationRef = ConversationRef(

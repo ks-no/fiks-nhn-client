@@ -16,9 +16,10 @@ import java.time.temporal.ChronoUnit
 import java.util.*
 import javax.xml.parsers.DocumentBuilderFactory
 import javax.xml.xpath.XPath
+import javax.xml.xpath.XPathConstants
 import javax.xml.xpath.XPathFactory
 
-fun String.validateXmlAgainst(startTime: OffsetDateTime, document: OutgoingBusinessDocument, vedleggBytes: ByteArray) {
+fun String.validateXmlAgainst(startTime: OffsetDateTime, document: OutgoingBusinessDocument, vedleggBytes: List<ByteArray>) {
     asClue { xml ->
         val xmlDoc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(ByteArrayInputStream(xml.toByteArray()))
         val xPath = XPathFactory.newInstance().newXPath()
@@ -145,12 +146,17 @@ fun String.validateXmlAgainst(startTime: OffsetDateTime, document: OutgoingBusin
             }
         }
 
-        OffsetDateTime.parse(xPath.evaluate("/MsgHead/Document[2]/RefDoc/IssueDate/@V", xmlDoc)) shouldBe document.vedlegg.date.truncatedTo(ChronoUnit.SECONDS)
-        xPath.evaluate("/MsgHead/Document[2]/RefDoc/MsgType/@V", xmlDoc) shouldBe TypeDokumentreferanse.VEDLEGG.verdi
-        xPath.evaluate("/MsgHead/Document[2]/RefDoc/MsgType/@DN", xmlDoc) shouldBe TypeDokumentreferanse.VEDLEGG.navn
-        xPath.evaluate("/MsgHead/Document[2]/RefDoc/MimeType", xmlDoc) shouldBe "application/pdf"
-        xPath.evaluate("/MsgHead/Document[2]/RefDoc/Description", xmlDoc) shouldBe document.vedlegg.description
-        Base64.getDecoder().decode(xPath.evaluate("/MsgHead/Document[2]/RefDoc/Content/Base64Container", xmlDoc)) shouldBe vedleggBytes
+        document.vedlegg.size shouldBe vedleggBytes.size
+        (xPath.evaluate("count(/MsgHead/Document)", xmlDoc, XPathConstants.NUMBER) as Double).toInt() shouldBe 1 + vedleggBytes.size
+        document.vedlegg.zip(vedleggBytes).forEachIndexed { index, (vedlegg, bytes) ->
+            val path = "/MsgHead/Document[${index + 2}]/RefDoc"
+            OffsetDateTime.parse(xPath.evaluate("$path/IssueDate/@V", xmlDoc)) shouldBe vedlegg.date.truncatedTo(ChronoUnit.SECONDS)
+            xPath.evaluate("$path/MsgType/@V", xmlDoc) shouldBe TypeDokumentreferanse.VEDLEGG.verdi
+            xPath.evaluate("$path/MsgType/@DN", xmlDoc) shouldBe TypeDokumentreferanse.VEDLEGG.navn
+            xPath.evaluate("$path/MimeType", xmlDoc) shouldBe "application/pdf"
+            xPath.evaluate("$path/Description", xmlDoc) shouldBe vedlegg.description
+            Base64.getDecoder().decode(xPath.evaluate("$path/Content/Base64Container", xmlDoc)) shouldBe bytes
+        }
 
         xPath.evaluate("/MsgHead/MsgInfo/ConversationRef/RefToParent", xmlDoc) shouldBe document.conversationRef?.refToParent
         xPath.evaluate("/MsgHead/MsgInfo/ConversationRef/RefToConversation", xmlDoc) shouldBe document.conversationRef?.refToConversation

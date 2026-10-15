@@ -3,7 +3,6 @@ package no.ks.fiks.nhn.msh
 import io.kotest.assertions.asClue
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldNotBeEmpty
 import io.mockk.*
 import no.ks.fiks.hdir.Adressetype
 import no.ks.fiks.hdir.Helsepersonell
@@ -34,7 +33,13 @@ class ClientWithFastlegeLookupTest : FreeSpec() {
             "The receiver should be looked up using FLR and AR, and the data should be serialized to XML and passed on to the service" {
                 val startTime = OffsetDateTime.now().truncatedTo(ChronoUnit.SECONDS)
                 val vedleggBytes = nextBytes(nextInt(1000, 100000))
-                val businessDocument = randomGPForPersonOutgoingBusinessDocument(vedleggBytes)
+                val secondVedleggBytes = nextBytes(nextInt(1000, 100000))
+                val businessDocument = randomGPForPersonOutgoingBusinessDocument(
+                    vedlegg = listOf(
+                        OutgoingVedlegg(OffsetDateTime.now(), randomString(), ByteArrayInputStream(vedleggBytes)),
+                        OutgoingVedlegg(OffsetDateTime.now().plusDays(1), randomString(), ByteArrayInputStream(secondVedleggBytes)),
+                    )
+                )
                 val patientGP = randomPatientGP()
                 val gpCommunicationParty = randomCommunicationPartyPerson()
 
@@ -57,7 +62,53 @@ class ClientWithFastlegeLookupTest : FreeSpec() {
                     request.contentTransferEncoding shouldBe "base64"
                     // Verify XML was generated (basic validation - detailed field validation skipped due to REST model differences)
                     val xml = String(Base64.getDecoder().decode(request.businessDocument))
-                    xml.shouldNotBeEmpty()
+                    val parentOrganization = gpCommunicationParty.personDetails!!.parentOrganization
+                    val postalAddress = gpCommunicationParty.postalAddress
+                    xml.validateXmlAgainst(
+                        startTime = startTime,
+                        document = OutgoingBusinessDocument(
+                            id = businessDocument.id,
+                            sender = businessDocument.sender,
+                            receiver = Receiver(
+                                parent = OrganizationCommunicationParty(
+                                    ids = listOf(OrganizationId(parentOrganization.herId.toString(), OrganizationIdType.HER_ID)),
+                                    address = null,
+                                    name = parentOrganization.name ?: ""
+                                ),
+                                child = PersonCommunicationParty(
+                                    ids = listOf(PersonId(gpCommunicationParty.herId.toString(), PersonIdType.HER_ID)),
+                                    address = postalAddress?.let {
+                                        Address(
+                                            type = Adressetype.POSTADRESSE,
+                                            streetAdr = it.address,
+                                            postalCode = it.postalCode,
+                                            city = it.city,
+                                            postbox = it.postalBox,
+                                            county = null,
+                                            country = null,
+                                        )
+                                    },
+                                    firstName = "",
+                                    middleName = "",
+                                    lastName = gpCommunicationParty.name ?: ""
+                                ),
+                                patient = Patient(
+                                    fnr = businessDocument.person.fnr,
+                                    firstName = businessDocument.person.firstName,
+                                    middleName = businessDocument.person.middleName,
+                                    lastName = businessDocument.person.lastName
+                                ),
+                            ),
+                            message = businessDocument.message,
+                            vedlegg = businessDocument.vedlegg,
+                            version = businessDocument.version,
+                            conversationRef = ConversationRef(
+                                refToParent = businessDocument.conversationRef?.refToParent,
+                                refToConversation = businessDocument.conversationRef?.refToConversation,
+                            ),
+                        ),
+                        vedleggBytes = listOf(vedleggBytes, secondVedleggBytes),
+                    )
                 }
             }
         }
@@ -81,7 +132,9 @@ class ClientWithFastlegeLookupTest : FreeSpec() {
 }
 
 private fun randomGPForPersonOutgoingBusinessDocument(
-    vedleggBytes: ByteArray = nextBytes(nextInt(1000, 100000)),
+    vedlegg: List<OutgoingVedlegg> = listOf(
+        OutgoingVedlegg(OffsetDateTime.now(), randomString(), ByteArrayInputStream(nextBytes(nextInt(1000, 100000))))
+    ),
 ): GPForPersonOutgoingBusinessDocument = GPForPersonOutgoingBusinessDocument(
     id = UUID.randomUUID(),
     sender = Sender(
@@ -116,11 +169,7 @@ private fun randomGPForPersonOutgoingBusinessDocument(
             type = Helsepersonell.entries.random(),
         ),
     ),
-    vedlegg = OutgoingVedlegg(
-        date = OffsetDateTime.now(),
-        description = randomString(),
-        data = ByteArrayInputStream(vedleggBytes),
-    ),
+    vedlegg = vedlegg,
     version = DialogmeldingVersion.entries.random(),
     conversationRef = ConversationRef(
         refToParent = UUID.randomUUID().toString(),
@@ -128,6 +177,27 @@ private fun randomGPForPersonOutgoingBusinessDocument(
     )
 )
 
-private fun randomCommunicationPartyPerson(): CommunicationParty = mockk(relaxed = true)
+private fun randomCommunicationPartyPerson(): CommunicationParty = CommunicationParty()
+    .herId(randomHerId())
+    .name(randomString())
+    .type(no.ks.fiks.nhn.ar.rest.model.CommunicationPartyType.PERSON)
+    .amqpTransportStatus(no.ks.fiks.nhn.ar.rest.model.AmqpTransportStatus.DISABLED)
+    .personDetails(
+        no.ks.fiks.nhn.ar.rest.model.PersonDetails()
+            .hprNumber(nextInt(10000, 99999))
+            .parentOrganization(
+                no.ks.fiks.nhn.ar.rest.model.ParentOrganization()
+                            .herId(randomHerId())
+                    .name(randomString())
+                    .organizationNumber(randomString())
+            )
+    )
+    .postalAddress(
+        no.ks.fiks.nhn.ar.rest.model.PostalAddress()
+            .address(randomString())
+            .postalBox(randomString())
+            .postalCode("0123")
+            .city(randomString())
+    )
 
 private fun randomPatientGP(): PatientGP = PatientGP(randomString(), randomHerId())

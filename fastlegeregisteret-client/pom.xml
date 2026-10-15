@@ -6,7 +6,7 @@
     <parent>
         <groupId>no.ks.fiks</groupId>
         <artifactId>nhn-client-parent</artifactId>
-        <version>2.0.1-SNAPSHOT</version>
+        <version>3.0.1-SNAPSHOT</version>
     </parent>
 
     <artifactId>fastlegeregisteret-client</artifactId>
@@ -14,7 +14,7 @@
     <description>Client for communicating with fastlegeregisteret (NHN)</description>
 
     <properties>
-        <cxf.version>4.2.3</cxf.version>
+        <cxf.version>4.2.4</cxf.version>
         <jakarta.xml.bind-api.version>4.0.5</jakarta.xml.bind-api.version>
         <jakarta.xml.ws-api.version>4.0.3</jakarta.xml.ws-api.version>
         <jakarta.jws-api.version>3.0.0</jakarta.jws-api.version>

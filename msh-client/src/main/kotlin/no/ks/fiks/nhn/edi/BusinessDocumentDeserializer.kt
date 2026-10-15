@@ -300,7 +300,7 @@ object BusinessDocumentDeserializer {
             toGregorianCalendar() // Use offset from XML timestamp
 
     private fun MsgHead.getVedlegg() =
-        document.drop(1).singleOrNull()?.let { doc ->
+        document.drop(1).mapNotNull { doc ->
             doc.refDoc.let { refDoc ->
                 refDoc
                     .takeIf { refDoc.msgType?.toTypeDokumentreferanse() == TypeDokumentreferanse.VEDLEGG }
