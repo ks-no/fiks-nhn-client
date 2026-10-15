@@ -1,6 +1,7 @@
 # NHN Client
 This repository provides clients for communicating with the following NHN services:
-- Adresseregisteret ([README](adresseregisteret-client/README.md))
+- Adresseregisteret REST API ([README](adresseregisteret-rest-client/README.md))
+- Adresseregisteret SOAP(deprecated) ([README](adresseregisteret-client/README.md))
 - Fastlegeregisteret ([README](fastlegeregisteret-client/README.md))
 - Meldingstjener API - EDI 2.0 ([README](msh-client/README.md))
 
