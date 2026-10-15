@@ -112,48 +112,109 @@ class ClientWithFastlegeLookupTest : FreeSpec() {
                     )
                 }
             }
-        }
 
-        "Throws when GP name is invalid" - {
-            "The lookup should fail if Addresseregisteret returns a GP name that cannot be split into first and last name" {
-                val businessDocument = randomGPForPersonOutgoingBusinessDocument()
+            "The GP full name should be split from the last word into lastName" {
+                val startTime = OffsetDateTime.now().truncatedTo(ChronoUnit.SECONDS)
+                val businessDocument = randomGPForPersonOutgoingBusinessDocument(vedlegg = emptyList())
                 val patientGP = randomPatientGP()
-                val gpCommunicationParty = randomCommunicationPartyPerson().name(randomString())
+                val gpCommunicationParty = randomCommunicationPartyPerson().name("Ola Kari Nordmann")
 
-                val apiService = mockk<MshInternalClient> { coEvery { postMessage(any(), any()) } returns UUID.randomUUID() }
+                val requestSlot = slot<PostMessageRequest>()
+                val apiService = mockk<MshInternalClient> { coEvery { postMessage(capture(requestSlot), any()) } returns UUID.randomUUID() }
                 val flrClient = mockk<FastlegeregisteretClient> { every { getPatientGP(any()) } returns patientGP }
                 val arClient = mockk<AdresseregisteretClient> { every { lookupHerId(any()) } returns gpCommunicationParty }
                 val client = ClientWithFastlegeLookup(apiService, flrClient, arClient)
 
-                shouldThrow<GpNotFoundException> {
-                    client.sendMessageToGPForPerson(businessDocument)
+                client.sendMessageToGPForPerson(businessDocument)
+
+                requestSlot.captured.asClue { request ->
+                    val xml = String(Base64.getDecoder().decode(request.businessDocument))
+                    val parentOrganization = gpCommunicationParty.personDetails!!.parentOrganization
+                    xml.validateXmlAgainst(
+                        startTime = startTime,
+                        document = OutgoingBusinessDocument(
+                            id = businessDocument.id,
+                            sender = businessDocument.sender,
+                            receiver = Receiver(
+                                parent = OrganizationCommunicationParty(
+                                    ids = listOf(OrganizationId(parentOrganization.herId.toString(), OrganizationIdType.HER_ID)),
+                                    address = null,
+                                    name = parentOrganization.name ?: ""
+                                ),
+                                child = PersonCommunicationParty(
+                                    ids = listOf(PersonId(gpCommunicationParty.herId.toString(), PersonIdType.HER_ID)),
+                                    address = gpCommunicationParty.postalAddress?.let {
+                                        Address(
+                                            type = Adressetype.POSTADRESSE,
+                                            streetAdr = it.address,
+                                            postalCode = it.postalCode,
+                                            city = it.city,
+                                            postbox = it.postalBox,
+                                            county = null,
+                                            country = null,
+                                        )
+                                    },
+                                    firstName = "Ola Kari",
+                                    middleName = "",
+                                    lastName = "Nordmann"
+                                ),
+                                patient = Patient(
+                                    fnr = businessDocument.person.fnr,
+                                    firstName = businessDocument.person.firstName,
+                                    middleName = businessDocument.person.middleName,
+                                    lastName = businessDocument.person.lastName
+                                ),
+                            ),
+                            message = businessDocument.message,
+                            vedlegg = businessDocument.vedlegg,
+                            version = businessDocument.version,
+                            conversationRef = ConversationRef(
+                                refToParent = businessDocument.conversationRef?.refToParent,
+                                refToConversation = businessDocument.conversationRef?.refToConversation,
+                            ),
+                        ),
+                        vedleggBytes = emptyList(),
+                    )
                 }
             }
         }
 
-        "Throws when parent organization name is empty" - {
-            "The lookup should fail if the parent organization has no usable name" {
-                val businessDocument = randomGPForPersonOutgoingBusinessDocument()
-                val patientGP = randomPatientGP()
-                val gpCommunicationParty = randomCommunicationPartyPerson().personDetails(
-                    no.ks.fiks.nhn.ar.rest.model.PersonDetails()
-                        .hprNumber(nextInt(10000, 99999))
-                        .parentOrganization(
-                            no.ks.fiks.nhn.ar.rest.model.ParentOrganization()
-                                .herId(randomHerId())
-                                .name("   ")
-                                .organizationNumber(randomString())
-                        )
-                )
+        "Rejects invalid GP name" {
+            val businessDocument = randomGPForPersonOutgoingBusinessDocument()
+            val patientGP = randomPatientGP()
+            val gpCommunicationParty = randomCommunicationPartyPerson().name(randomString())
 
-                val apiService = mockk<MshInternalClient> { coEvery { postMessage(any(), any()) } returns UUID.randomUUID() }
-                val flrClient = mockk<FastlegeregisteretClient> { every { getPatientGP(any()) } returns patientGP }
-                val arClient = mockk<AdresseregisteretClient> { every { lookupHerId(any()) } returns gpCommunicationParty }
-                val client = ClientWithFastlegeLookup(apiService, flrClient, arClient)
+            val apiService = mockk<MshInternalClient> { coEvery { postMessage(any(), any()) } returns UUID.randomUUID() }
+            val flrClient = mockk<FastlegeregisteretClient> { every { getPatientGP(any()) } returns patientGP }
+            val arClient = mockk<AdresseregisteretClient> { every { lookupHerId(any()) } returns gpCommunicationParty }
+            val client = ClientWithFastlegeLookup(apiService, flrClient, arClient)
 
-                shouldThrow<GpNotFoundException> {
-                    client.sendMessageToGPForPerson(businessDocument)
-                }
+            shouldThrow<GpNotFoundException> {
+                client.sendMessageToGPForPerson(businessDocument)
+            }
+        }
+
+        "Rejects empty parent organization name" {
+            val businessDocument = randomGPForPersonOutgoingBusinessDocument()
+            val patientGP = randomPatientGP()
+            val gpCommunicationParty = randomCommunicationPartyPerson().personDetails(
+                no.ks.fiks.nhn.ar.rest.model.PersonDetails()
+                    .hprNumber(nextInt(10000, 99999))
+                    .parentOrganization(
+                        no.ks.fiks.nhn.ar.rest.model.ParentOrganization()
+                            .herId(randomHerId())
+                            .name("   ")
+                            .organizationNumber(randomString())
+                    )
+            )
+
+            val apiService = mockk<MshInternalClient> { coEvery { postMessage(any(), any()) } returns UUID.randomUUID() }
+            val flrClient = mockk<FastlegeregisteretClient> { every { getPatientGP(any()) } returns patientGP }
+            val arClient = mockk<AdresseregisteretClient> { every { lookupHerId(any()) } returns gpCommunicationParty }
+            val client = ClientWithFastlegeLookup(apiService, flrClient, arClient)
+
+            shouldThrow<GpNotFoundException> {
+                client.sendMessageToGPForPerson(businessDocument)
             }
         }
 
@@ -231,7 +292,7 @@ private fun randomCommunicationPartyPerson(): CommunicationParty = Communication
             .hprNumber(nextInt(10000, 99999))
             .parentOrganization(
                 no.ks.fiks.nhn.ar.rest.model.ParentOrganization()
-                            .herId(randomHerId())
+                    .herId(randomHerId())
                     .name(randomString())
                     .organizationNumber(randomString())
             )
@@ -245,3 +306,4 @@ private fun randomCommunicationPartyPerson(): CommunicationParty = Communication
     )
 
 private fun randomPatientGP(): PatientGP = PatientGP(randomString(), randomHerId())
+
