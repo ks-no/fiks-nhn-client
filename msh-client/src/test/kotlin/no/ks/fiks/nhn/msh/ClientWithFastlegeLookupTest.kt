@@ -61,7 +61,6 @@ class ClientWithFastlegeLookupTest : FreeSpec() {
                 requestSlot.captured.asClue { request ->
                     request.contentType shouldBe "application/xml"
                     request.contentTransferEncoding shouldBe "base64"
-                    // Verify XML was generated (basic validation - detailed field validation skipped due to REST model differences)
                     val xml = String(Base64.getDecoder().decode(request.businessDocument))
                     val parentOrganization = gpCommunicationParty.personDetails!!.parentOrganization
                     val postalAddress = gpCommunicationParty.postalAddress
