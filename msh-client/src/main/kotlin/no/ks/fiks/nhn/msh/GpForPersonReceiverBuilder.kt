@@ -3,8 +3,8 @@ package no.ks.fiks.nhn.msh
 import no.ks.fiks.hdir.Adressetype
 import no.ks.fiks.hdir.OrganizationIdType
 import no.ks.fiks.hdir.PersonIdType
-import no.ks.fiks.nhn.ar.AdresseregisteretClient
-import no.ks.fiks.nhn.ar.PersonCommunicationParty
+import no.ks.fiks.nhn.ar.rest.AdresseregisteretClient
+import no.ks.fiks.nhn.ar.rest.model.CommunicationParty
 import no.ks.fiks.nhn.flr.FastlegeregisteretClient
 
 class GpForPersonReceiverBuilder(
@@ -14,7 +14,8 @@ class GpForPersonReceiverBuilder(
 
     fun buildGpForPersonReceiver(person: Person): Receiver {
         val fastlege = lookupFastlege(person.fnr)
-        val parent = fastlege.parent ?: throw GpNotFoundException("GP does not have a parent", person.fnr)
+        val parent = fastlege.personDetails?.parentOrganization ?: throw GpNotFoundException("GP does not have a parent", person.fnr)
+        val gpName = splitName(fastlege.name, person.fnr)
 
         return Receiver(
             parent = OrganizationCommunicationParty(
@@ -25,7 +26,8 @@ class GpForPersonReceiverBuilder(
                     )
                 ),
                 address = null,
-                name = parent.name,
+                name = parent.name?.takeIf { it.isNotBlank() }
+                    ?: throw GpNotFoundException("GP does not have a valid parent name", person.fnr),
             ),
             child = PersonCommunicationParty(
                 ids = listOf(
@@ -34,20 +36,20 @@ class GpForPersonReceiverBuilder(
                         type = PersonIdType.HER_ID,
                     )
                 ),
-                address = fastlege.physicalAddresses.firstOrNull()?.let {
+                address = fastlege.postalAddress?.let {
                     Address(
-                        type = Adressetype.entries.firstOrNull { nyType -> nyType.verdi == it.type?.code },
-                        streetAdr = it.streetAddress,
+                        type = Adressetype.POSTADRESSE,
+                        streetAdr = it.address,
                         postalCode = it.postalCode,
                         city = it.city,
-                        postbox = it.postbox,
+                        postbox = it.postalBox,
                         county = null,
-                        country = it.country?.let { country -> Country(code = country.code, name = country.name) }
+                        country = null
                     )
                 },
-                firstName = fastlege.firstName,
-                middleName = fastlege.middleName,
-                lastName = fastlege.lastName,
+                firstName = gpName.firstName,
+                middleName = null,
+                lastName = gpName.lastName,
             ),
             patient = Patient(
                 fnr = person.fnr,
@@ -58,14 +60,37 @@ class GpForPersonReceiverBuilder(
         )
     }
 
-    private fun lookupFastlege(personId: String): PersonCommunicationParty =
+    private fun lookupFastlege(personId: String): CommunicationParty =
         flrClient.getPatientGP(personId)
             ?.let { patientGP ->
                 arClient
                     .lookupHerId(patientGP.gpHerId ?: throw GpNotFoundException("GP does not have HER-id", personId))
-                    .let { it as? PersonCommunicationParty ?: throw GpNotFoundException("Adresseregisteret returned a communication party that is not a person", personId) }
+                    ?.takeIf { it.personDetails != null }
+                    ?: throw GpNotFoundException("Adresseregisteret returned a communication party that is not a person", personId)
             }
             ?: throw GpNotFoundException("Could not find GP for person", personId)
+
+    private fun splitName(fullName: String?, personId: String): ParsedName {
+        val nameParts = fullName
+            ?.trim()
+            ?.split(Regex("\\s+"))
+            ?.filter { it.isNotBlank() }
+            .orEmpty()
+
+        if (nameParts.size < 2) {
+            throw GpNotFoundException("GP does not have a valid name", personId)
+        }
+
+        return ParsedName(
+            firstName = nameParts.dropLast(1).joinToString(" "),
+            lastName = nameParts.last(),
+        )
+    }
+
+    private data class ParsedName(
+        val firstName: String,
+        val lastName: String,
+    )
 
 
 }

@@ -97,17 +97,18 @@ object BusinessDocumentSerializer {
                 }
             }
         healthcareProfessional = child
-            .let { it as? PersonCommunicationParty }
-            ?.let { person ->
-                HealthcareProfessional().apply {
-                    givenName = person.firstName
-                    middleName = person.middleName
-                    familyName = person.lastName
-                    ident = person.ids.map { toIdent(it) }
-                    address = person.address?.let { convert(it) }
-                }
-            }
+            .let { it as? no.ks.fiks.nhn.msh.PersonCommunicationParty }
+            ?.let(::toHealthcareProfessional)
     }
+
+    private fun toHealthcareProfessional(person: no.ks.fiks.nhn.msh.PersonCommunicationParty) =
+        HealthcareProfessional().apply {
+            givenName = person.firstName
+            middleName = person.middleName
+            familyName = person.lastName
+            ident = person.ids.map { toIdent(it) }
+            address = person.address?.let { convert(it) }
+        }
 
     private fun buildMsgInfoType(version: DialogmeldingVersion) =
         when (version) {
