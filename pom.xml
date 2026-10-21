@@ -45,7 +45,7 @@
         <kotlin.version>2.4.21</kotlin.version>
         <kotlin-logging.version>3.0.5</kotlin-logging.version>
         <nimbus-jose-jwt.version>10.10</nimbus-jose-jwt.version>
-        <jackson.version>2.22.3</jackson.version>
+        <jackson.version>2.22.4</jackson.version>
         <caffeine.version>3.3.1</caffeine.version>
 
         <kotest.version>6.2.6</kotest.version>
