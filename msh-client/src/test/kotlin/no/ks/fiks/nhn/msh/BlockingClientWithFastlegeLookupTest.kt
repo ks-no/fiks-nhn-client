@@ -139,16 +139,64 @@ class BlockingClientWithFastlegeLookupTest : StringSpec() {
             verifySequence { blockingClient.sendApplicationReceipt(appRec, requestParameters) }
         }
 
-        "Mark message read should proxy to internal client" {
+        "Get unread notifications should proxy to internal client" {
+            val notifications = listOf<UnreadNotification>(mockk(), mockk())
+            val asyncClient = mockk<ClientWithFastlegeLookup> { coEvery { getUnreadNotifications(any(), any(), any()) } returns notifications }
+            val blockingClient = BlockingClientWithFastlegeLookup(asyncClient)
+
+            val herIds = listOf(nextInt(1, 100000), nextInt(100001, 200000))
+            val notificationsToFetch = 10
+            val requestParameters = RequestParameters()
+            blockingClient.getUnreadNotifications(herIds, notificationsToFetch, requestParameters).asClue {
+                it shouldBe notifications
+            }
+
+            verifySequence { blockingClient.getUnreadNotifications(herIds, notificationsToFetch, requestParameters) }
+        }
+
+        "Delete notifications should proxy to internal client" {
+            val asyncClient = mockk<ClientWithFastlegeLookup> { coEvery { deleteNotifications(any(), any()) } just runs }
+            val blockingClient = BlockingClientWithFastlegeLookup(asyncClient)
+
+            val notificationIds = listOf(UUID.randomUUID(), UUID.randomUUID())
+            val requestParameters = RequestParameters()
+            blockingClient.deleteNotifications(notificationIds, requestParameters)
+
+            verifySequence { blockingClient.deleteNotifications(notificationIds, requestParameters) }
+        }
+
+        "Set MSH configurations should proxy to internal client" {
+            val asyncClient = mockk<ClientWithFastlegeLookup> { coEvery { setMshConfigurations(any(), any()) } just runs }
+            val blockingClient = BlockingClientWithFastlegeLookup(asyncClient)
+
+            val configurations = listOf(mockk<MshConfiguration>(), mockk())
+            val requestParameters = RequestParameters()
+            blockingClient.setMshConfigurations(configurations, requestParameters)
+
+            verifySequence { blockingClient.setMshConfigurations(configurations, requestParameters) }
+        }
+
+        "Delete MSH configurations should proxy to internal client" {
+            val asyncClient = mockk<ClientWithFastlegeLookup> { coEvery { deleteMshConfigurations(any(), any()) } just runs }
+            val blockingClient = BlockingClientWithFastlegeLookup(asyncClient)
+
+            val herIds = listOf(nextInt(1, 100000), nextInt(100001, 200000))
+            val requestParameters = RequestParameters()
+            blockingClient.deleteMshConfigurations(herIds, requestParameters)
+
+            verifySequence { blockingClient.deleteMshConfigurations(herIds, requestParameters) }
+        }
+
+        "Mark message downloaded should proxy to internal client" {
             val id = UUID.randomUUID()
-            val asyncClient = mockk<ClientWithFastlegeLookup> { coEvery { markMessageRead(any(), any(), any()) } just runs }
+            val asyncClient = mockk<ClientWithFastlegeLookup> { coEvery { markMessageDownloaded(any(), any(), any()) } just runs }
             val blockingClient = BlockingClientWithFastlegeLookup(asyncClient)
 
             val receiverHerId = nextInt(1, 100000)
             val requestParameters = RequestParameters()
-            blockingClient.markMessageRead(id, receiverHerId, requestParameters)
+            blockingClient.markMessageDownloaded(id, receiverHerId, requestParameters)
 
-            verifySequence { blockingClient.markMessageRead(id, receiverHerId, requestParameters) }
+            verifySequence { blockingClient.markMessageDownloaded(id, receiverHerId, requestParameters) }
         }
 
         "Get status should proxy to internal client" {
@@ -167,4 +215,3 @@ class BlockingClientWithFastlegeLookupTest : StringSpec() {
     }
 
 }
-

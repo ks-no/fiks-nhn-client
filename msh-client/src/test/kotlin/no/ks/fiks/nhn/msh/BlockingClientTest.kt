@@ -126,16 +126,49 @@ class BlockingClientTest : StringSpec() {
             verifySequence { blockingClient.sendApplicationReceipt(appRec, requestParameters) }
         }
 
-        "Mark message read should proxy to internal client" {
+        "Delete notifications should proxy to internal client" {
+            val asyncClient = mockk<Client> { coEvery { deleteNotifications(any(), any()) } just runs }
+            val blockingClient = BlockingClient(asyncClient)
+
+            val notificationIds = listOf(UUID.randomUUID(), UUID.randomUUID())
+            val requestParameters = RequestParameters()
+            blockingClient.deleteNotifications(notificationIds, requestParameters)
+
+            verifySequence { blockingClient.deleteNotifications(notificationIds, requestParameters) }
+        }
+
+        "Set MSH configurations should proxy to internal client" {
+            val asyncClient = mockk<Client> { coEvery { setMshConfigurations(any(), any()) } just runs }
+            val blockingClient = BlockingClient(asyncClient)
+
+            val configurations = listOf(mockk<MshConfiguration>(), mockk())
+            val requestParameters = RequestParameters()
+            blockingClient.setMshConfigurations(configurations, requestParameters)
+
+            verifySequence { blockingClient.setMshConfigurations(configurations, requestParameters) }
+        }
+
+        "Delete MSH configurations should proxy to internal client" {
+            val asyncClient = mockk<Client> { coEvery { deleteMshConfigurations(any(), any()) } just runs }
+            val blockingClient = BlockingClient(asyncClient)
+
+            val herIds = listOf(nextInt(1, 100000), nextInt(100001, 200000))
+            val requestParameters = RequestParameters()
+            blockingClient.deleteMshConfigurations(herIds, requestParameters)
+
+            verifySequence { blockingClient.deleteMshConfigurations(herIds, requestParameters) }
+        }
+
+        "Mark message downloaded should proxy to internal client" {
             val id = UUID.randomUUID()
-            val asyncClient = mockk<Client> { coEvery { markMessageRead(any(), any(), any()) } just runs }
+            val asyncClient = mockk<Client> { coEvery { markMessageDownloaded(any(), any(), any()) } just runs }
             val blockingClient = BlockingClient(asyncClient)
 
             val receiverHerId = nextInt(1, 100000)
             val requestParameters = RequestParameters()
-            blockingClient.markMessageRead(id, receiverHerId, requestParameters)
+            blockingClient.markMessageDownloaded(id, receiverHerId, requestParameters)
 
-            verifySequence { blockingClient.markMessageRead(id, receiverHerId, requestParameters) }
+            verifySequence { blockingClient.markMessageDownloaded(id, receiverHerId, requestParameters) }
         }
 
         "Get status should proxy to internal client" {
@@ -143,7 +176,6 @@ class BlockingClientTest : StringSpec() {
             val statuses = listOf<StatusInfo>(mockk(), mockk(), mockk())
             val asyncClient = mockk<Client> { coEvery { getStatus(any(), any()) } returns statuses }
             val blockingClient = BlockingClient(asyncClient)
-
             val requestParameters = RequestParameters()
             blockingClient.getStatus(id, requestParameters).asClue {
                 it shouldBe statuses
@@ -154,4 +186,3 @@ class BlockingClientTest : StringSpec() {
     }
 
 }
-

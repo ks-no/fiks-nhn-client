@@ -11,9 +11,9 @@ data class Message(
 data class MessageWithMetadata(
     val id: UUID,
     val contentType: String?,
-    val receiverHerId: Int,
+    val receiverHerIds: List<Int>,
     val senderHerId: Int,
     val businessDocumentId: String,
     val businessDocumentDate: OffsetDateTime?,
-    val isAppRec: Boolean,
+    val businessDocumentMsgType: String?,
 )

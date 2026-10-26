@@ -9,14 +9,14 @@
         <version>5.0.1-SNAPSHOT</version>
     </parent>
 
-    <artifactId>msh-api-v2</artifactId>
+    <artifactId>msh-api-v3</artifactId>
     <name>${project.groupId}:${project.artifactId}</name>
-    <description>Feign client generated from the MSH API v2 spec</description>
+    <description>OpenAPI-generated models for the MSH API v3 spec</description>
 
     <properties>
         <openapi-spec-name>${project.artifactId}</openapi-spec-name>
         <openapi-spec-file>${openapi-spec-name}.json</openapi-spec-file>
-        <basePackage>${project.groupId}.stralfors</basePackage>
+        <basePackage>${project.groupId}.msh</basePackage>
 
         <jakarta.annotation-api.version>3.0.0</jakarta.annotation-api.version>
         <feign.version>13.17</feign.version>
@@ -87,16 +87,16 @@
                 </configuration>
                 <executions>
                     <execution>
-                        <id>generate-msh-v2</id>
+                        <id>generate-msh-v3</id>
                         <goals>
                             <goal>generate</goal>
                         </goals>
                         <phase>generate-sources</phase>
                         <configuration>
-                            <inputSpec>${project.basedir}/../fiks-nhn-specs/specs/msh-api-v2.json</inputSpec>
-                            <modelPackage>no.nhn.msh.v2.model</modelPackage>
-                            <apiPackage>no.nhn.msh.v2.api</apiPackage>
-                            <invokerPackage>no.nhn.msh.v2.invoker</invokerPackage>
+                            <inputSpec>${project.basedir}/../fiks-nhn-specs/specs/msh-api-v3.json</inputSpec>
+                            <modelPackage>no.nhn.msh.v3.model</modelPackage>
+                            <apiPackage>no.nhn.msh.v3.api</apiPackage>
+                            <invokerPackage>no.nhn.msh.v3.invoker</invokerPackage>
                         </configuration>
                     </execution>
                 </executions>

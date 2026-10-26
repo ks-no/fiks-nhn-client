@@ -11,7 +11,7 @@ import java.util.*
 class GetMessagesTest : StringSpec({
     "Get messages example" {
         val client = mockk<ClientWithFastlegeLookup> { coEvery { getMessages(any(), any()) } returns listOf() }
-        client.getMessages( // Returned messages only include an id and HER-id of the receiver, without any additional metadata
+        client.getMessages(
             receiverHerId = 34567,
         )
     }

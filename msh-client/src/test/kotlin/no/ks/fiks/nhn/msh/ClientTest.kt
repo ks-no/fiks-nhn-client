@@ -21,14 +21,23 @@ import no.ks.fiks.hdir.Helsepersonell
 import no.ks.fiks.hdir.HelsepersonellsFunksjoner
 import no.ks.fiks.hdir.StatusForMottakAvMelding
 import no.ks.fiks.nhn.*
-import no.nhn.msh.v2.model.*
-import no.nhn.msh.v2.model.AppRecStatus
-import no.nhn.msh.v2.model.DeliveryState
-import no.nhn.msh.v2.model.StatusInfo
+import no.ks.fiks.nhn.msh.MshConfiguration as ClientMshConfiguration
+import no.ks.fiks.nhn.msh.RejectMessageFilters as ClientRejectMessageFilters
+import no.nhn.msh.v3.model.AppRecError as NhnAppRecError
+import no.nhn.msh.v3.model.AppRecStatus as NhnAppRecStatus
+import no.nhn.msh.v3.model.ApprecInfo as NhnApprecInfo
+import no.nhn.msh.v3.model.DeliveryState as NhnDeliveryState
+import no.nhn.msh.v3.model.GetBusinessDocumentResponse as NhnGetBusinessDocumentResponse
+import no.nhn.msh.v3.model.GetMessageResponse as NhnGetMessageResponse
+import no.nhn.msh.v3.model.PostAppRecRequest as NhnPostAppRecRequest
+import no.nhn.msh.v3.model.PostMessageRequest as NhnPostMessageRequest
+import no.nhn.msh.v3.model.StatusInfo as NhnStatusInfo
+import no.nhn.msh.v3.model.UnreadNotification as NhnUnreadNotification
 import java.io.ByteArrayInputStream
 import java.time.OffsetDateTime
 import java.time.temporal.ChronoUnit
-import java.util.*
+import java.util.Base64
+import java.util.UUID
 import kotlin.random.Random.Default.nextBoolean
 import kotlin.random.Random.Default.nextBytes
 import kotlin.random.Random.Default.nextInt
@@ -43,11 +52,11 @@ class ClientTest : FreeSpec() {
                 val vedleggBytes = nextBytes(nextInt(1000, 100000))
                 val businessDocument = randomOutgoingBusinessDocument(vedleggBytes)
 
-                val requestSlot = slot<PostMessageRequest>()
+                val requestSlot = slot<NhnPostMessageRequest>()
                 val internalClient = mockk<MshInternalClient> {
                     coEvery { postMessage(capture(requestSlot), any()) } returns UUID.randomUUID()
                 }
-                val client = Client(internalClient)
+                val client = Client(internalClient, testApplicationMetadata)
 
                 client.sendMessage(businessDocument)
 
@@ -74,7 +83,7 @@ class ClientTest : FreeSpec() {
                 val internalClient = mockk<MshInternalClient> {
                     coEvery { postMessage(any(), any()) } returns UUID.randomUUID()
                 }
-                val client = Client(internalClient)
+                val client = Client(internalClient, testApplicationMetadata)
 
                 client.sendMessage(randomOutgoingBusinessDocument(), params)
                 coVerifySequence {
@@ -85,23 +94,26 @@ class ClientTest : FreeSpec() {
 
         "Get messages" - {
             "Messages should be retrieved and mapped" {
-                val apiMessages = List(nextInt(0, 10)) { randomApiMessageWithoutMetadata() }
+                val apiNotifications = List(nextInt(0, 10)) { randomApiUnreadNotification().apply {
+                    type = no.nhn.msh.v3.model.NotificationType.NEW_MESSAGE
+                    relatedMessageId = UUID.randomUUID().toString()
+                } }
 
                 val internalClient = mockk<MshInternalClient> {
-                    coEvery { getMessages(any(), any()) } returns apiMessages
+                    coEvery { getUnreadNotifications(any(), any(), any()) } returns apiNotifications
                 }
-                val client = Client(internalClient)
+                val client = Client(internalClient, testApplicationMetadata)
 
                 val receiverHerId = randomHerId()
                 client.getMessages(receiverHerId).asClue {
                     it.forEachIndexed { i, message ->
-                        message.id shouldBe apiMessages[i].id
-                        message.receiverHerId shouldBe apiMessages[i].receiverHerId
+                        message.id shouldBe UUID.fromString(apiNotifications[i].relatedMessageId)
+                        message.receiverHerId shouldBe apiNotifications[i].notificationReceiverHerId
                     }
                 }
 
                 coVerifySequence {
-                    internalClient.getMessages(receiverHerId, false)
+                    internalClient.getUnreadNotifications(listOf(receiverHerId), null)
                 }
             }
 
@@ -109,57 +121,79 @@ class ClientTest : FreeSpec() {
                 val params = RequestParameters(HelseIdTokenParameters(SingleTenantHelseIdTokenParameters(randomHerId().toString())))
 
                 val internalClient = mockk<MshInternalClient> {
-                    coEvery { getMessages(any(), any(), any()) } returns List(nextInt(0, 10)) { randomApiMessageWithoutMetadata() }
+                    coEvery { getUnreadNotifications(any(), any(), any()) } returns List(nextInt(0, 10)) { randomApiUnreadNotification().apply {
+                        type = no.nhn.msh.v3.model.NotificationType.NEW_MESSAGE
+                        relatedMessageId = UUID.randomUUID().toString()
+                    } }
                 }
-                val client = Client(internalClient)
+                val client = Client(internalClient, testApplicationMetadata)
 
                 val receiverHerId = randomHerId()
                 client.getMessages(receiverHerId, params)
                 coVerifySequence {
-                    internalClient.getMessages(receiverHerId, false, params)
+                    internalClient.getUnreadNotifications(listOf(receiverHerId), null, params)
                 }
             }
         }
 
         "Get messages with metadata" - {
+            //TODO: Test with empty list
+
             "Messages should be retrieved and mapped" {
-                val apiMessages = List(nextInt(0, 10)) { randomApiMessageWithMetadata() }
+                val apiNotifications = List(nextInt(1, 10)) { randomApiUnreadNotification().apply {
+                    type = no.nhn.msh.v3.model.NotificationType.NEW_MESSAGE
+                    relatedMessageId = UUID.randomUUID().toString()
+                } }
+                val apiMessages = apiNotifications.map { notification ->
+                    randomApiMessageWithMetadata().apply {
+                        id = notification.relatedMessageId!!
+                        receiverHerIds = setOf(notification.notificationReceiverHerId)
+                    }
+                }
 
                 val internalClient = mockk<MshInternalClient> {
-                    coEvery { getMessages(any(), any(), any()) } returns apiMessages
+                    coEvery { getUnreadNotifications(any(), any(), any()) } returns apiNotifications
+                    coEvery { getMessage(any(), any()) } returnsMany apiMessages
                 }
-                val client = Client(internalClient)
+                val client = Client(internalClient, testApplicationMetadata)
 
                 val receiverHerId = randomHerId()
                 client.getMessagesWithMetadata(receiverHerId).asClue {
                     it.forEachIndexed { i, message ->
-                        message.id shouldBe apiMessages[i].id
+                        message.id shouldBe UUID.fromString(apiMessages[i].id)
                         message.contentType shouldBe apiMessages[i].contentType
-                        message.receiverHerId shouldBe apiMessages[i].receiverHerId
+                        message.receiverHerIds shouldBe apiMessages[i].receiverHerIds?.toList()
                         message.senderHerId shouldBe apiMessages[i].senderHerId
                         message.businessDocumentId shouldBe apiMessages[i].businessDocumentId
-                        message.businessDocumentDate shouldBe apiMessages[i].businessDocumentGenDate
-                        message.isAppRec shouldBe apiMessages[i].isAppRec
+                        message.businessDocumentDate shouldBe apiMessages[i].businessDocumentGenDate?.let { OffsetDateTime.parse(it) }
+                        message.businessDocumentMsgType shouldBe apiMessages[i].businessDocumentMsgType
                     }
                 }
 
                 coVerifySequence {
-                    internalClient.getMessages(receiverHerId, true)
+                    internalClient.getUnreadNotifications(listOf(receiverHerId), null)
+                    apiNotifications.forEach { internalClient.getMessage(UUID.fromString(it.relatedMessageId), null) }
                 }
             }
 
             "Params should be passed on" {
                 val params = RequestParameters(HelseIdTokenParameters(SingleTenantHelseIdTokenParameters(randomHerId().toString())))
 
+                val apiNotifications = List(nextInt(0, 10)) { randomApiUnreadNotification().apply {
+                    type = no.nhn.msh.v3.model.NotificationType.NEW_MESSAGE
+                    relatedMessageId = UUID.randomUUID().toString()
+                } }
                 val internalClient = mockk<MshInternalClient> {
-                    coEvery { getMessages(any(), any(), any()) } returns List(nextInt(0, 10)) { randomApiMessageWithMetadata() }
+                    coEvery { getUnreadNotifications(any(), any(), any()) } returns apiNotifications
+                    coEvery { getMessage(any(), any()) } returns randomApiMessageWithMetadata()
                 }
-                val client = Client(internalClient)
+                val client = Client(internalClient, testApplicationMetadata)
 
                 val receiverHerId = randomHerId()
                 client.getMessagesWithMetadata(receiverHerId, params)
                 coVerifySequence {
-                    internalClient.getMessages(receiverHerId, true, params)
+                    internalClient.getUnreadNotifications(listOf(receiverHerId), null, params)
+                    apiNotifications.forEach { internalClient.getMessage(UUID.fromString(it.relatedMessageId), params) }
                 }
             }
         }
@@ -171,17 +205,17 @@ class ClientTest : FreeSpec() {
                 val internalClient = mockk<MshInternalClient> {
                     coEvery { getMessage(any(), any()) } returns message
                 }
-                val client = Client(internalClient)
+                val client = Client(internalClient, testApplicationMetadata)
 
                 val messageId = UUID.randomUUID()
                 client.getMessage(messageId).asClue {
-                    it.id shouldBe message.id
+                    it.id shouldBe UUID.fromString(message.id)
                     it.contentType shouldBe message.contentType
-                    it.receiverHerId shouldBe message.receiverHerId
+                    it.receiverHerIds shouldBe message.receiverHerIds?.toList()
                     it.senderHerId shouldBe message.senderHerId
                     it.businessDocumentId shouldBe message.businessDocumentId
-                    it.businessDocumentDate shouldBe message.businessDocumentGenDate
-                    it.isAppRec shouldBe message.isAppRec
+                    it.businessDocumentDate shouldBe message.businessDocumentGenDate?.let { OffsetDateTime.parse(it) }
+                    it.businessDocumentMsgType shouldBe message.businessDocumentMsgType
                 }
 
                 coVerifySequence {
@@ -195,7 +229,7 @@ class ClientTest : FreeSpec() {
                 val internalClient = mockk<MshInternalClient> {
                     coEvery { getMessage(any(), any()) } returns randomApiMessageWithMetadata()
                 }
-                val client = Client(internalClient)
+                val client = Client(internalClient, testApplicationMetadata)
 
                 client.getMessage(UUID.randomUUID(), params)
                 coVerifySequence {
@@ -206,7 +240,7 @@ class ClientTest : FreeSpec() {
 
         "Get business document" - {
             "Only Base64 encoding is supported" {
-                val response = GetBusinessDocumentResponse().apply {
+                val response = NhnGetBusinessDocumentResponse().apply {
                     businessDocument = UUID.randomUUID().toString()
                     contentType = UUID.randomUUID().toString()
                     contentTransferEncoding = UUID.randomUUID().toString()
@@ -215,7 +249,7 @@ class ClientTest : FreeSpec() {
                 val internalClient = mockk<MshInternalClient> {
                     coEvery { getBusinessDocument(any(), any()) } returns response
                 }
-                val client = Client(internalClient)
+                val client = Client(internalClient, testApplicationMetadata)
 
                 val id = UUID.randomUUID()
                 shouldThrow<IllegalArgumentException> { client.getBusinessDocument(id) }.asClue {
@@ -224,7 +258,7 @@ class ClientTest : FreeSpec() {
             }
 
             "Only XML is supported" {
-                val response = GetBusinessDocumentResponse().apply {
+                val response = NhnGetBusinessDocumentResponse().apply {
                     businessDocument = UUID.randomUUID().toString()
                     contentType = UUID.randomUUID().toString()
                     contentTransferEncoding = "base64"
@@ -233,7 +267,7 @@ class ClientTest : FreeSpec() {
                 val internalClient = mockk<MshInternalClient> {
                     coEvery { getBusinessDocument(any(), any()) } returns response
                 }
-                val client = Client(internalClient)
+                val client = Client(internalClient, testApplicationMetadata)
 
                 val id = UUID.randomUUID()
                 shouldThrow<IllegalArgumentException> { client.getBusinessDocument(id) }.asClue {
@@ -242,7 +276,7 @@ class ClientTest : FreeSpec() {
             }
 
             "When encoding and type is correct, the document should be retrieved, deserialized and mapped" {
-                val response = GetBusinessDocumentResponse().apply {
+                val response = NhnGetBusinessDocumentResponse().apply {
                     businessDocument = Base64.getEncoder().encodeToString(readResourceContent("dialogmelding/1.0/foresporsel-og-svar/dialog-foresporsel-samsvar-test.xml"))
                     contentType = "application/xml"
                     contentTransferEncoding = "base64"
@@ -251,7 +285,7 @@ class ClientTest : FreeSpec() {
                 val internalClient = mockk<MshInternalClient> {
                     coEvery { getBusinessDocument(any(), any()) } returns response
                 }
-                val client = Client(internalClient)
+                val client = Client(internalClient, testApplicationMetadata)
 
                 val id = UUID.randomUUID()
                 client.getBusinessDocument(id).asClue {
@@ -264,7 +298,7 @@ class ClientTest : FreeSpec() {
             }
 
             "If the returned message is of wrong type, an exception should be thrown" {
-                val response = GetBusinessDocumentResponse().apply {
+                val response = NhnGetBusinessDocumentResponse().apply {
                     businessDocument = Base64.getEncoder().encodeToString(readResourceContent("app-rec/1.0/all-data.xml"))
                     contentType = "application/xml"
                     contentTransferEncoding = "base64"
@@ -273,7 +307,7 @@ class ClientTest : FreeSpec() {
                 val internalClient = mockk<MshInternalClient> {
                     coEvery { getBusinessDocument(any(), any()) } returns response
                 }
-                val client = Client(internalClient)
+                val client = Client(internalClient, testApplicationMetadata)
 
                 val id = UUID.randomUUID()
                 shouldThrow<IllegalArgumentException> { client.getBusinessDocument(id) }.asClue {
@@ -289,13 +323,13 @@ class ClientTest : FreeSpec() {
                 val params = RequestParameters(HelseIdTokenParameters(SingleTenantHelseIdTokenParameters(randomHerId().toString())))
 
                 val internalClient = mockk<MshInternalClient> {
-                    coEvery { getBusinessDocument(any(), any()) } returns GetBusinessDocumentResponse().apply {
+                    coEvery { getBusinessDocument(any(), any()) } returns NhnGetBusinessDocumentResponse().apply {
                         businessDocument = Base64.getEncoder().encodeToString(readResourceContent("dialogmelding/1.0/foresporsel-og-svar/dialog-foresporsel-samsvar-test.xml"))
                         contentType = "application/xml"
                         contentTransferEncoding = "base64"
                     }
                 }
-                val client = Client(internalClient)
+                val client = Client(internalClient, testApplicationMetadata)
 
                 client.getBusinessDocument(UUID.randomUUID(), params)
                 coVerifySequence {
@@ -306,7 +340,7 @@ class ClientTest : FreeSpec() {
 
         "Get application receipt" - {
             "Only Base64 encoding is supported" {
-                val response = GetBusinessDocumentResponse().apply {
+                val response = NhnGetBusinessDocumentResponse().apply {
                     businessDocument = UUID.randomUUID().toString()
                     contentType = UUID.randomUUID().toString()
                     contentTransferEncoding = UUID.randomUUID().toString()
@@ -315,7 +349,7 @@ class ClientTest : FreeSpec() {
                 val internalClient = mockk<MshInternalClient> {
                     coEvery { getBusinessDocument(any(), any()) } returns response
                 }
-                val client = Client(internalClient)
+                val client = Client(internalClient, testApplicationMetadata)
 
                 val id = UUID.randomUUID()
                 shouldThrow<IllegalArgumentException> { client.getApplicationReceipt(id) }.asClue {
@@ -324,7 +358,7 @@ class ClientTest : FreeSpec() {
             }
 
             "Only XML is supported" {
-                val response = GetBusinessDocumentResponse().apply {
+                val response = NhnGetBusinessDocumentResponse().apply {
                     businessDocument = UUID.randomUUID().toString()
                     contentType = UUID.randomUUID().toString()
                     contentTransferEncoding = "base64"
@@ -333,7 +367,7 @@ class ClientTest : FreeSpec() {
                 val internalClient = mockk<MshInternalClient> {
                     coEvery { getBusinessDocument(any(), any()) } returns response
                 }
-                val client = Client(internalClient)
+                val client = Client(internalClient, testApplicationMetadata)
 
                 val id = UUID.randomUUID()
                 shouldThrow<IllegalArgumentException> { client.getApplicationReceipt(id) }.asClue {
@@ -342,7 +376,7 @@ class ClientTest : FreeSpec() {
             }
 
             "When encoding and type is correct, the document should be retrieved, deserialized and mapped" {
-                val response = GetBusinessDocumentResponse().apply {
+                val response = NhnGetBusinessDocumentResponse().apply {
                     businessDocument = Base64.getEncoder().encodeToString(readResourceContent("app-rec/1.0/all-data.xml"))
                     contentType = "application/xml"
                     contentTransferEncoding = "base64"
@@ -351,7 +385,7 @@ class ClientTest : FreeSpec() {
                 val internalClient = mockk<MshInternalClient> {
                     coEvery { getBusinessDocument(any(), any()) } returns response
                 }
-                val client = Client(internalClient)
+                val client = Client(internalClient, testApplicationMetadata)
 
                 val id = UUID.randomUUID()
                 client.getApplicationReceipt(id).asClue {
@@ -364,7 +398,7 @@ class ClientTest : FreeSpec() {
             }
 
             "If the returned message is of wrong type, an exception should be thrown" {
-                val response = GetBusinessDocumentResponse().apply {
+                val response = NhnGetBusinessDocumentResponse().apply {
                     businessDocument = Base64.getEncoder().encodeToString(readResourceContent("dialogmelding/1.0/foresporsel-og-svar/dialog-foresporsel-samsvar-test.xml"))
                     contentType = "application/xml"
                     contentTransferEncoding = "base64"
@@ -372,7 +406,7 @@ class ClientTest : FreeSpec() {
                 val internalClient = mockk<MshInternalClient> {
                     coEvery { getBusinessDocument(any(), any()) } returns response
                 }
-                val client = Client(internalClient)
+                val client = Client(internalClient, testApplicationMetadata)
 
                 val id = UUID.randomUUID()
                 shouldThrow<IllegalArgumentException> { client.getApplicationReceipt(id) }.asClue {
@@ -388,13 +422,13 @@ class ClientTest : FreeSpec() {
                 val params = RequestParameters(HelseIdTokenParameters(SingleTenantHelseIdTokenParameters(randomHerId().toString())))
 
                 val internalClient = mockk<MshInternalClient> {
-                    coEvery { getBusinessDocument(any(), any()) } returns GetBusinessDocumentResponse().apply {
+                    coEvery { getBusinessDocument(any(), any()) } returns NhnGetBusinessDocumentResponse().apply {
                         businessDocument = Base64.getEncoder().encodeToString(readResourceContent("app-rec/1.0/all-data.xml"))
                         contentType = "application/xml"
                         contentTransferEncoding = "base64"
                     }
                 }
-                val client = Client(internalClient)
+                val client = Client(internalClient, testApplicationMetadata)
 
                 client.getApplicationReceipt(UUID.randomUUID(), params)
                 coVerifySequence {
@@ -405,54 +439,58 @@ class ClientTest : FreeSpec() {
 
         "Get application receipts for message" - {
             "Should be retrieved and mapped" {
-                val appRecInfo = ApprecInfo().apply {
+                val statusInfo = NhnStatusInfo().apply {
                     receiverHerId = randomHerId()
-                    appRecStatus = AppRecStatus.OK
-                    appRecErrorList = emptyList()
+                    apprecInfo = NhnApprecInfo().apply {
+                        appRecStatus = NhnAppRecStatus.OK
+                        appRecErrorList = emptyList()
+                    }
                 }
 
                 val internalClient = mockk<MshInternalClient> {
-                    coEvery { getAppRecInfo(any(), any()) } returns listOf(appRecInfo)
+                    coEvery { getStatus(any(), any()) } returns listOf(statusInfo)
                 }
-                val client = Client(internalClient)
+                val client = Client(internalClient, testApplicationMetadata)
 
                 val messageId = UUID.randomUUID()
                 client.getApplicationReceiptsForMessage(messageId).asClue {
                     it shouldHaveSize 1
                     with(it.single()) {
-                        receiverHerId shouldBe appRecInfo.receiverHerId
+                        receiverHerId shouldBe statusInfo.receiverHerId
                         status shouldBe StatusForMottakAvMelding.OK
                         errors.shouldBeEmpty()
                     }
                 }
 
                 coVerifySequence {
-                    internalClient.getAppRecInfo(messageId, null)
+                    internalClient.getStatus(messageId, null)
                 }
             }
 
             "Should handle rejected with error" {
-                val appRecInfo = ApprecInfo().apply {
+                val statusInfo = NhnStatusInfo().apply {
                     receiverHerId = randomHerId()
-                    appRecStatus = AppRecStatus.REJECTED
-                    appRecErrorList = listOf(
-                        AppRecError().apply {
-                            errorCode = "E10"
-                            description = "Ugyldig meldingsidentifikator"
-                            oid = "2.16.578.1.12.4.1.1.8221"
-                            details = "Extra details about error"
-                        }
-                    )
+                    apprecInfo = NhnApprecInfo().apply {
+                        appRecStatus = NhnAppRecStatus.REJECTED
+                        appRecErrorList = listOf(
+                            NhnAppRecError().apply {
+                                errorCode = "E10"
+                                description = "Ugyldig meldingsidentifikator"
+                                oid = "2.16.578.1.12.4.1.1.8221"
+                                details = "Extra details about error"
+                            }
+                        )
+                    }
                 }
 
                 val client = Client(mockk<MshInternalClient> {
-                    coEvery { getAppRecInfo(any(), any()) } returns listOf(appRecInfo)
-                })
+                    coEvery { getStatus(any(), any()) } returns listOf(statusInfo)
+                }, testApplicationMetadata)
 
                 client.getApplicationReceiptsForMessage(UUID.randomUUID()).asClue {
                     it shouldHaveSize 1
                     with(it.single()) {
-                        receiverHerId shouldBe appRecInfo.receiverHerId
+                        receiverHerId shouldBe statusInfo.receiverHerId
                         status shouldBe StatusForMottakAvMelding.AVVIST
                         errors shouldHaveSize 1
                         with(errors.single()) {
@@ -467,33 +505,35 @@ class ClientTest : FreeSpec() {
             }
 
             "Should handle ok error in message with errors" {
-                val appRecInfo = ApprecInfo().apply {
+                val statusInfo = NhnStatusInfo().apply {
                     receiverHerId = randomHerId()
-                    appRecStatus = AppRecStatus.OK_ERROR_IN_MESSAGE_PART
-                    appRecErrorList = listOf(
-                        AppRecError().apply {
-                            errorCode = "E32"
-                            description = "Pasientens navn mangler"
-                            oid = "2.16.578.1.12.4.1.1.8221"
-                            details = "Noe gikk galt"
-                        },
-                        AppRecError().apply {
-                            errorCode = "T02"
-                            description = "XML validerer ikke"
-                            oid = "2.16.578.1.12.4.1.1.8221"
-                            details = "Feil i XML"
-                        }
-                    )
+                    apprecInfo = NhnApprecInfo().apply {
+                        appRecStatus = NhnAppRecStatus.OK_ERROR_IN_MESSAGE_PART
+                        appRecErrorList = listOf(
+                            NhnAppRecError().apply {
+                                errorCode = "E32"
+                                description = "Pasientens navn mangler"
+                                oid = "2.16.578.1.12.4.1.1.8221"
+                                details = "Noe gikk galt"
+                            },
+                            NhnAppRecError().apply {
+                                errorCode = "T02"
+                                description = "XML validerer ikke"
+                                oid = "2.16.578.1.12.4.1.1.8221"
+                                details = "Feil i XML"
+                            }
+                        )
+                    }
                 }
 
                 val client = Client(mockk<MshInternalClient> {
-                    coEvery { getAppRecInfo(any(), any()) } returns listOf(appRecInfo)
-                })
+                    coEvery { getStatus(any(), any()) } returns listOf(statusInfo)
+                }, testApplicationMetadata)
 
                 client.getApplicationReceiptsForMessage(UUID.randomUUID()).asClue {
                     it shouldHaveSize 1
                     with(it.single()) {
-                        receiverHerId shouldBe appRecInfo.receiverHerId
+                        receiverHerId shouldBe statusInfo.receiverHerId
                         status shouldBe StatusForMottakAvMelding.OK_FEIL_I_DELMELDING
                         errors shouldHaveSize 2
                         with(errors[0]) {
@@ -515,21 +555,20 @@ class ClientTest : FreeSpec() {
             }
 
             "Missing status should map to null" {
-                val appRecInfo = ApprecInfo().apply {
+                val statusInfo = NhnStatusInfo().apply {
                     receiverHerId = randomHerId()
-                    appRecStatus = null
-                    appRecErrorList = emptyList()
+                    apprecInfo = null
                 }
 
                 val client = Client(mockk<MshInternalClient> {
-                    coEvery { getAppRecInfo(any(), any()) } returns listOf(appRecInfo)
-                })
+                    coEvery { getStatus(any(), any()) } returns listOf(statusInfo)
+                }, testApplicationMetadata)
 
                 val messageId = UUID.randomUUID()
                 client.getApplicationReceiptsForMessage(messageId).asClue {
                     it shouldHaveSize 1
                     with(it.single()) {
-                        receiverHerId shouldBe appRecInfo.receiverHerId
+                        receiverHerId shouldBe statusInfo.receiverHerId
                         status should beNull()
                         errors.shouldBeEmpty()
                     }
@@ -537,28 +576,30 @@ class ClientTest : FreeSpec() {
             }
 
             "Unknown error code should be mapped to UKJENT" {
-                val appRecInfo = ApprecInfo().apply {
+                val statusInfo = NhnStatusInfo().apply {
                     receiverHerId = randomHerId()
-                    appRecStatus = AppRecStatus.REJECTED
-                    appRecErrorList = listOf(
-                        AppRecError().apply {
-                            errorCode = "A123"
-                            description = "Kan ikke håndteres"
-                            oid = "1.2.3.4.5.6.7.8.9"
-                            details = "Error X"
-                        },
-                    )
+                    apprecInfo = NhnApprecInfo().apply {
+                        appRecStatus = NhnAppRecStatus.REJECTED
+                        appRecErrorList = listOf(
+                            NhnAppRecError().apply {
+                                errorCode = "A123"
+                                description = "Kan ikke håndteres"
+                                oid = "1.2.3.4.5.6.7.8.9"
+                                details = "Error X"
+                            },
+                        )
+                    }
                 }
 
                 val client = Client(mockk<MshInternalClient> {
-                    coEvery { getAppRecInfo(any(), any()) } returns listOf(appRecInfo)
-                })
+                    coEvery { getStatus(any(), any()) } returns listOf(statusInfo)
+                }, testApplicationMetadata)
 
                 val messageId = UUID.randomUUID()
                 client.getApplicationReceiptsForMessage(messageId).asClue {
                     it shouldHaveSize 1
                     with(it.single()) {
-                        receiverHerId shouldBe appRecInfo.receiverHerId
+                        receiverHerId shouldBe statusInfo.receiverHerId
                         status shouldBe StatusForMottakAvMelding.AVVIST
                         errors shouldHaveSize 1
                         with(errors.single()) {
@@ -573,21 +614,23 @@ class ClientTest : FreeSpec() {
             }
 
             "Null errors should be mapped to empty list" {
-                val appRecInfo = ApprecInfo().apply {
+                val statusInfo = NhnStatusInfo().apply {
                     receiverHerId = randomHerId()
-                    appRecStatus = AppRecStatus.REJECTED
-                    appRecErrorList = null
+                    apprecInfo = NhnApprecInfo().apply {
+                        appRecStatus = NhnAppRecStatus.REJECTED
+                        appRecErrorList = null
+                    }
                 }
 
                 val client = Client(mockk<MshInternalClient> {
-                    coEvery { getAppRecInfo(any(), any()) } returns listOf(appRecInfo)
-                })
+                    coEvery { getStatus(any(), any()) } returns listOf(statusInfo)
+                }, testApplicationMetadata)
 
                 val messageId = UUID.randomUUID()
                 client.getApplicationReceiptsForMessage(messageId).asClue {
                     it shouldHaveSize 1
                     with(it.single()) {
-                        receiverHerId shouldBe appRecInfo.receiverHerId
+                        receiverHerId shouldBe statusInfo.receiverHerId
                         status shouldBe StatusForMottakAvMelding.AVVIST
                         errors shouldNot beNull()
                         errors.shouldBeEmpty()
@@ -599,11 +642,11 @@ class ClientTest : FreeSpec() {
         "Send application receipt" - {
             "Should be able to send OK receipt without errors" {
                 val returnedId = UUID.randomUUID()
-                val requestSlot = slot<PostAppRecRequest>()
+                val requestSlot = slot<NhnPostAppRecRequest>()
                 val internalClient = mockk<MshInternalClient> {
-                    coEvery { postAppRec(any(), any(), capture(requestSlot), any()) } returns returnedId
+                    coEvery { postAppRec(any(), capture(requestSlot), any()) } returns returnedId
                 }
-                val client = Client(internalClient)
+                val client = Client(internalClient, testApplicationMetadata)
 
                 val receipt = OutgoingApplicationReceipt(UUID.randomUUID(), randomHerId(), StatusForMottakAvMelding.OK, emptyList())
                 client.sendApplicationReceipt(receipt).asClue {
@@ -611,20 +654,20 @@ class ClientTest : FreeSpec() {
                 }
 
                 coVerifySequence {
-                    internalClient.postAppRec(receipt.acknowledgedId, receipt.senderHerId, any())
+                    internalClient.postAppRec(receipt.acknowledgedId, any(), null)
                 }
 
                 requestSlot.captured.asClue { request ->
-                    request.appRecStatus shouldBe AppRecStatus.OK
+                    request.appRecStatus shouldBe NhnAppRecStatus.OK
                     request.appRecErrorList.shouldBeEmpty()
-                    request.ebXmlOverrides should beNull()
+                    request.transportMetadataOverrides should beNull()
                 }
             }
 
             "Should be able to send OK_FEIL_I_DELMELDING with errors" {
-                val requestSlot = slot<PostAppRecRequest>()
-                val internalClient = mockk<MshInternalClient> { coEvery { postAppRec(any(), any(), capture(requestSlot), any()) } returns UUID.randomUUID() }
-                val client = Client(internalClient)
+                val requestSlot = slot<NhnPostAppRecRequest>()
+                val internalClient = mockk<MshInternalClient> { coEvery { postAppRec(any(), capture(requestSlot), any()) } returns UUID.randomUUID() }
+                val client = Client(internalClient, testApplicationMetadata)
 
                 val receipt = OutgoingApplicationReceipt(
                     acknowledgedId = UUID.randomUUID(),
@@ -635,28 +678,29 @@ class ClientTest : FreeSpec() {
                 client.sendApplicationReceipt(receipt)
 
                 coVerifySequence {
-                    internalClient.postAppRec(receipt.acknowledgedId, receipt.senderHerId, any())
+                    internalClient.postAppRec(receipt.acknowledgedId, any(), null)
                 }
 
                 requestSlot.captured.asClue { request ->
-                    request.appRecStatus shouldBe AppRecStatus.OK_ERROR_IN_MESSAGE_PART
-                    request.appRecErrorList!! shouldHaveSize receipt.errors!!.size
-                    receipt.errors.forEach {
-                        request.appRecErrorList!! shouldContain AppRecError().apply {
+                    val requestAppRecErrorList = request.appRecErrorList ?: emptyList()
+                    request.appRecStatus shouldBe NhnAppRecStatus.OK_ERROR_IN_MESSAGE_PART
+                    requestAppRecErrorList shouldHaveSize receipt.errors.orEmpty().size
+                    receipt.errors.orEmpty().forEach {
+                        requestAppRecErrorList shouldContain NhnAppRecError().apply {
                             errorCode = it.type.verdi
                             description = it.type.navn
                             oid = it.type.kodeverk
                             details = it.details
                         }
                     }
-                    request.ebXmlOverrides should beNull()
+                    request.transportMetadataOverrides should beNull()
                 }
             }
 
             "Should be able to send AVVIST with errors" {
-                val requestSlot = slot<PostAppRecRequest>()
-                val internalClient = mockk<MshInternalClient> { coEvery { postAppRec(any(), any(), capture(requestSlot), any()) } returns UUID.randomUUID() }
-                val client = Client(internalClient)
+                val requestSlot = slot<NhnPostAppRecRequest>()
+                val internalClient = mockk<MshInternalClient> { coEvery { postAppRec(any(), capture(requestSlot), any()) } returns UUID.randomUUID() }
+                val client = Client(internalClient, testApplicationMetadata)
 
                 val receipt = OutgoingApplicationReceipt(
                     acknowledgedId = UUID.randomUUID(),
@@ -667,26 +711,27 @@ class ClientTest : FreeSpec() {
                 client.sendApplicationReceipt(receipt)
 
                 coVerifySequence {
-                    internalClient.postAppRec(receipt.acknowledgedId, receipt.senderHerId, any())
+                    internalClient.postAppRec(receipt.acknowledgedId, any(), null)
                 }
 
                 requestSlot.captured.asClue { request ->
-                    request.appRecStatus shouldBe AppRecStatus.REJECTED
-                    request.appRecErrorList!! shouldHaveSize receipt.errors!!.size
-                    receipt.errors.forEach {
-                        request.appRecErrorList!! shouldContain AppRecError().apply {
+                    val requestAppRecErrorList = request.appRecErrorList ?: emptyList()
+                    request.appRecStatus shouldBe NhnAppRecStatus.REJECTED
+                    requestAppRecErrorList shouldHaveSize receipt.errors.orEmpty().size
+                    receipt.errors.orEmpty().forEach {
+                        requestAppRecErrorList shouldContain NhnAppRecError().apply {
                             errorCode = it.type.verdi
                             description = it.type.navn
                             oid = it.type.kodeverk
                             details = it.details
                         }
                     }
-                    request.ebXmlOverrides should beNull()
+                    request.transportMetadataOverrides should beNull()
                 }
             }
 
             "Trying to send an OK receipt with errors should cause an exception to be thrown" {
-                val client = Client(mockk<MshInternalClient> { coEvery { postAppRec(any(), any(), any(), any()) } returns UUID.randomUUID() })
+                val client = Client(mockk<MshInternalClient> { coEvery { postAppRec(any(), any(), any()) } returns UUID.randomUUID() }, testApplicationMetadata)
 
                 val receipt = OutgoingApplicationReceipt(
                     acknowledgedId = UUID.randomUUID(),
@@ -701,7 +746,7 @@ class ClientTest : FreeSpec() {
             }
 
             "Trying to send an OK_FEIL_I_DELMELDING receipt without errors should cause an exception to be thrown" {
-                val client = Client(mockk<MshInternalClient> { coEvery { postAppRec(any(), any(), any(), any()) } returns UUID.randomUUID() })
+                val client = Client(mockk<MshInternalClient> { coEvery { postAppRec(any(), any(), any()) } returns UUID.randomUUID() }, testApplicationMetadata)
 
                 val receipt = OutgoingApplicationReceipt(
                     acknowledgedId = UUID.randomUUID(),
@@ -716,7 +761,7 @@ class ClientTest : FreeSpec() {
             }
 
             "Trying to send an AVVIST receipt without errors should cause an exception to be thrown" {
-                val client = Client(mockk<MshInternalClient> { coEvery { postAppRec(any(), any(), any(), any()) } returns UUID.randomUUID() })
+                val client = Client(mockk<MshInternalClient> { coEvery { postAppRec(any(), any(), any()) } returns UUID.randomUUID() }, testApplicationMetadata)
 
                 val receipt = OutgoingApplicationReceipt(
                     acknowledgedId = UUID.randomUUID(),
@@ -734,9 +779,9 @@ class ClientTest : FreeSpec() {
                 val params = RequestParameters(HelseIdTokenParameters(SingleTenantHelseIdTokenParameters(randomHerId().toString())))
 
                 val internalClient = mockk<MshInternalClient> {
-                    coEvery { postAppRec(any(), any(), any(), any()) } returns UUID.randomUUID()
+                    coEvery { postAppRec(any(), any(), any()) } returns UUID.randomUUID()
                 }
-                val client = Client(internalClient)
+                val client = Client(internalClient, testApplicationMetadata)
 
                 client.sendApplicationReceipt(
                     OutgoingApplicationReceipt(
@@ -747,24 +792,36 @@ class ClientTest : FreeSpec() {
                     ), params
                 )
                 coVerifySequence {
-                    internalClient.postAppRec(any(), any(), any(), params)
+                    internalClient.postAppRec(any(), any(), params)
                 }
             }
         }
 
-        "Mark message read" - {
-            "The data should be serialized to XML and passed on to the service" {
-                val internalClient = mockk<MshInternalClient> {
-                    coEvery { markMessageRead(any(), any(), any()) } just runs
-                }
-                val client = Client(internalClient)
+        "Get unread notifications" - {
+            "Unread notifications should be retrieved and mapped" {
+                val apiNotifications = List(nextInt(1, 5)) { randomApiUnreadNotification() }
 
-                val id = UUID.randomUUID()
-                val receiverHerId = randomHerId()
-                client.markMessageRead(id, receiverHerId)
+                val internalClient = mockk<MshInternalClient> {
+                    coEvery { getUnreadNotifications(any(), any(), any()) } returns apiNotifications
+                }
+                val client = Client(internalClient, testApplicationMetadata)
+
+                val herIds = listOf(randomHerId(), randomHerId())
+                val notificationsToFetch = 10
+                client.getUnreadNotifications(herIds, notificationsToFetch).asClue {
+                    it.forEachIndexed { i, notification ->
+                        notification.notificationId shouldBe UUID.fromString(apiNotifications[i].notificationId)
+                        notification.relatedMessageId shouldBe apiNotifications[i].relatedMessageId?.let { UUID.fromString(it) }
+                        notification.type.name shouldBe apiNotifications[i].type.value
+                        notification.notificationReceiverHerId shouldBe apiNotifications[i].notificationReceiverHerId
+                        notification.notificationTriggeredByHerId shouldBe apiNotifications[i].notificationTriggeredByHerId
+                        notification.description shouldBe apiNotifications[i].description
+                        notification.createdAt shouldBe apiNotifications[i].createdAt
+                    }
+                }
 
                 coVerifySequence {
-                    internalClient.markMessageRead(id, receiverHerId)
+                    internalClient.getUnreadNotifications(herIds, notificationsToFetch, null)
                 }
             }
 
@@ -772,13 +829,138 @@ class ClientTest : FreeSpec() {
                 val params = RequestParameters(HelseIdTokenParameters(SingleTenantHelseIdTokenParameters(randomHerId().toString())))
 
                 val internalClient = mockk<MshInternalClient> {
-                    coEvery { markMessageRead(any(), any(), any()) } just runs
+                    coEvery { getUnreadNotifications(any(), any(), any()) } returns emptyList()
                 }
-                val client = Client(internalClient)
+                val client = Client(internalClient, testApplicationMetadata)
 
-                client.markMessageRead(UUID.randomUUID(), randomHerId(), params)
+                client.getUnreadNotifications(listOf(randomHerId()), 10, params)
                 coVerifySequence {
-                    internalClient.markMessageRead(any(), any(), params)
+                    internalClient.getUnreadNotifications(any(), any(), params)
+                }
+            }
+        }
+
+        "Delete notifications" - {
+            "Notification ids should be passed on" {
+                val notificationIds = listOf(UUID.randomUUID(), UUID.randomUUID())
+
+                val internalClient = mockk<MshInternalClient> {
+                    coEvery { deleteNotifications(any(), any()) } just runs
+                }
+                val client = Client(internalClient, testApplicationMetadata)
+
+                client.deleteNotifications(notificationIds)
+
+                coVerifySequence {
+                    internalClient.deleteNotifications(notificationIds, null)
+                }
+            }
+
+            "Params should be passed on" {
+                val params = RequestParameters(HelseIdTokenParameters(SingleTenantHelseIdTokenParameters(randomHerId().toString())))
+
+                val internalClient = mockk<MshInternalClient> {
+                    coEvery { deleteNotifications(any(), any()) } just runs
+                }
+                val client = Client(internalClient, testApplicationMetadata)
+
+                client.deleteNotifications(listOf(UUID.randomUUID()), params)
+                coVerifySequence {
+                    internalClient.deleteNotifications(any(), params)
+                }
+            }
+        }
+
+        "Set MSH configurations" - {
+            "Configurations should be passed on to the internal client" {
+                val configurations = List(nextInt(1, 5)) { randomMshConfiguration() }
+                val generatedConfigurations = configurations.map { toNhnMshConfiguration(it) }
+
+                val internalClient = mockk<MshInternalClient> {
+                    coEvery { setMshConfigurations(any(), any()) } just runs
+                }
+                val client = Client(internalClient, testApplicationMetadata)
+
+                client.setMshConfigurations(configurations)
+
+                coVerifySequence {
+                    internalClient.setMshConfigurations(generatedConfigurations, null)
+                }
+            }
+
+            "Params should be passed on" {
+                val params = RequestParameters(HelseIdTokenParameters(SingleTenantHelseIdTokenParameters(randomHerId().toString())))
+
+                val internalClient = mockk<MshInternalClient> {
+                    coEvery { setMshConfigurations(any(), any()) } just runs
+                }
+                val client = Client(internalClient, testApplicationMetadata)
+
+                client.setMshConfigurations(listOf(randomMshConfiguration()), params)
+                coVerifySequence {
+                    internalClient.setMshConfigurations(any(), params)
+                }
+            }
+        }
+
+        "Delete MSH configurations" - {
+            "HerIds should be passed on to the internal client" {
+                val herIds = listOf(randomHerId(), randomHerId())
+
+                val internalClient = mockk<MshInternalClient> {
+                    coEvery { deleteMshConfigurations(any(), any()) } just runs
+                }
+                val client = Client(internalClient, testApplicationMetadata)
+
+                client.deleteMshConfigurations(herIds)
+
+                coVerifySequence {
+                    internalClient.deleteMshConfigurations(herIds, null)
+                }
+            }
+
+            "Params should be passed on" {
+                val params = RequestParameters(HelseIdTokenParameters(SingleTenantHelseIdTokenParameters(randomHerId().toString())))
+
+                val internalClient = mockk<MshInternalClient> {
+                    coEvery { deleteMshConfigurations(any(), any()) } just runs
+                }
+                val client = Client(internalClient, testApplicationMetadata)
+
+                client.deleteMshConfigurations(listOf(randomHerId()), params)
+                coVerifySequence {
+                    internalClient.deleteMshConfigurations(any(), params)
+                }
+            }
+        }
+
+        "Mark message downloaded" - {
+            "The data should be serialized to XML and passed on to the service" {
+                val internalClient = mockk<MshInternalClient> {
+                    coEvery { markMessageDownloaded(any(), any(), any()) } just runs
+                }
+                val client = Client(internalClient, testApplicationMetadata)
+
+                val id = UUID.randomUUID()
+                val receiverHerId = randomHerId()
+                client.markMessageDownloaded(id, receiverHerId)
+
+                coVerifySequence {
+                    internalClient.markMessageDownloaded(id, receiverHerId)
+                }
+            }
+
+            "Params should be passed on" {
+                val params = RequestParameters(HelseIdTokenParameters(SingleTenantHelseIdTokenParameters(randomHerId().toString())))
+
+                val internalClient = mockk<MshInternalClient> {
+                    coEvery { markMessageDownloaded(any(), any(), any()) } just runs
+                }
+                val client = Client(internalClient, testApplicationMetadata)
+
+                client.markMessageDownloaded(UUID.randomUUID(), randomHerId(), params)
+                coVerifySequence {
+                    internalClient.markMessageDownloaded(any(), any(), params)
                 }
             }
         }
@@ -790,14 +972,14 @@ class ClientTest : FreeSpec() {
                 val internalClient = mockk<MshInternalClient> {
                     coEvery { getStatus(any(), any()) } returns statuses
                 }
-                val client = Client(internalClient)
+                val client = Client(internalClient, testApplicationMetadata)
 
                 val id = UUID.randomUUID()
                 client.getStatus(id).asClue {
                     it.forEachIndexed { i, status ->
                         status.receiverHerId shouldBe statuses[i].receiverHerId
                         status.deliveryState.name shouldBe statuses[i].transportDeliveryState.name
-                        status.appRecStatus?.name shouldBe statuses[i].appRecStatus?.name
+                        status.appRecStatus?.name shouldBe statuses[i].apprecInfo?.appRecStatus?.name
                     }
                 }
 
@@ -812,7 +994,7 @@ class ClientTest : FreeSpec() {
                 val internalClient = mockk<MshInternalClient> {
                     coEvery { getStatus(any(), any()) } returns emptyList()
                 }
-                val client = Client(internalClient)
+                val client = Client(internalClient, testApplicationMetadata)
 
                 client.getStatus(UUID.randomUUID(), params)
                 coVerifySequence {
@@ -889,19 +1071,19 @@ private fun randomOutgoingBusinessDocument(
     )
 )
 
-private fun randomApiMessageWithoutMetadata() = Message().apply {
-    id = UUID.randomUUID()
-    receiverHerId = randomHerId()
+private fun randomApiMessageWithoutMetadata() = NhnGetMessageResponse().apply {
+    id = UUID.randomUUID().toString()
+    receiverHerIds = setOf(randomHerId())
 }
 
-private fun randomApiMessageWithMetadata() = Message().apply {
-    id = UUID.randomUUID()
+private fun randomApiMessageWithMetadata() = NhnGetMessageResponse().apply {
+    id = UUID.randomUUID().toString()
     contentType = UUID.randomUUID().toString()
-    receiverHerId = randomHerId()
+    receiverHerIds = setOf(randomHerId())
     senderHerId = randomHerId()
     businessDocumentId = UUID.randomUUID().toString()
-    businessDocumentGenDate = OffsetDateTime.now()
-    isAppRec = nextBoolean()
+    businessDocumentGenDate = OffsetDateTime.now().toString()
+    businessDocumentMsgType = nextBoolean().let { if (it) "APPREC" else null }
 }
 
 private fun randomOutgoingApplicationReceiptError() =
@@ -912,8 +1094,48 @@ private fun randomOutgoingApplicationReceiptError() =
         )
     }
 
-private fun randomStatusInfo() = StatusInfo().apply {
+private fun randomStatusInfo() = NhnStatusInfo().apply {
     receiverHerId = randomHerId()
-    transportDeliveryState = DeliveryState.entries.random()
-    appRecStatus = AppRecStatus.entries.plus(null).random()
+    sent = nextBoolean()
+    transportDeliveryState = NhnDeliveryState.entries.random()
+    apprecInfo = NhnApprecInfo().apply {
+        appRecStatus = NhnAppRecStatus.entries.plus(null).random()
+    }
 }
+
+private fun randomMshConfiguration() = ClientMshConfiguration(
+    herId = randomHerId(),
+    receiveNotificationChannel = ReceiveNotificationChannel.entries.random(),
+    clientLocked = nextBoolean(),
+    rejectMessageFilters = if (nextBoolean()) {
+        ClientRejectMessageFilters(messageFunctions = listOf(UUID.randomUUID().toString()))
+    } else {
+        null
+    },
+)
+
+private fun toNhnMshConfiguration(configuration: no.ks.fiks.nhn.msh.MshConfiguration): no.nhn.msh.v3.model.MshConfiguration = no.nhn.msh.v3.model.MshConfiguration()
+    .herId(configuration.herId)
+    .receiveNotificationChannel(
+        when (configuration.receiveNotificationChannel) {
+            ReceiveNotificationChannel.Api -> no.nhn.msh.v3.model.ReceiveNotificationChannel.API
+            ReceiveNotificationChannel.Kafka -> no.nhn.msh.v3.model.ReceiveNotificationChannel.KAFKA
+        }
+    )
+    .clientLocked(configuration.clientLocked)
+    .rejectMessageFilters(
+        configuration.rejectMessageFilters?.let { filters ->
+            no.nhn.msh.v3.model.MshConfigurationRejectMessageFilters().messageFunction(filters.messageFunctions)
+        }
+    )
+
+private fun randomApiUnreadNotification() = no.nhn.msh.v3.model.UnreadNotification().apply {
+    notificationId = UUID.randomUUID().toString()
+    relatedMessageId = UUID.randomUUID().toString().takeIf { nextBoolean() }
+    type = no.nhn.msh.v3.model.NotificationType.entries.random()
+    notificationReceiverHerId = randomHerId()
+    notificationTriggeredByHerId = randomHerId().takeIf { nextBoolean() }
+    description = UUID.randomUUID().toString().takeIf { nextBoolean() }
+    createdAt = OffsetDateTime.now()
+}
+

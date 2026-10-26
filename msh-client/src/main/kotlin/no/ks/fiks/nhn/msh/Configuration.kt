@@ -7,6 +7,7 @@ data class Configuration(
     val helseId: HelseIdConfiguration,
     val mshBaseUrl: String,
     val sourceSystem: String,
+    val applicationMetadata: ApplicationMetadata,
 )
 
 data class ConfigurationWithFastlegeLookup(
@@ -15,6 +16,12 @@ data class ConfigurationWithFastlegeLookup(
     val fastlegeregister: FastlegeregisterConfiguration,
     val mshBaseUrl: String,
     val sourceSystem: String,
+    val applicationMetadata: ApplicationMetadata,
+)
+
+data class ApplicationMetadata(
+    val applicationName: String,
+    val applicationVersion: String,
 )
 
 data class HelseIdConfiguration(

@@ -62,13 +62,50 @@ class BlockingClientWithFastlegeLookup(
     ) : UUID = runBlocking { client.sendApplicationReceipt(receipt, requestParameters) }
 
     @JvmOverloads
-    fun markMessageRead(
+    fun getUnreadNotifications(
+        herIds: Collection<Int>,
+        notificationsToFetch: Int? = null,
+        requestParameters: RequestParameters? = null,
+    ): List<UnreadNotification> = runBlocking { client.getUnreadNotifications(herIds, notificationsToFetch, requestParameters) }
+
+    @JvmOverloads
+    fun deleteNotifications(
+        notificationIds: Collection<UUID>,
+        requestParameters: RequestParameters? = null,
+    ) {
+        runBlocking {
+            client.deleteNotifications(notificationIds, requestParameters)
+        }
+    }
+
+    @JvmOverloads
+    fun setMshConfigurations(
+        configurations: List<MshConfiguration>,
+        requestParameters: RequestParameters? = null,
+    ) {
+        runBlocking {
+            client.setMshConfigurations(configurations, requestParameters)
+        }
+    }
+
+    @JvmOverloads
+    fun deleteMshConfigurations(
+        herIds: Collection<Int>,
+        requestParameters: RequestParameters? = null,
+    ) {
+        runBlocking {
+            client.deleteMshConfigurations(herIds, requestParameters)
+        }
+    }
+
+    @JvmOverloads
+    fun markMessageDownloaded(
         id: UUID,
         receiverHerId: Int,
         requestParameters: RequestParameters? = null,
     ) {
         runBlocking {
-            client.markMessageRead(id, receiverHerId, requestParameters)
+            client.markMessageDownloaded(id, receiverHerId, requestParameters)
         }
     }
 
