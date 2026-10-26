@@ -14,18 +14,6 @@ class BlockingClient(
     ): UUID = runBlocking { client.sendMessage(businessDocument, requestParameters) }
 
     @JvmOverloads
-    fun getMessages(
-        receiverHerId: Int,
-        requestParameters: RequestParameters? = null,
-    ): List<Message> = runBlocking { client.getMessages(receiverHerId, requestParameters) }
-
-    @JvmOverloads
-    fun getMessagesWithMetadata(
-        receiverHerId: Int,
-        requestParameters: RequestParameters? = null,
-    ): List<MessageWithMetadata> = runBlocking { client.getMessagesWithMetadata(receiverHerId, requestParameters) }
-
-    @JvmOverloads
     fun getMessage(
         id: UUID,
         requestParameters: RequestParameters? = null,

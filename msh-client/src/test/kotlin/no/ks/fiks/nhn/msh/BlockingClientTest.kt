@@ -28,34 +28,6 @@ class BlockingClientTest : StringSpec() {
             verifySequence { blockingClient.sendMessage(businessDocument, requestParameters) }
         }
 
-        "Get messages should proxy to internal client" {
-            val messages = listOf<Message>(mockk(), mockk())
-            val asyncClient = mockk<Client> { coEvery { getMessages(any(), any()) } returns messages }
-            val blockingClient = BlockingClient(asyncClient)
-
-            val receiverHerId = nextInt(1, 100000)
-            val requestParameters = RequestParameters()
-            blockingClient.getMessages(receiverHerId, requestParameters).asClue {
-                it shouldBe messages
-            }
-
-            verifySequence { blockingClient.getMessages(receiverHerId, requestParameters) }
-        }
-
-        "Get messages with metadata should proxy to internal client" {
-            val messages = listOf<MessageWithMetadata>(mockk(), mockk())
-            val asyncClient = mockk<Client> { coEvery { getMessagesWithMetadata(any(), any()) } returns messages }
-            val blockingClient = BlockingClient(asyncClient)
-
-            val receiverHerId = nextInt(1, 100000)
-            val requestParameters = RequestParameters()
-            blockingClient.getMessagesWithMetadata(receiverHerId, requestParameters).asClue {
-                it shouldBe messages
-            }
-
-            verifySequence { blockingClient.getMessagesWithMetadata(receiverHerId, requestParameters) }
-        }
-
         "Get message should proxy to internal client" {
             val id = UUID.randomUUID()
             val message = mockk<MessageWithMetadata>()

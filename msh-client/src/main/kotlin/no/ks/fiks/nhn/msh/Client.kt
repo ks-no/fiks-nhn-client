@@ -46,34 +46,6 @@ open class Client @JvmOverloads constructor(
         )
     }
 
-    suspend fun getMessages(
-        receiverHerId: Int,
-        requestParameters: RequestParameters? = null,
-    ): List<Message> =
-        getUnreadNotifications(
-            herIds = listOf(receiverHerId),
-            requestParameters = requestParameters,
-        ).filter { it.type == NotificationType.NewMessage }
-            .mapNotNull { notification ->
-                notification.relatedMessageId?.let {
-                    Message(
-                        id = it,
-                        receiverHerId = notification.notificationReceiverHerId,
-                    )
-                }
-            }
-
-    suspend fun getMessagesWithMetadata(
-        receiverHerId: Int,
-        requestParameters: RequestParameters? = null,
-    ): List<MessageWithMetadata> =
-        getUnreadNotifications(
-            herIds = listOf(receiverHerId),
-            requestParameters = requestParameters,
-        ).filter { it.type == NotificationType.NewMessage }
-            .mapNotNull { it.relatedMessageId }
-            .map { getMessage(it, requestParameters) }
-
     suspend fun getMessage(
         id: UUID,
         requestParameters: RequestParameters? = null,
