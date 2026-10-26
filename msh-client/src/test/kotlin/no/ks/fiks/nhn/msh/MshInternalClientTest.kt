@@ -93,6 +93,33 @@ class MshInternalClientTest : FreeSpec() {
                 }
             }
 
+            "Unread notification without createdAt should be parsed" {
+                val herIds = listOf(randomHerId())
+                mockGetUnreadNotifications(
+                    herIds,
+                    body = NhnGetUnreadNotificationsResponse()
+                        .unreadNotifications(
+                            listOf(
+                                NhnUnreadNotification()
+                                    .notificationId("17aaeaa7-fa1e-4b60-a8e9-bdc31718dfc9")
+                                    .type(NhnNotificationType.NEW_MESSAGE)
+                                    .notificationReceiverHerId(6789),
+                            )
+                        )
+                        .toJson(),
+                )
+
+                buildDefaultClient().getUnreadNotifications(herIds).asClue {
+                    it shouldHaveSize 1
+                    with(it.single()) {
+                        notificationId shouldBe "17aaeaa7-fa1e-4b60-a8e9-bdc31718dfc9"
+                        type shouldBe NhnNotificationType.NEW_MESSAGE
+                        notificationReceiverHerId shouldBe 6789
+                        createdAt shouldBe null
+                    }
+                }
+            }
+
             "Server error when getting unread notifications should throw exception" {
                 val herIds = listOf(randomHerId())
                 val expected = UUID.randomUUID().toString()

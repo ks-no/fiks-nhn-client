@@ -6,9 +6,9 @@ import java.util.*
 data class MessageWithMetadata(
     val id: UUID,
     val contentType: String?,
-    val receiverHerIds: List<Int>,
-    val senderHerId: Int,
-    val businessDocumentId: String,
+    val receiverHerIds: List<Int>?,
+    val senderHerId: Int?,
+    val businessDocumentId: String?,
     val businessDocumentDate: OffsetDateTime?,
     val businessDocumentMsgType: String?,
 )

@@ -221,9 +221,9 @@ open class Client @JvmOverloads constructor(
         id = runCatching { UUID.fromString(id) }
             .getOrElse { throw IllegalArgumentException("Message has malformed id field") },
         contentType = contentType,
-        receiverHerIds = receiverHerIds?.toList() ?: throw IllegalArgumentException("Message $id is missing receiverHerIds field"),
-        senderHerId = senderHerId ?: throw IllegalArgumentException("Message $id is missing senderHerId field"),
-        businessDocumentId = businessDocumentId ?: throw IllegalArgumentException("Message $id is missing businessDocumentId field"),
+        receiverHerIds = receiverHerIds?.toList(),
+        senderHerId = senderHerId,
+        businessDocumentId = businessDocumentId,
         businessDocumentDate = businessDocumentGenDate?.parseOffsetDateTimeOrNull(),
         businessDocumentMsgType = businessDocumentMsgType,
     )
@@ -245,7 +245,7 @@ open class Client @JvmOverloads constructor(
         notificationReceiverHerId = notificationReceiverHerId,
         notificationTriggeredByHerId = notificationTriggeredByHerId,
         description = description,
-        createdAt = createdAt ?: throw IllegalArgumentException("Unread notification $notificationId is missing createdAt field"),
+        createdAt = createdAt,
     )
 
     private fun NhnStatusInfo.toStatusInfo() = StatusInfo(

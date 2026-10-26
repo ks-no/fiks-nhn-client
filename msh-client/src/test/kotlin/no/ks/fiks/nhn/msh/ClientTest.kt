@@ -117,6 +117,27 @@ class ClientTest : FreeSpec() {
                 }
             }
 
+            "Should map message with only id when metadata is unavailable" {
+                val message = NhnGetMessageResponse().apply {
+                    id = UUID.randomUUID().toString()
+                }
+
+                val internalClient = mockk<MshInternalClient> {
+                    coEvery { getMessage(any(), any()) } returns message
+                }
+                val client = Client(internalClient, testApplicationMetadata)
+
+                client.getMessage(UUID.randomUUID()).asClue {
+                    it.id shouldBe UUID.fromString(message.id)
+                    it.contentType should beNull()
+                    it.receiverHerIds should beNull()
+                    it.senderHerId should beNull()
+                    it.businessDocumentId should beNull()
+                    it.businessDocumentDate should beNull()
+                    it.businessDocumentMsgType should beNull()
+                }
+            }
+
             "Params should be passed on" {
                 val params = RequestParameters(HelseIdTokenParameters(SingleTenantHelseIdTokenParameters(randomHerId().toString())))
 
@@ -716,6 +737,34 @@ class ClientTest : FreeSpec() {
 
                 coVerifySequence {
                     internalClient.getUnreadNotifications(herIds, notificationsToFetch, null)
+                }
+            }
+
+            "Notification without createdAt should be mapped with null timestamp without failing the batch" {
+                val withoutTimestamp = no.nhn.msh.v3.model.UnreadNotification().apply {
+                    notificationId = UUID.randomUUID().toString()
+                    type = no.nhn.msh.v3.model.NotificationType.NEW_MESSAGE
+                    notificationReceiverHerId = randomHerId()
+                }
+                val withTimestamp = randomApiUnreadNotification()
+
+                val internalClient = mockk<MshInternalClient> {
+                    coEvery { getUnreadNotifications(any(), any(), any()) } returns listOf(withoutTimestamp, withTimestamp)
+                }
+                val client = Client(internalClient, testApplicationMetadata)
+
+                client.getUnreadNotifications(listOf(randomHerId())).asClue {
+                    it shouldHaveSize 2
+                    with(it[0]) {
+                        notificationId shouldBe UUID.fromString(withoutTimestamp.notificationId)
+                        type shouldBe NotificationType.NewMessage
+                        notificationReceiverHerId shouldBe withoutTimestamp.notificationReceiverHerId
+                        relatedMessageId should beNull()
+                        notificationTriggeredByHerId should beNull()
+                        description should beNull()
+                        createdAt should beNull()
+                    }
+                    it[1].createdAt shouldBe withTimestamp.createdAt
                 }
             }
 

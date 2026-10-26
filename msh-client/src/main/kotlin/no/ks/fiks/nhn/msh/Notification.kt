@@ -18,5 +18,5 @@ data class UnreadNotification(
     val notificationReceiverHerId: Int,
     val notificationTriggeredByHerId: Int?,
     val description: String?,
-    val createdAt: OffsetDateTime,
+    val createdAt: OffsetDateTime?,
 )
