@@ -14,6 +14,6 @@ class GetMessagesWithMetadataTest : StringSpec({
         )
             .filter { it.type == NotificationType.NewMessage }
             .mapNotNull { it.relatedMessageId }
-            .map { client.getMessage(it) } // Returned messages include extra metadata, including the business document id and message type
+            .map { client.getMessage(it) }
     }
 })
