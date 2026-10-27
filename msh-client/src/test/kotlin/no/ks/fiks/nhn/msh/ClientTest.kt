@@ -513,7 +513,7 @@ class ClientTest : FreeSpec() {
                 }
             }
 
-            "Params should be passed on" {
+            "Application receipt params should be passed on" {
                 val params = RequestParameters(HelseIdTokenParameters(SingleTenantHelseIdTokenParameters(randomHerId().toString())))
 
                 val internalClient = mockk<MshInternalClient> {
