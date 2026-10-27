@@ -1203,17 +1203,104 @@ class ClientTest : FreeSpec() {
                 val client = Client(internalClient, testApplicationMetadata)
 
                 val id = UUID.randomUUID()
-                client.getStatus(id).asClue {
+                client.getStatus(id).asClue { it ->
                     it.forEachIndexed { i, status ->
                         status.receiverHerId shouldBe statuses[i].receiverHerId
+                        status.sent shouldBe statuses[i].sent
                         status.deliveryState.name shouldBe statuses[i].transportDeliveryState.name
                         status.appRecStatus?.name shouldBe statuses[i].apprecInfo?.appRecStatus?.name
+                        status.appRecId shouldBe statuses[i].apprecInfo?.appRecId?.takeIf { it.isNotBlank() }?.let { UUID.fromString(it) }
+                        status.appRecErrors.map { it.errorCode } shouldBe (statuses[i].apprecInfo?.appRecErrorList?.map { it.errorCode } ?: emptyList<String>())
                     }
                 }
 
                 coVerifySequence {
                     internalClient.getStatus(id, null)
                 }
+            }
+
+            "Should map populated appRecId and errors" {
+                val expectedAppRecId = UUID.randomUUID()
+                val statusInfo = NhnStatusInfo().apply {
+                    receiverHerId = randomHerId()
+                    sent = true
+                    transportDeliveryState = NhnDeliveryState.ACKNOWLEDGED
+                    apprecInfo = NhnApprecInfo().apply {
+                        appRecStatus = NhnAppRecStatus.REJECTED
+                        appRecId = expectedAppRecId.toString()
+                        appRecErrorList = listOf(
+                            NhnAppRecError().apply {
+                                errorCode = "E10"
+                                description = "Ugyldig meldingsidentifikator"
+                                oid = "2.16.578.1.12.4.1.1.8221"
+                                details = "Extra details about error"
+                            }
+                        )
+                    }
+                }
+
+                val client = Client(mockk<MshInternalClient> {
+                    coEvery { getStatus(any(), any()) } returns listOf(statusInfo)
+                }, testApplicationMetadata)
+
+                client.getStatus(UUID.randomUUID()).single().asClue { mapped ->
+                    mapped.receiverHerId shouldBe statusInfo.receiverHerId
+                    mapped.sent shouldBe true
+                    mapped.deliveryState shouldBe DeliveryState.ACKNOWLEDGED
+                    mapped.appRecStatus shouldBe AppRecStatus.REJECTED
+                    mapped.appRecId shouldBe expectedAppRecId
+                    mapped.appRecErrors shouldHaveSize 1
+                    with(mapped.appRecErrors.single()) {
+                        type shouldBe FeilmeldingForApplikasjonskvittering.UGYLDIG_ID
+                        errorCode shouldBe "E10"
+                        description shouldBe "Ugyldig meldingsidentifikator"
+                        oid shouldBe "2.16.578.1.12.4.1.1.8221"
+                        details shouldBe "Extra details about error"
+                    }
+                }
+            }
+
+            "Should map missing receipt information to empty values" {
+                val statusInfo = NhnStatusInfo().apply {
+                    receiverHerId = randomHerId()
+                    sent = false
+                    transportDeliveryState = NhnDeliveryState.UNCONFIRMED
+                    apprecInfo = null
+                }
+
+                val client = Client(mockk<MshInternalClient> {
+                    coEvery { getStatus(any(), any()) } returns listOf(statusInfo)
+                }, testApplicationMetadata)
+
+                client.getStatus(UUID.randomUUID()).single().asClue { mapped ->
+                    mapped.receiverHerId shouldBe statusInfo.receiverHerId
+                    mapped.sent shouldBe false
+                    mapped.deliveryState shouldBe DeliveryState.UNCONFIRMED
+                    mapped.appRecStatus shouldBe null
+                    mapped.appRecId shouldBe null
+                    mapped.appRecErrors.shouldBeEmpty()
+                }
+            }
+
+            "Should throw on malformed appRecId" {
+                val statusInfo = NhnStatusInfo().apply {
+                    receiverHerId = randomHerId()
+                    sent = true
+                    transportDeliveryState = NhnDeliveryState.ACKNOWLEDGED
+                    apprecInfo = NhnApprecInfo().apply {
+                        appRecStatus = NhnAppRecStatus.OK
+                        appRecId = "not-a-uuid"
+                        appRecErrorList = emptyList()
+                    }
+                }
+
+                val client = Client(mockk<MshInternalClient> {
+                    coEvery { getStatus(any(), any()) } returns listOf(statusInfo)
+                }, testApplicationMetadata)
+
+                shouldThrow<IllegalArgumentException> {
+                    client.getStatus(UUID.randomUUID()).single()
+                }.message shouldBe "Status is missing or has malformed appRecId field"
             }
 
             "Params should be passed on" {
@@ -1323,6 +1410,15 @@ private fun randomStatusInfo() = NhnStatusInfo().apply {
     transportDeliveryState = NhnDeliveryState.entries.random()
     apprecInfo = NhnApprecInfo().apply {
         appRecStatus = NhnAppRecStatus.entries.plus(null).random()
+        appRecId = if (nextBoolean()) UUID.randomUUID().toString() else null
+        appRecErrorList = if (nextBoolean()) listOf(
+            NhnAppRecError().apply {
+                errorCode = listOf("E10", "E32", "T02").random()
+                description = "Random error"
+                oid = "2.16.578.1.12.4.1.1.8221"
+                details = "details"
+            }
+        ) else emptyList()
     }
 }
 
