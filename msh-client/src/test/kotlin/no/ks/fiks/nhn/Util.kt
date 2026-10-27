@@ -4,6 +4,7 @@ import no.ks.fiks.hdir.Adressetype
 import no.ks.fiks.hdir.OrganizationIdType
 import no.ks.fiks.hdir.PersonIdType
 import no.ks.fiks.nhn.msh.Address
+import no.ks.fiks.nhn.msh.ApplicationMetadata
 import no.ks.fiks.nhn.msh.Country
 import no.ks.fiks.nhn.msh.County
 import no.ks.fiks.nhn.msh.OrganizationId
@@ -19,8 +20,8 @@ fun readResourceContent(path: String) = ClassLoader.getSystemResource(path).read
 
 fun randomHerId(): Int = nextInt(0, 1000000)
 fun randomString(): String = UUID.randomUUID().toString()
-fun randomOrganizationHerId(): OrganizationId = OrganizationId(randomString(), OrganizationIdType.HER_ID)
-fun randomPersonHerId(): PersonId = PersonId(randomString(), PersonIdType.HER_ID)
+fun randomOrganizationHerId(): OrganizationId = OrganizationId(randomHerId().toString(), OrganizationIdType.HER_ID)
+fun randomPersonHerId(): PersonId = PersonId(randomHerId().toString(), PersonIdType.HER_ID)
 
 fun randomAddress(): Address = Address(
     type = Adressetype.entries.random(),
@@ -31,3 +32,5 @@ fun randomAddress(): Address = Address(
     county = County(code = nextInt(1000, 10000).toString(), name = UUID.randomUUID().toString()),
     country = Country(code = Locale.getISOCountries().random(), name = UUID.randomUUID().toString()),
 )
+
+val testApplicationMetadata = ApplicationMetadata(applicationName = "fiks-nhn-client-test", applicationVersion = "1.0.0")

@@ -110,11 +110,17 @@ object BusinessDocumentSerializer {
             address = person.address?.let { convert(it) }
         }
 
-    private fun buildMsgInfoType(version: DialogmeldingVersion) =
+    fun resolveMessageTypeIdentificator(version: DialogmeldingVersion): String =
+        resolveMessageType(version).verdi
+
+    fun resolveMessageType(version: DialogmeldingVersion): MeldingensFunksjon =
         when (version) {
             DialogmeldingVersion.V1_0 -> MeldingensFunksjon.DIALOG_FORESPORSEL
             DialogmeldingVersion.V1_1 -> MeldingensFunksjon.DIALOG_HELSEFAGLIG
-        }.run {
+        }
+
+    private fun buildMsgInfoType(version: DialogmeldingVersion) =
+        resolveMessageType(version).run {
             CS().apply {
                 v = verdi
                 dn = navn

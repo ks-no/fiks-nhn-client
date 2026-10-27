@@ -12,9 +12,9 @@ import java.util.*
 
 class RequestParametersTest : StringSpec({
     "Sending an example message to GP for person" {
-        val client = mockk<ClientWithFastlegeLookup> { coEvery { getMessages(any(), any()) } returns listOf() }
-        client.getMessages( // Returned messages only include an id and HER-id of the receiver, without any additional metadata
-            receiverHerId = 34567,
+        val client = mockk<ClientWithFastlegeLookup> { coEvery { getUnreadNotifications(any(), any(), any()) } returns listOf() }
+        client.getUnreadNotifications(
+            herIds = listOf(34567),
             requestParameters = RequestParameters(
                 helseId = HelseIdTokenParameters(
                     tenant = MultiTenantHelseIdTokenParameters( // Can also be single tenant

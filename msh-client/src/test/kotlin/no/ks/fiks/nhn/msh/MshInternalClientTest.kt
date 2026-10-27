@@ -1,5 +1,8 @@
 package no.ks.fiks.nhn.msh
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.*
 import io.kotest.assertions.asClue
@@ -9,8 +12,6 @@ import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldHaveSize
-import io.kotest.matchers.nulls.beNull
-import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
@@ -23,10 +24,20 @@ import no.ks.fiks.helseid.dpop.HttpMethod
 import no.ks.fiks.helseid.dpop.ProofBuilder
 import no.ks.fiks.nhn.randomHerId
 import no.ks.fiks.nhn.readResourceContentAsString
-import no.nhn.msh.v2.model.AppRecStatus
-import no.nhn.msh.v2.model.DeliveryState
-import no.nhn.msh.v2.model.PostAppRecRequest
-import no.nhn.msh.v2.model.PostMessageRequest
+import no.nhn.msh.v3.model.AppRecStatus as NhnAppRecStatus
+import no.nhn.msh.v3.model.DeleteNotificationsRequest as NhnDeleteNotificationsRequest
+import no.nhn.msh.v3.model.DeliveryState as NhnDeliveryState
+import no.nhn.msh.v3.model.GetUnreadNotificationsResponse as NhnGetUnreadNotificationsResponse
+import no.nhn.msh.v3.model.MarkAsDownloadedRequest as NhnMarkAsDownloadedRequest
+import no.nhn.msh.v3.model.MshConfiguration as NhnMshConfiguration
+import no.nhn.msh.v3.model.MshConfigurationRejectMessageFilters as NhnMshConfigurationRejectMessageFilters
+import no.nhn.msh.v3.model.NotificationType as NhnNotificationType
+import no.nhn.msh.v3.model.PostAppRecRequest
+import no.nhn.msh.v3.model.PostMessageRequest
+import no.nhn.msh.v3.model.ReceiveNotificationChannel as NhnReceiveNotificationChannel
+import no.nhn.msh.v3.model.SetMshConfigurationsRequest as NhnSetMshConfigurationsRequest
+import no.nhn.msh.v3.model.UnreadNotification as NhnUnreadNotification
+
 import org.wiremock.integrations.testcontainers.WireMockContainer
 import java.time.OffsetDateTime
 import java.util.*
@@ -39,169 +50,20 @@ class MshInternalClientTest : FreeSpec() {
     private val wireMock = WireMockContainer("wiremock/wiremock:3.12.1")
         .also { it.start() }
     private val wireMockClient = WireMock(wireMock.host, wireMock.port)
+    private val objectMapper = ObjectMapper()
+        .registerModule(JavaTimeModule())
+        .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+
+    private fun Any.toJson(): String = objectMapper.writeValueAsString(this)
 
     init {
 
-        "Get app rec info" - {
-            "Should make expected calls and parse response" {
-                val id = UUID.randomUUID()
-                mockGetAppRec(id)
+        "Notifications" - {
 
-                val accessToken = UUID.randomUUID().toString()
-                val helseIdClient = mockHelseIdClient(accessToken)
-                val proofBuilder = mockProofBuilder()
-                MshInternalClient(
-                    baseUrl = wireMock.baseUrl,
-                    sourceSystem = UUID.randomUUID().toString(),
-                    helseIdClient = helseIdClient,
-                    proofBuilder = proofBuilder,
-                ).getAppRecInfo(id)
-                    .asClue {
-                        it shouldHaveSize 1
-                        with(it.single()) {
-                            receiverHerId shouldBe 8094866
-                            appRecStatus shouldBe AppRecStatus.OK
-                            appRecErrorList.shouldBeEmpty()
-                        }
-                    }
-
-                verifySequence {
-                    helseIdClient.getAccessToken(StandardAccessTokenRequest(TokenType.DPOP))
-                    proofBuilder.buildProof(
-                        Endpoint(HttpMethod.GET, "${wireMock.baseUrl}/Messages/$id/apprec"),
-                        null,
-                        accessToken
-                    )
-                }
-            }
-
-            "Should handle rejected" {
-                val id = UUID.randomUUID()
-                mockGetAppRec(id, body = readResourceContentAsString("msh/get-apprecinfo-rejected.json"))
-
-                buildDefaultClient().getAppRecInfo(id)
-                    .asClue {
-                        it shouldHaveSize 1
-                        with(it.single()) {
-                            receiverHerId shouldBe 42
-                            appRecStatus shouldBe AppRecStatus.REJECTED
-                            appRecErrorList!! shouldHaveSize 1
-                            with(appRecErrorList!!.single()) {
-                                errorCode shouldBe "E10"
-                                details shouldBe "Ugyldig meldingsidentifikator"
-                            }
-                        }
-                    }
-            }
-
-            "Should handle ok error in message part" {
-                val id = UUID.randomUUID()
-                mockGetAppRec(id, body = readResourceContentAsString("msh/get-apprecinfo-okerrorinmessagepart.json"))
-
-                buildDefaultClient().getAppRecInfo(id)
-                    .asClue {
-                        it shouldHaveSize 1
-                        with(it.single()) {
-                            receiverHerId shouldBe 123456
-                            appRecStatus shouldBe AppRecStatus.OK_ERROR_IN_MESSAGE_PART
-                            appRecErrorList!! shouldHaveSize 2
-                            with(appRecErrorList!![0]) {
-                                errorCode shouldBe "E31"
-                                details shouldBe "Pasientens fødselsnummer er feil"
-                            }
-                            with(appRecErrorList!![1]) {
-                                errorCode shouldBe "E20"
-                                details shouldBe "Noe gikk galt"
-                            }
-                        }
-                    }
-            }
-
-            "Should handle multiple apprecs in same response" {
-                val id = UUID.randomUUID()
-                mockGetAppRec(id, body = readResourceContentAsString("msh/get-apprecinfo-multi.json"))
-
-                buildDefaultClient().getAppRecInfo(id)
-                    .asClue {
-                        it shouldHaveSize 2
-                        with(it[0]) {
-                            receiverHerId shouldBe 1111
-                            appRecStatus shouldBe AppRecStatus.REJECTED
-                            appRecErrorList!! shouldHaveSize 1
-                            with(appRecErrorList!!.single()) {
-                                errorCode shouldBe "E10"
-                                details shouldBe "Ugyldig meldingsidentifikator"
-                            }
-                        }
-                        with(it[1]) {
-                            receiverHerId shouldBe 2222
-                            appRecStatus shouldBe AppRecStatus.OK
-                            appRecErrorList!! shouldHaveSize 0
-                        }
-                    }
-            }
-
-            "Not OK response should throw exception" {
-                val id = UUID.randomUUID()
-                val expected = UUID.randomUUID().toString()
-                mockGetAppRec(id, 201, expected)
-
-                shouldThrow<HttpException> {
-                    buildDefaultClient().getAppRecInfo(id)
-                }.asClue {
-                    it.status shouldBe 201
-                    it.body shouldBe expected
-                    it.message shouldBe "Got HTTP status 201 when expecting 200: $expected"
-                }
-            }
-
-            "Redirect response should throw exception" {
-                val id = UUID.randomUUID()
-                val expected = UUID.randomUUID().toString()
-                mockGetAppRec(id, 301, expected)
-
-                shouldThrow<HttpRedirectException> {
-                    buildDefaultClient().getAppRecInfo(id)
-                }.asClue {
-                    it.status shouldBe 301
-                    it.body shouldBe expected
-                    it.message shouldBe "Got HTTP status 301: $expected"
-                }
-            }
-
-            "Client error response should throw exception" {
-                val id = UUID.randomUUID()
-                val expected = UUID.randomUUID().toString()
-                mockGetAppRec(id, 400, expected)
-
-                shouldThrow<HttpClientException> {
-                    buildDefaultClient().getAppRecInfo(id)
-                }.asClue {
-                    it.status shouldBe 400
-                    it.body shouldBe expected
-                    it.message shouldBe "Got HTTP status 400: $expected"
-                }
-            }
-
-            "Server error response should throw exception" {
-                val id = UUID.randomUUID()
-                val expected = UUID.randomUUID().toString()
-                mockGetAppRec(id, 500, expected)
-
-                shouldThrow<HttpServerException> {
-                    buildDefaultClient().getAppRecInfo(id)
-                }.asClue {
-                    it.status shouldBe 500
-                    it.body shouldBe expected
-                    it.message shouldBe "Got HTTP status 500: $expected"
-                }
-            }
-        }
-
-        "Get messages" - {
-            "Should make expected calls and parse response" {
-                val herId = randomHerId()
-                mockGetMessages(herId)
+            "Get unread notifications should make expected calls and parse response" {
+                val herIds = listOf(42, 1337)
+                val notificationsToFetch = 10
+                mockGetUnreadNotifications(herIds, notificationsToFetch)
 
                 val accessToken = UUID.randomUUID().toString()
                 val helseIdClient = mockHelseIdClient(accessToken)
@@ -212,79 +74,102 @@ class MshInternalClientTest : FreeSpec() {
                     helseIdClient = helseIdClient,
                     proofBuilder = proofBuilder,
                 )
-                client
-                    .getMessages(herId)
+                client.getUnreadNotifications(herIds, notificationsToFetch)
                     .asClue {
-                        it.size shouldBe 2
+                        it shouldHaveSize 2
                         with(it[0]) {
-                            id shouldBe UUID.fromString("0c8f3d36-f9e7-4e3f-9d5c-c820fa9b5773")
-                            receiverHerId shouldBe 8143060
-                        }
-                        with(it[1]) {
-                            id shouldBe UUID.fromString("99607d81-18bd-45ee-a96f-85e3687a5e05")
-                            receiverHerId shouldBe 8143060
+                            notificationId shouldBe "17aaeaa7-fa1e-4b60-a8e9-bdc31718dfc9"
+                            relatedMessageId shouldBe "0d5c8d05-ab57-4b2b-b480-c46c69cdf789"
+                            type shouldBe NhnNotificationType.NEW_MESSAGE
+                            notificationReceiverHerId shouldBe 6789
+                            notificationTriggeredByHerId shouldBe 9876
+                            description shouldBe "New message received (EPIKRISE)."
                         }
                     }
 
                 verifySequence {
                     helseIdClient.getAccessToken(StandardAccessTokenRequest(TokenType.DPOP))
-                    proofBuilder.buildProof(Endpoint(HttpMethod.GET, "${wireMock.baseUrl}/Messages"), null, accessToken)
+                    proofBuilder.buildProof(Endpoint(HttpMethod.GET, "${wireMock.baseUrl}/notifications/unread"), null, accessToken)
                 }
             }
 
-            "Not OK response should throw exception" {
-                val receiverHerId = randomHerId()
-                val expected = UUID.randomUUID().toString()
-                mockGetMessages(receiverHerId, 201, expected)
+            "Unread notification without createdAt should be parsed" {
+                val herIds = listOf(randomHerId())
+                mockGetUnreadNotifications(
+                    herIds,
+                    body = NhnGetUnreadNotificationsResponse()
+                        .unreadNotifications(
+                            listOf(
+                                NhnUnreadNotification()
+                                    .notificationId("17aaeaa7-fa1e-4b60-a8e9-bdc31718dfc9")
+                                    .type(NhnNotificationType.NEW_MESSAGE)
+                                    .notificationReceiverHerId(6789),
+                            )
+                        )
+                        .toJson(),
+                )
 
-                shouldThrow<HttpException> {
-                    buildDefaultClient().getMessages(receiverHerId)
-                }.asClue {
-                    it.status shouldBe 201
-                    it.body shouldBe expected
-                    it.message shouldBe "Got HTTP status 201 when expecting 200: $expected"
+                buildDefaultClient().getUnreadNotifications(herIds).asClue {
+                    it shouldHaveSize 1
+                    with(it.single()) {
+                        notificationId shouldBe "17aaeaa7-fa1e-4b60-a8e9-bdc31718dfc9"
+                        type shouldBe NhnNotificationType.NEW_MESSAGE
+                        notificationReceiverHerId shouldBe 6789
+                        createdAt shouldBe null
+                    }
                 }
             }
 
-            "Redirect response should throw exception" {
-                val receiverHerId = randomHerId()
+            "Server error when getting unread notifications should throw exception" {
+                val herIds = listOf(randomHerId())
                 val expected = UUID.randomUUID().toString()
-                mockGetMessages(receiverHerId, 301, expected)
-
-                shouldThrow<HttpRedirectException> {
-                    buildDefaultClient().getMessages(receiverHerId)
-                }.asClue {
-                    it.status shouldBe 301
-                    it.body shouldBe expected
-                    it.message shouldBe "Got HTTP status 301: $expected"
-                }
-            }
-
-            "Client error response should throw exception" {
-                val receiverHerId = randomHerId()
-                val expected = UUID.randomUUID().toString()
-                mockGetMessages(receiverHerId, 401, expected)
-
-                shouldThrow<HttpClientException> {
-                    buildDefaultClient().getMessages(receiverHerId)
-                }.asClue {
-                    it.status shouldBe 401
-                    it.body shouldBe expected
-                    it.message shouldBe "Got HTTP status 401: $expected"
-                }
-            }
-
-            "Server error response should throw exception" {
-                val receiverHerId = randomHerId()
-                val expected = UUID.randomUUID().toString()
-                mockGetMessages(receiverHerId, 503, expected)
+                mockGetUnreadNotifications(herIds, status = 500, body = expected)
 
                 shouldThrow<HttpServerException> {
-                    buildDefaultClient().getMessages(receiverHerId)
+                    buildDefaultClient().getUnreadNotifications(herIds)
                 }.asClue {
-                    it.status shouldBe 503
+                    it.status shouldBe 500
                     it.body shouldBe expected
-                    it.message shouldBe "Got HTTP status 503: $expected"
+                    it.message shouldBe "Got HTTP status 500: $expected"
+                }
+            }
+
+            "Delete notifications should make expected calls" {
+                val notificationIds = listOf(
+                    UUID.fromString("17aaeaa7-fa1e-4b60-a8e9-bdc31718dfc9"),
+                    UUID.fromString("c5e6b600-78ef-4d2a-ad5e-e4b64e3f5230"),
+                )
+                mockDeleteNotifications(
+                    expectedBody = NhnDeleteNotificationsRequest()
+                        .notificationIds(notificationIds.map { it.toString() }.toSet())
+                )
+
+                val accessToken = UUID.randomUUID().toString()
+                val helseIdClient = mockHelseIdClient(accessToken)
+                val proofBuilder = mockProofBuilder()
+                MshInternalClient(
+                    baseUrl = wireMock.baseUrl,
+                    sourceSystem = UUID.randomUUID().toString(),
+                    helseIdClient = helseIdClient,
+                    proofBuilder = proofBuilder,
+                ).deleteNotifications(notificationIds)
+
+                verifySequence {
+                    helseIdClient.getAccessToken(StandardAccessTokenRequest(TokenType.DPOP))
+                    proofBuilder.buildProof(Endpoint(HttpMethod.POST, "${wireMock.baseUrl}/notifications/delete"), null, accessToken)
+                }
+            }
+
+            "Client error when deleting notifications should throw exception" {
+                val expected = UUID.randomUUID().toString()
+                mockDeleteNotifications(status = 404, body = expected)
+
+                shouldThrow<HttpClientException> {
+                    buildDefaultClient().deleteNotifications(listOf(UUID.randomUUID()))
+                }.asClue {
+                    it.status shouldBe 404
+                    it.body shouldBe expected
+                    it.message shouldBe "Got HTTP status 404: $expected"
                 }
             }
         }
@@ -309,11 +194,11 @@ class MshInternalClientTest : FreeSpec() {
 
                 verifySequence {
                     helseIdClient.getAccessToken(StandardAccessTokenRequest(TokenType.DPOP))
-                    proofBuilder.buildProof(Endpoint(HttpMethod.POST, "${wireMock.baseUrl}/Messages"), null, accessToken)
+                    proofBuilder.buildProof(Endpoint(HttpMethod.POST, "${wireMock.baseUrl}/messages"), null, accessToken)
                 }
             }
 
-            "Not CREATED response should throw exception" {
+            "Not accepted response should throw exception" {
                 val expected = UUID.randomUUID().toString()
                 mockSendMessage(200, expected)
 
@@ -322,7 +207,7 @@ class MshInternalClientTest : FreeSpec() {
                 }.asClue {
                     it.status shouldBe 200
                     it.body shouldBe expected
-                    it.message shouldBe "Got HTTP status 200 when expecting 201: $expected"
+                    it.message shouldBe "Got HTTP status 200 when expecting 202: $expected"
                 }
             }
 
@@ -383,18 +268,18 @@ class MshInternalClientTest : FreeSpec() {
                 client
                     .getMessage(id)
                     .asClue {
-                        it.id shouldBe UUID.fromString("80383714-f0de-4cf8-900f-c79ba3af028c")
+                        it.id shouldBe "80383714-f0de-4cf8-900f-c79ba3af028c"
                         it.contentType shouldBe "application/xml"
-                        it.receiverHerId shouldBe 8143060
+                        it.receiverHerIds?.first() shouldBe 8143060
                         it.senderHerId shouldBe 8094866
                         it.businessDocumentId shouldBe "c88389b7-f8ad-40b2-81e1-090e715b7530"
-                        it.businessDocumentGenDate shouldBe OffsetDateTime.parse("2025-08-21T11:39:57+02:00")
-                        it.isAppRec shouldBe false
+                        it.businessDocumentGenDate shouldBe "2025-08-21T11:39:57"
+                        it.businessDocumentMsgType shouldBe null
                     }
 
                 verifySequence {
                     helseIdClient.getAccessToken(StandardAccessTokenRequest(TokenType.DPOP))
-                    proofBuilder.buildProof(Endpoint(HttpMethod.GET, "${wireMock.baseUrl}/Messages/$id"), null, accessToken)
+                    proofBuilder.buildProof(Endpoint(HttpMethod.GET, "${wireMock.baseUrl}/messages/$id"), null, accessToken)
                 }
             }
 
@@ -406,13 +291,13 @@ class MshInternalClientTest : FreeSpec() {
                 buildDefaultClient(accessToken)
                     .getMessage(id)
                     .asClue {
-                        it.id shouldBe UUID.fromString("0c8f3d36-f9e7-4e3f-9d5c-c820fa9b5773")
+                        it.id shouldBe "0c8f3d36-f9e7-4e3f-9d5c-c820fa9b5773"
                         it.contentType shouldBe "application/xml"
-                        it.receiverHerId shouldBe 8143060
+                        it.receiverHerIds?.first() shouldBe 8143060
                         it.senderHerId shouldBe 8094866
                         it.businessDocumentId shouldBe "9ebaaf44-7317-41b7-892a-2a568acd5111"
-                        it.businessDocumentGenDate shouldBe OffsetDateTime.parse("2025-08-21T11:21:16.0004155+02:00")
-                        it.isAppRec shouldBe true
+                        it.businessDocumentGenDate shouldBe "2025-08-21T11:21:16.0004155"
+                        it.businessDocumentMsgType shouldBe "APPREC"
                     }
             }
 
@@ -480,13 +365,13 @@ class MshInternalClientTest : FreeSpec() {
                 client
                     .getMessage(id)
                     .asClue {
-                        it.id shouldBe UUID.fromString("80383714-f0de-4cf8-900f-c79ba3af028c")
+                        it.id shouldBe "80383714-f0de-4cf8-900f-c79ba3af028c"
                         it.contentType shouldBe "application/xml"
-                        it.receiverHerId shouldBe 8143060
+                        it.receiverHerIds?.first() shouldBe 8143060
                         it.senderHerId shouldBe 8094866
                         it.businessDocumentId shouldBe "c88389b7-f8ad-40b2-81e1-090e715b7530"
-                        it.businessDocumentGenDate shouldBe OffsetDateTime.parse("2025-08-21T11:39:57+02:00")
-                        it.isAppRec shouldBe false
+                        it.businessDocumentGenDate shouldBe "2025-08-21T11:39:57"
+                        it.businessDocumentMsgType shouldBe null
                     }
             }
         }
@@ -508,7 +393,7 @@ class MshInternalClientTest : FreeSpec() {
                 client
                     .getBusinessDocument(id)
                     .asClue {
-                        it.businessDocument shouldBe "PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4KPCEtLSBERVRURSBFUiBFTiBURVNUTUVMRElORyBNRUQgRklLVElWRSBQRVJTT05EQVRBIC0tPgo8IS0tIEVrc2VtcGVsIHDDpSBoZWxzZWZhZ2xpZyBkaWFsb2cgZXR0ZXJzZW5kaW5nIGF2IGluZm9ybWFzam9uIHZlZHIgaGVudmlzbmluZyAtLT4KPE1zZ0hlYWQgeG1sbnM9Imh0dHA6Ly93d3cua2l0aC5uby94bWxzdGRzL21zZ2hlYWQvMjAwNi0wNS0yNCIgeG1sbnM6eHNkPSJodHRwOi8vd3d3LnczLm9yZy8yMDAxL1hNTFNjaGVtYS54c2QiIHhtbG5zOmZrMT0iaHR0cDovL3d3dy5raXRoLm5vL3htbHN0ZHMvZmVsbGVza29tcG9uZW50MSIgeG1sbnM6eHNpPSJodHRwOi8vd3d3LnczLm9yZy8yMDAxL1hNTFNjaGVtYS1pbnN0YW5jZSIgeHNpOnNjaGVtYUxvY2F0aW9uPSJodHRwOi8vd3d3LmtpdGgubm8veG1sc3Rkcy9tc2doZWFkLzIwMDYtMDUtMjQgTXNnSGVhZC12MV8yLnhzZCI+CiAgPE1zZ0luZm8+CiAgICA8VHlwZSBWPSJESUFMT0dfSEVMU0VGQUdMSUciIEROPSJIZWxzZWZhZ2xpZyBkaWFsb2ciIC8+CiAgICA8TUlHdmVyc2lvbj52MS4yIDIwMDYtMDUtMjQ8L01JR3ZlcnNpb24+CiAgICA8R2VuRGF0ZT4yMDI1LTA4LTIxVDExOjM5OjU3PC9HZW5EYXRlPgogICAgPE1zZ0lkPmM4ODM4OWI3LWY4YWQtNDBiMi04MWUxLTA5MGU3MTViNzUzMDwvTXNnSWQ+CiAgICA8UHJvY2Vzc2luZ1N0YXR1cyBWPSJEIiBETj0iRGVidWdnaW5nIiAvPgogICAgPFNlbmRlcj4KICAgICAgPE9yZ2FuaXNhdGlvbj4KICAgICAgICA8T3JnYW5pc2F0aW9uTmFtZT5OT1JTSyBIRUxTRU5FVFQgU0Y8L09yZ2FuaXNhdGlvbk5hbWU+CiAgICAgICAgPElkZW50PgogICAgICAgICAgPElkPjExMjM3NDwvSWQ+CiAgICAgICAgICA8VHlwZUlkIFY9IkhFUiIgRE49IkhFUi1pZCIgUz0iMi4xNi41NzguMS4xMi40LjEuMS45MDUxIiAvPgogICAgICAgIDwvSWRlbnQ+CiAgICAgICAgPE9yZ2FuaXNhdGlvbj4KICAgICAgICAgIDxPcmdhbmlzYXRpb25OYW1lPk1lbGRpbmdzdmFsaWRlcmluZzwvT3JnYW5pc2F0aW9uTmFtZT4KICAgICAgICAgIDxJZGVudD4KICAgICAgICAgICAgPElkPjgwOTQ4NjY8L0lkPgogICAgICAgICAgICA8VHlwZUlkIFY9IkhFUiIgRE49IkhFUi1pZCIgUz0iMi4xNi41NzguMS4xMi40LjEuMS45MDUxIiAvPgogICAgICAgICAgPC9JZGVudD4KICAgICAgICA8L09yZ2FuaXNhdGlvbj4KICAgICAgPC9PcmdhbmlzYXRpb24+CiAgICA8L1NlbmRlcj4KICAgIDxSZWNlaXZlcj4KICAgICAgPE9yZ2FuaXNhdGlvbj4KICAgICAgICA8T3JnYW5pc2F0aW9uTmFtZT5LUy1ESUdJVEFMRSBGRUxMRVNUSkVORVNURVIgQVM8L09yZ2FuaXNhdGlvbk5hbWU+CiAgICAgICAgPElkZW50PgogICAgICAgICAgPElkPjgxNDI5ODc8L0lkPgogICAgICAgICAgPFR5cGVJZCBWPSJIRVIiIEROPSJIRVItaWQiIFM9IjIuMTYuNTc4LjEuMTIuNC4xLjEuOTA1MSIgLz4KICAgICAgICA8L0lkZW50PgogICAgICAgIDxPcmdhbmlzYXRpb24+CiAgICAgICAgICA8T3JnYW5pc2F0aW9uTmFtZT5TYWtzYmVoYW5kbGluZyBwYXNpZW50b3BwbHlzbmluZ2VyPC9PcmdhbmlzYXRpb25OYW1lPgogICAgICAgICAgPElkZW50PgogICAgICAgICAgICA8SWQ+ODE0MzA2MDwvSWQ+CiAgICAgICAgICAgIDxUeXBlSWQgUz0iMi4xNi41NzguMS4xMi40LjEuMS45MDUxIiBWPSJIRVIiIEROPSJIRVItaWQiIC8+CiAgICAgICAgICA8L0lkZW50PgogICAgICAgIDwvT3JnYW5pc2F0aW9uPgogICAgICA8L09yZ2FuaXNhdGlvbj4KICAgIDwvUmVjZWl2ZXI+CiAgICA8UGF0aWVudD4KICAgICAgPEZhbWlseU5hbWU+TEVORVNUT0w8L0ZhbWlseU5hbWU+CiAgICAgIDxHaXZlbk5hbWU+QlJVTjwvR2l2ZW5OYW1lPgogICAgICA8RGF0ZU9mQmlydGg+MjAwMi0wNy0xNTwvRGF0ZU9mQmlydGg+CiAgICAgIDxJZGVudD4KICAgICAgICA8SWQ+MTU3MjAyNTUxNzg8L0lkPgogICAgICAgIDxUeXBlSWQgVj0iRk5SIiBETj0iRsO4ZHNlbHNudW1tZXIiIFM9IjIuMTYuNTc4LjEuMTIuNC4xLjEuODExNiIgLz4KICAgICAgPC9JZGVudD4KICAgIDwvUGF0aWVudD4KICA8L01zZ0luZm8+CiAgPERvY3VtZW50PgogICAgPFJlZkRvYz4KICAgICAgPElzc3VlRGF0ZSBWPSIyMDI1LTA4LTIxVDExOjM5OjU3IiAvPgogICAgICA8TXNnVHlwZSBWPSJYTUwiIEROPSJYTUwtaW5zdGFucyIgLz4KICAgICAgPENvbnRlbnQ+CiAgICAgICAgPERpYWxvZ21lbGRpbmcgeG1sbnM9Imh0dHA6Ly93d3cua2l0aC5uby94bWxzdGRzL2RpYWxvZy8yMDEzLTAxLTIzIiB4bWxuczp4c2Q9Imh0dHA6Ly93d3cudzMub3JnLzIwMDEvWE1MU2NoZW1hLnhzZCIgeG1sbnM6eHNpPSJodHRwOi8vd3d3LnczLm9yZy8yMDAxL1hNTFNjaGVtYS1pbnN0YW5jZSIgeHNpOnNjaGVtYUxvY2F0aW9uPSJodHRwOi8vd3d3LmtpdGgubm8veG1sc3Rkcy9kaWFsb2cvMjAxMy0wMS0yMyBkaWFsb2dtZWxkaW5nLXYxLjEueHNkIj4KICAgICAgICAgIDxOb3RhdD4KICAgICAgICAgICAgPFRlbWFLb2RldCBWPSI4IiBETj0iRm9yZXNww7hyc2VsIG9tIGhlbHNlb3BwbHlzbmluZ2VyIiBTPSIyLjE2LjU3OC4xLjEyLjQuMS4xLjczMjIiIC8+CiAgICAgICAgICAgIDxUZW1hPkVLRyB0YXR0IGkgZGFnPC9UZW1hPgogICAgICAgICAgICA8VGVrc3ROb3RhdElubmhvbGQ+UGFzaWVudGVuIGVyIGhlbnZpc3QgdGlsIGthcmRpb2xvZ2lzayBwb2xpa2xpbmlrayBmb3IgdXRyZWRuaW5nIG1lZCBzcMO4cnNtw6VsIG9tIGNhcmRpYWwgw6Vyc2FrIG9nIG11bGlnIGFuZ2luYSBwZWN0b3Jpcy4gRXR0ZXJzZW5kZXIgRUtHIHRhdHQgaSBkYWcgdXRlbiBmdW5uLiBTZSB2ZWRsZWdnLjwvVGVrc3ROb3RhdElubmhvbGQ+CiAgICAgICAgICAgIDxSb2xsZXJSZWxhdGVydE5vdGF0PgogICAgICAgICAgICAgIDxSb2xlVG9QYXRpZW50IEROPSJGYXN0bGVnZSIgVj0iNiIgUz0iMi4xNi41NzguMS4xMi40LjEuMS45MDM0IiAvPgogICAgICAgICAgICAgIDxIZWFsdGhjYXJlUHJvZmVzc2lvbmFsPgogICAgICAgICAgICAgICAgPEZhbWlseU5hbWU+TGVnZTwvRmFtaWx5TmFtZT4KICAgICAgICAgICAgICAgIDxHaXZlbk5hbWU+S3Vuc3RpZzwvR2l2ZW5OYW1lPgogICAgICAgICAgICAgICAgPElkZW50PgogICAgICAgICAgICAgICAgICA8ZmsxOklkPjkxNDQ5MDA8L2ZrMTpJZD4KICAgICAgICAgICAgICAgICAgPGZrMTpUeXBlSWQgVj0iSFBSIiBETj0iSFBSLW51bW1lciIgUz0iMi4xNi41NzguMS4xMi40LjEuMS44MTE2IiAvPgogICAgICAgICAgICAgICAgPC9JZGVudD4KICAgICAgICAgICAgICAgIDxUZWxlQ29tPgogICAgICAgICAgICAgICAgICA8ZmsxOlRlbGVBZGRyZXNzIFY9InRlbDoxMjM0NTY3OCI+PC9mazE6VGVsZUFkZHJlc3M+CiAgICAgICAgICAgICAgICA8L1RlbGVDb20+CiAgICAgICAgICAgICAgPC9IZWFsdGhjYXJlUHJvZmVzc2lvbmFsPgogICAgICAgICAgICA8L1JvbGxlclJlbGF0ZXJ0Tm90YXQ+CiAgICAgICAgICA8L05vdGF0PgogICAgICAgIDwvRGlhbG9nbWVsZGluZz4KICAgICAgPC9Db250ZW50PgogICAgPC9SZWZEb2M+CiAgPC9Eb2N1bWVudD4KICA8RG9jdW1lbnQ+CiAgICA8UmVmRG9jPgogICAgICA8SXNzdWVEYXRlIFY9IjIwMjUtMDgtMjFUMTE6Mzk6NTcuNjgxNTE0MVoiIC8+CiAgICAgIDxNc2dUeXBlIFY9IkEiIEROPSJWZWRsZWdnIiAvPgogICAgICA8TWltZVR5cGU+YXBwbGljYXRpb24vcGRmPC9NaW1lVHlwZT4KICAgICAgPERlc2NyaXB0aW9uPnNtYWxsLnBkZjwvRGVzY3JpcHRpb24+CiAgICAgIDxDb250ZW50PgogICAgICAgIDxCYXNlNjRDb250YWluZXIgeG1sbnM6eHNpPSJodHRwOi8vd3d3LnczLm9yZy8yMDAxL1hNTFNjaGVtYWluc3RhbmNlIiB4bWxucz0iaHR0cDovL3d3dy5raXRoLm5vL3htbHN0ZHMvYmFzZTY0Y29udGFpbmVyIj5KVkJFUmkweExqSWdDaVhpNDgvVENpQUtPU0F3SUc5aWFnbzhQQW92VEdWdVozUm9JREV3SURBZ1Vnb3ZSbWxzZEdWeUlDOUdiR0YwWlVSbFkyOWtaU0FLUGo0S2MzUnlaV0Z0Q2tpSnpaRFJTc013RklhZklPL3dlNmV5WnVja1RaUHRidElXQmkwVWpZS1FHeEZiSm1wbGl1TGIyNlFNOFg2Q0pCZkp5Zjk5eWNtRkY2eEphZ1dyck14endKZUNFTWQrZ0ZqV0JDMWRMUGVDSkZrYmwvZlRLZnduVHF0MUNLMHhJWnlFd0ZZWjJUK2Z3VDhLbm1JeFVtSmluTktKeVVpeVc3bVpWRVE2STU0bTJLM1p6Rml1cHZnUGFlZTdKSEZ1WnF5RHZ4dUdCYlpkdThEMXkrN2pZZisyZS8vQzJLT0ptOWR4ZkVxcVRITVJYWmxSMGhSSnVLd1phdTZFSmErTU9kanBZTi9ncHJxOHhWVzdhUnAwWlkxNjJ5U2JrdG9XdnhwUFpVTEd4SkxTcitHNFV1WCtRSHJjbC9yei8yZXF2UGdHUFBXaHFncGxibVJ6ZEhKbFlXMEtaVzVrYjJKcUNqRXdJREFnYjJKcUNqSTBOZ3BsYm1Sdlltb0tOQ0F3SUc5aWFnbzhQQW92Vkhsd1pTQXZVR0ZuWlFvdlVHRnlaVzUwSURVZ01DQlNDaTlTWlhOdmRYSmpaWE1nUER3S0wwWnZiblFnUER3S0wwWXdJRFlnTUNCU0lBb3ZSakVnTnlBd0lGSWdDajQrQ2k5UWNtOWpVMlYwSURJZ01DQlNDajQrQ2k5RGIyNTBaVzUwY3lBNUlEQWdVZ28rUGdwbGJtUnZZbW9LTmlBd0lHOWlhZ284UEFvdlZIbHdaU0F2Um05dWRBb3ZVM1ZpZEhsd1pTQXZWSEoxWlZSNWNHVUtMMDVoYldVZ0wwWXdDaTlDWVhObFJtOXVkQ0F2UVhKcFlXd0tMMFZ1WTI5a2FXNW5JQzlYYVc1QmJuTnBSVzVqYjJScGJtY0tQajRLWlc1a2IySnFDamNnTUNCdlltb0tQRHdLTDFSNWNHVWdMMFp2Ym5RS0wxTjFZblI1Y0dVZ0wxUnlkV1ZVZVhCbENpOU9ZVzFsSUM5R01Rb3ZRbUZ6WlVadmJuUWdMMEp2YjJ0QmJuUnBjWFZoTEVKdmJHUUtMMFpwY25OMFEyaGhjaUF6TVFvdlRHRnpkRU5vWVhJZ01qVTFDaTlYYVdSMGFITWdXeUEzTlRBZ01qVXdJREkzT0NBME1ESWdOakEySURVd01DQTRPRGtnT0RNeklESXlOeUF6TXpNZ016TXpJRFEwTkNBMk1EWWdNalV3SURNek15QXlOVEFnQ2pJNU5pQTFNREFnTlRBd0lEVXdNQ0ExTURBZ05UQXdJRFV3TUNBMU1EQWdOVEF3SURVd01DQTFNREFnTWpVd0lESTFNQ0EyTURZZ05qQTJJRFl3TmlBS05EUTBJRGMwTnlBM056Z2dOalkzSURjeU1pQTRNek1nTmpFeElEVTFOaUE0TXpNZ09ETXpJRE00T1NBek9Ea2dOemM0SURZeE1TQXhNREF3SURnek15QUtPRE16SURZeE1TQTRNek1nTnpJeUlEWXhNU0EyTmpjZ056YzRJRGMzT0NBeE1EQXdJRFkyTnlBMk5qY2dOalkzSURNek15QTJNRFlnTXpNeklEWXdOaUFLTlRBd0lETXpNeUExTURBZ05qRXhJRFEwTkNBMk1URWdOVEF3SURNNE9TQTFOVFlnTmpFeElETXpNeUF6TXpNZ05qRXhJRE16TXlBNE9Ea2dOakV4SUFvMU5UWWdOakV4SURZeE1TQXpPRGtnTkRRMElETXpNeUEyTVRFZ05UVTJJRGd6TXlBMU1EQWdOVFUySURVd01DQXpNVEFnTmpBMklETXhNQ0EyTURZZ0NqYzFNQ0ExTURBZ056VXdJRE16TXlBMU1EQWdOVEF3SURFd01EQWdOVEF3SURVd01DQXpNek1nTVRBd01DQTJNVEVnTXpnNUlERXdNREFnTnpVd0lEYzFNQ0FLTnpVd0lEYzFNQ0F5TnpnZ01qYzRJRFV3TUNBMU1EQWdOakEySURVd01DQXhNREF3SURNek15QTVPVGdnTkRRMElETTRPU0E0TXpNZ056VXdJRGMxTUNBS05qWTNJREkxTUNBeU56Z2dOVEF3SURVd01DQTJNRFlnTlRBd0lEWXdOaUExTURBZ016TXpJRGMwTnlBME16Z2dOVEF3SURZd05pQXpNek1nTnpRM0lBbzFNREFnTkRBd0lEVTBPU0F6TmpFZ016WXhJRE16TXlBMU56WWdOalF4SURJMU1DQXpNek1nTXpZeElEUTRPQ0ExTURBZ09EZzVJRGc1TUNBNE9Ea2dDalEwTkNBM056Z2dOemM0SURjM09DQTNOemdnTnpjNElEYzNPQ0F4TURBd0lEY3lNaUEyTVRFZ05qRXhJRFl4TVNBMk1URWdNemc1SURNNE9TQXpPRGtnQ2pNNE9TQTRNek1nT0RNeklEZ3pNeUE0TXpNZ09ETXpJRGd6TXlBNE16TWdOakEySURnek15QTNOemdnTnpjNElEYzNPQ0EzTnpnZ05qWTNJRFl4TVNBS05qRXhJRFV3TUNBMU1EQWdOVEF3SURVd01DQTFNREFnTlRBd0lEYzNPQ0EwTkRRZ05UQXdJRFV3TUNBMU1EQWdOVEF3SURNek15QXpNek1nTXpNeklBb3pNek1nTlRVMklEWXhNU0ExTlRZZ05UVTJJRFUxTmlBMU5UWWdOVFUySURVME9TQTFOVFlnTmpFeElEWXhNU0EyTVRFZ05qRXhJRFUxTmlBMk1URWdDalUxTmlCZENpOUZibU52WkdsdVp5QXZWMmx1UVc1emFVVnVZMjlrYVc1bkNpOUdiMjUwUkdWelkzSnBjSFJ2Y2lBNElEQWdVZ28rUGdwbGJtUnZZbW9LT0NBd0lHOWlhZ284UEFvdlZIbHdaU0F2Um05dWRFUmxjMk55YVhCMGIzSUtMMFp2Ym5ST1lXMWxJQzlDYjI5clFXNTBhWEYxWVN4Q2IyeGtDaTlHYkdGbmN5QXhOalF4T0FvdlJtOXVkRUpDYjNnZ1d5QXRNalV3SUMweU5qQWdNVEl6TmlBNU16QWdYUW92VFdsemMybHVaMWRwWkhSb0lEYzFNQW92VTNSbGJWWWdNVFEyQ2k5VGRHVnRTQ0F4TkRZS0wwbDBZV3hwWTBGdVoyeGxJREFLTDBOaGNFaGxhV2RvZENBNU16QUtMMWhJWldsbmFIUWdOalV4Q2k5QmMyTmxiblFnT1RNd0NpOUVaWE5qWlc1MElESTJNQW92VEdWaFpHbHVaeUF5TVRBS0wwMWhlRmRwWkhSb0lERXdNekFLTDBGMloxZHBaSFJvSURRMk1BbytQZ3BsYm1Sdlltb0tNaUF3SUc5aWFncGJJQzlRUkVZZ0wxUmxlSFFnSUYwS1pXNWtiMkpxQ2pVZ01DQnZZbW9LUER3S0wwdHBaSE1nV3pRZ01DQlNJRjBLTDBOdmRXNTBJREVLTDFSNWNHVWdMMUJoWjJWekNpOU5aV1JwWVVKdmVDQmJJREFnTUNBMk1USWdOemt5SUYwS1BqNEtaVzVrYjJKcUNqRWdNQ0J2WW1vS1BEd0tMME55WldGMGIzSWdLREUzTWpVdVptMHBDaTlEY21WaGRHbHZia1JoZEdVZ0tERXRTbUZ1TFRNZ01UZzZNVFZRVFNrS0wxUnBkR3hsSUNneE56STFMbEJFUmlrS0wwRjFkR2h2Y2lBb1ZXNXJibTkzYmlrS0wxQnliMlIxWTJWeUlDaEJZM0p2WW1GMElGQkVSbGR5YVhSbGNpQXpMakF5SUdadmNpQlhhVzVrYjNkektRb3ZTMlY1ZDI5eVpITWdLQ2tLTDFOMVltcGxZM1FnS0NrS1BqNEtaVzVrYjJKcUNqTWdNQ0J2WW1vS1BEd0tMMUJoWjJWeklEVWdNQ0JTQ2k5VWVYQmxJQzlEWVhSaGJHOW5DaTlFWldaaGRXeDBSM0poZVNBeE1TQXdJRklLTDBSbFptRjFiSFJTUjBJZ0lERXlJREFnVWdvK1BncGxibVJ2WW1vS01URWdNQ0J2WW1vS1d5OURZV3hIY21GNUNqdzhDaTlYYUdsMFpWQnZhVzUwSUZzd0xqazFNRFVnTVNBeExqQTRPVEVnWFFvdlIyRnRiV0VnTUM0eU5EWTRJQW8rUGdwZENtVnVaRzlpYWdveE1pQXdJRzlpYWdwYkwwTmhiRkpIUWdvOFBBb3ZWMmhwZEdWUWIybHVkQ0JiTUM0NU5UQTFJREVnTVM0d09Ea3hJRjBLTDBkaGJXMWhJRnN3TGpJME5qZ2dNQzR5TkRZNElEQXVNalEyT0NCZENpOU5ZWFJ5YVhnZ1d6QXVORE0yTVNBd0xqSXlNalVnTUM0d01UTTVJREF1TXpnMU1TQXdMamN4TmprZ01DNHdPVGN4SURBdU1UUXpNU0F3TGpBMk1EWWdNQzQzTVRReElGMEtQajRLWFFwbGJtUnZZbW9LZUhKbFpnb3dJREV6Q2pBd01EQXdNREF3TURBZ05qVTFNelVnWmdvd01EQXdNREF5TVRjeUlEQXdNREF3SUc0S01EQXdNREF3TWpBME5pQXdNREF3TUNCdUNqQXdNREF3TURJek5qTWdNREF3TURBZ2Jnb3dNREF3TURBd016YzFJREF3TURBd0lHNEtNREF3TURBd01qQTRNQ0F3TURBd01DQnVDakF3TURBd01EQTFNVGdnTURBd01EQWdiZ293TURBd01EQXdOak16SURBd01EQXdJRzRLTURBd01EQXdNVGMyTUNBd01EQXdNQ0J1Q2pBd01EQXdNREF3TWpFZ01EQXdNREFnYmdvd01EQXdNREF3TXpVeUlEQXdNREF3SUc0S01EQXdNREF3TWpRMk1DQXdNREF3TUNCdUNqQXdNREF3TURJMU5EZ2dNREF3TURBZ2JncDBjbUZwYkdWeUNqdzhDaTlUYVhwbElERXpDaTlTYjI5MElETWdNQ0JTQ2k5SmJtWnZJREVnTUNCU0NpOUpSQ0JiUERRM01UUTVOVEV3TkRNelpHUTBPRGd5WmpBMVpqaGpNVEkwTWpJek56TTBQancwTnpFME9UVXhNRFF6TTJSa05EZzRNbVl3TldZNFl6RXlOREl5TXpjek5ENWRDajQrQ25OMFlYSjBlSEpsWmdveU56STJDaVVsUlU5R0NnPT08L0Jhc2U2NENvbnRhaW5lcj4KICAgICAgPC9Db250ZW50PgogICAgPC9SZWZEb2M+CiAgPC9Eb2N1bWVudD4KPC9Nc2dIZWFkPgo="
+                        it.businessDocument shouldBe expectedBusinessDocument("msh/get-business-document-response.json")
                         it.contentType shouldBe "application/xml"
                         it.contentTransferEncoding shouldBe "base64"
                     }
@@ -516,7 +401,7 @@ class MshInternalClientTest : FreeSpec() {
                 verifySequence {
                     helseIdClient.getAccessToken(StandardAccessTokenRequest(TokenType.DPOP))
                     proofBuilder.buildProof(
-                        Endpoint(HttpMethod.GET, "${wireMock.baseUrl}/Messages/$id/business-document"),
+                        Endpoint(HttpMethod.GET, "${wireMock.baseUrl}/messages/$id/business-document"),
                         null,
                         accessToken
                     )
@@ -531,7 +416,7 @@ class MshInternalClientTest : FreeSpec() {
                buildDefaultClient(accessToken)
                     .getBusinessDocument(id)
                     .asClue {
-                        it.businessDocument shouldBe "PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4KPEFwcFJlYyB4bWxuczp4c2k9Imh0dHA6Ly93d3cudzMub3JnLzIwMDEvWE1MU2NoZW1hLWluc3RhbmNlIiB4bWxuczp4c2Q9Imh0dHA6Ly93d3cudzMub3JnLzIwMDEvWE1MU2NoZW1hIiB4bWxucz0iaHR0cDovL3d3dy5raXRoLm5vL3htbHN0ZHMvYXBwcmVjLzIwMTItMDItMTUiPgogIDxNc2dUeXBlIFY9IkFQUFJFQyIgLz4KICA8TUlHdmVyc2lvbj52MS4xIDIwMTItMDItMTU8L01JR3ZlcnNpb24+CiAgPEdlbkRhdGU+MjAyNS0wOC0yMVQxMToyMToxNi4wMDA0MTU1WjwvR2VuRGF0ZT4KICA8SWQ+OWViYWFmNDQtNzMxNy00MWI3LTg5MmEtMmE1NjhhY2Q1MTExPC9JZD4KICA8U2VuZGVyPgogICAgPFJvbGUgVj0iUFJJTSIgRE49IlByaW3DpnJtb3R0YWtlciIgLz4KICAgIDxIQ1A+CiAgICAgIDxJbnN0PgogICAgICAgIDxOYW1lPk5ITjwvTmFtZT4KICAgICAgICA8SWQ+MTEyMzc0PC9JZD4KICAgICAgICA8VHlwZUlkIFY9IkhFUiIgRE49IkhFUi1pZCIgLz4KICAgICAgICA8RGVwdD4KICAgICAgICAgIDxOYW1lPk5ITjwvTmFtZT4KICAgICAgICAgIDxJZD44MDk0ODY2PC9JZD4KICAgICAgICAgIDxUeXBlSWQgVj0iSEVSIiBETj0iSEVSLWlkIiAvPgogICAgICAgIDwvRGVwdD4KICAgICAgPC9JbnN0PgogICAgPC9IQ1A+CiAgPC9TZW5kZXI+CiAgPFJlY2VpdmVyPgogICAgPFJvbGUgVj0iQVZTIiAvPgogICAgPEhDUD4KICAgICAgPEluc3Q+CiAgICAgICAgPE5hbWU+S1MtRElHSVRBTEUgRkVMTEVTVEpFTkVTVEVSIEFTPC9OYW1lPgogICAgICAgIDxJZD44MTQyOTg3PC9JZD4KICAgICAgICA8VHlwZUlkIFY9IkhFUiIgRE49IkhFUi1pZCIgLz4KICAgICAgICA8RGVwdD4KICAgICAgICAgIDxOYW1lPlN2YXJVdCBtZWxkaW5nc2Zvcm1pZGxlcjwvTmFtZT4KICAgICAgICAgIDxJZD44MTQzMDYwPC9JZD4KICAgICAgICAgIDxUeXBlSWQgVj0iSEVSIiBETj0iSEVSLWlkIiAvPgogICAgICAgIDwvRGVwdD4KICAgICAgPC9JbnN0PgogICAgPC9IQ1A+CiAgPC9SZWNlaXZlcj4KICA8U3RhdHVzIFY9IjEiIEROPSJPSyIgLz4KICA8T3JpZ2luYWxNc2dJZD4KICAgIDxNc2dUeXBlIFY9IkRJQUxPR19IRUxTRUZBR0xJRyIgRE49IkhlbHNlZmFnbGlnIGRpYWxvZyIgLz4KICAgIDxJc3N1ZURhdGU+MjAyNS0wOC0yMVQxMzoyMDo0OCswMjowMDwvSXNzdWVEYXRlPgogICAgPElkPmE1ZTk2NjVlLTQ5ODItNDUyMS1hNTBmLTRiMTIxZmMyNTA5NDwvSWQ+CiAgPC9PcmlnaW5hbE1zZ0lkPgo8L0FwcFJlYz4K"
+                        it.businessDocument shouldBe expectedBusinessDocument("msh/get-business-document-apprec-response.json")
                         it.contentType shouldBe "application/xml"
                         it.contentTransferEncoding shouldBe "base64"
                     }
@@ -614,15 +499,15 @@ class MshInternalClientTest : FreeSpec() {
                         it.size shouldBe 1
                         with(it.single()) {
                             receiverHerId shouldBe 8094866
-                            transportDeliveryState shouldBe DeliveryState.UNCONFIRMED
-                            appRecStatus should beNull()
+                            transportDeliveryState shouldBe NhnDeliveryState.UNCONFIRMED
+                            apprecInfo?.appRecStatus shouldBe null
                         }
                     }
 
                 verifySequence {
                     helseIdClient.getAccessToken(StandardAccessTokenRequest(TokenType.DPOP))
                     proofBuilder.buildProof(
-                        Endpoint(HttpMethod.GET, "${wireMock.baseUrl}/Messages/$id/status"),
+                        Endpoint(HttpMethod.GET, "${wireMock.baseUrl}/messages/$id/status"),
                         null,
                         accessToken
                     )
@@ -640,8 +525,8 @@ class MshInternalClientTest : FreeSpec() {
                         it.size shouldBe 1
                         with(it.single()) {
                             receiverHerId shouldBe 8094866
-                            transportDeliveryState shouldBe DeliveryState.ACKNOWLEDGED
-                            appRecStatus shouldBe AppRecStatus.OK
+                            transportDeliveryState shouldBe NhnDeliveryState.ACKNOWLEDGED
+                            apprecInfo?.appRecStatus shouldBe NhnAppRecStatus.OK
                         }
                     }
             }
@@ -719,7 +604,7 @@ class MshInternalClientTest : FreeSpec() {
                     proofBuilder = proofBuilder,
                 )
                 client
-                    .postAppRec(id, senderHerId, PostAppRecRequest())
+                    .postAppRec(id, PostAppRecRequest().appRecSenderHerId(senderHerId))
                     .asClue {
                         it shouldBe UUID.fromString("680bb102-4541-4ca9-8210-07251b3206a3")
                     }
@@ -729,7 +614,7 @@ class MshInternalClientTest : FreeSpec() {
                     proofBuilder.buildProof(
                         Endpoint(
                             HttpMethod.POST,
-                            "${wireMock.baseUrl}/Messages/$id/apprec/$senderHerId"
+                            "${wireMock.baseUrl}/messages/$id/apprec"
                         ), null, accessToken
                     )
                 }
@@ -742,11 +627,11 @@ class MshInternalClientTest : FreeSpec() {
                 mockPostAppRec(id, senderHerId, 200, expected)
 
                 shouldThrow<HttpException> {
-                    buildDefaultClient().postAppRec(id, senderHerId, PostAppRecRequest())
+                    buildDefaultClient().postAppRec(id, PostAppRecRequest().appRecSenderHerId(senderHerId))
                 }.asClue {
                     it.status shouldBe 200
                     it.body shouldBe expected
-                    it.message shouldBe "Got HTTP status 200 when expecting 201: $expected"
+                    it.message shouldBe "Got HTTP status 200 when expecting 202: $expected"
                 }
             }
 
@@ -757,7 +642,7 @@ class MshInternalClientTest : FreeSpec() {
                 mockPostAppRec(id, senderHerId, 301, expected)
 
                 shouldThrow<HttpRedirectException> {
-                    buildDefaultClient().postAppRec(id, senderHerId, PostAppRecRequest())
+                    buildDefaultClient().postAppRec(id, PostAppRecRequest().appRecSenderHerId(senderHerId))
                 }.asClue {
                     it.status shouldBe 301
                     it.body shouldBe expected
@@ -772,7 +657,7 @@ class MshInternalClientTest : FreeSpec() {
                 mockPostAppRec(id, senderHerId, 401, expected)
 
                 shouldThrow<HttpClientException> {
-                    buildDefaultClient().postAppRec(id, senderHerId, PostAppRecRequest())
+                    buildDefaultClient().postAppRec(id, PostAppRecRequest().appRecSenderHerId(senderHerId))
                 }.asClue {
                     it.status shouldBe 401
                     it.body shouldBe expected
@@ -787,7 +672,7 @@ class MshInternalClientTest : FreeSpec() {
                 mockPostAppRec(id, senderHerId, 500, expected)
 
                 shouldThrow<HttpServerException> {
-                    buildDefaultClient().postAppRec(id, senderHerId, PostAppRecRequest())
+                    buildDefaultClient().postAppRec(id, PostAppRecRequest().appRecSenderHerId(senderHerId))
                 }.asClue {
                     it.status shouldBe 500
                     it.body shouldBe expected
@@ -796,11 +681,11 @@ class MshInternalClientTest : FreeSpec() {
             }
         }
 
-        "Mark message read" - {
+        "Mark message downloaded" - {
             "Should make expected calls" {
                 val id = UUID.randomUUID()
-                val senderHerId = nextInt(1, 1000000)
-                mockMarkMessageRead(id, senderHerId)
+                val receiverHerId = nextInt(1, 1000000)
+                mockMarkMessageDownloaded(id, receiverHerId)
 
                 val accessToken = UUID.randomUUID().toString()
                 val helseIdClient = mockHelseIdClient(accessToken)
@@ -810,12 +695,12 @@ class MshInternalClientTest : FreeSpec() {
                     sourceSystem = UUID.randomUUID().toString(),
                     helseIdClient = helseIdClient,
                     proofBuilder = proofBuilder,
-                ).markMessageRead(id, senderHerId)
+                ).markMessageDownloaded(id, receiverHerId)
 
                 verifySequence {
                     helseIdClient.getAccessToken(StandardAccessTokenRequest(TokenType.DPOP))
                     proofBuilder.buildProof(
-                        Endpoint(HttpMethod.PUT, "${wireMock.baseUrl}/Messages/$id/read/$senderHerId"),
+                        Endpoint(HttpMethod.PUT, "${wireMock.baseUrl}/messages/$id/downloaded"),
                         null,
                         accessToken
                     )
@@ -824,12 +709,12 @@ class MshInternalClientTest : FreeSpec() {
 
             "Not NO_CONTENT response should throw exception" {
                 val id = UUID.randomUUID()
-                val senderHerId = nextInt(1, 1000000)
+                val receiverHerId = nextInt(1, 1000000)
                 val expected = UUID.randomUUID().toString()
-                mockMarkMessageRead(id, senderHerId, 201, expected)
+                mockMarkMessageDownloaded(id, receiverHerId, 201, expected)
 
                 shouldThrow<HttpException> {
-                    buildDefaultClient().markMessageRead(id, senderHerId)
+                    buildDefaultClient().markMessageDownloaded(id, receiverHerId)
                 }.asClue {
                     it.status shouldBe 201
                     it.body shouldBe expected
@@ -839,12 +724,12 @@ class MshInternalClientTest : FreeSpec() {
 
             "Redirect response should throw exception" {
                 val id = UUID.randomUUID()
-                val senderHerId = nextInt(1, 1000000)
+                val receiverHerId = nextInt(1, 1000000)
                 val expected = UUID.randomUUID().toString()
-                mockMarkMessageRead(id, senderHerId, 302, expected)
+                mockMarkMessageDownloaded(id, receiverHerId, 302, expected)
 
                 shouldThrow<HttpRedirectException> {
-                    buildDefaultClient().markMessageRead(id, senderHerId)
+                    buildDefaultClient().markMessageDownloaded(id, receiverHerId)
                 }.asClue {
                     it.status shouldBe 302
                     it.body shouldBe expected
@@ -854,12 +739,12 @@ class MshInternalClientTest : FreeSpec() {
 
             "Client error response should throw exception" {
                 val id = UUID.randomUUID()
-                val senderHerId = nextInt(1, 1000000)
+                val receiverHerId = nextInt(1, 1000000)
                 val expected = UUID.randomUUID().toString()
-                mockMarkMessageRead(id, senderHerId, 404, expected)
+                mockMarkMessageDownloaded(id, receiverHerId, 404, expected)
 
                 shouldThrow<HttpClientException> {
-                    buildDefaultClient().markMessageRead(id, senderHerId)
+                    buildDefaultClient().markMessageDownloaded(id, receiverHerId)
                 }.asClue {
                     it.status shouldBe 404
                     it.body shouldBe expected
@@ -869,16 +754,103 @@ class MshInternalClientTest : FreeSpec() {
 
             "Server error response should throw exception" {
                 val id = UUID.randomUUID()
-                val senderHerId = nextInt(1, 1000000)
+                val receiverHerId = nextInt(1, 1000000)
                 val expected = UUID.randomUUID().toString()
-                mockMarkMessageRead(id, senderHerId, 501, expected)
+                mockMarkMessageDownloaded(id, receiverHerId, 501, expected)
 
                 shouldThrow<HttpServerException> {
-                    buildDefaultClient().markMessageRead(id, senderHerId)
+                    buildDefaultClient().markMessageDownloaded(id, receiverHerId)
                 }.asClue {
                     it.status shouldBe 501
                     it.body shouldBe expected
                     it.message shouldBe "Got HTTP status 501: $expected"
+                }
+            }
+        }
+
+        "MSH configurations" - {
+            "Set configurations should make expected calls" {
+                val configuration = NhnMshConfiguration()
+                    .herId(123456)
+                    .receiveNotificationChannel(NhnReceiveNotificationChannel.API)
+                    .clientLocked(true)
+                    .rejectMessageFilters(
+                        NhnMshConfigurationRejectMessageFilters().messageFunction(listOf("DIALOG_HELSEFAGLIG"))
+                    )
+                mockSetMshConfigurations(
+                    expectedBody = NhnSetMshConfigurationsRequest().configurations(listOf(configuration))
+                )
+
+                val accessToken = UUID.randomUUID().toString()
+                val helseIdClient = mockHelseIdClient(accessToken)
+                val proofBuilder = mockProofBuilder()
+                MshInternalClient(
+                    baseUrl = wireMock.baseUrl,
+                    sourceSystem = UUID.randomUUID().toString(),
+                    helseIdClient = helseIdClient,
+                    proofBuilder = proofBuilder,
+                ).setMshConfigurations(listOf(configuration))
+
+                verifySequence {
+                    helseIdClient.getAccessToken(StandardAccessTokenRequest(TokenType.DPOP))
+                    proofBuilder.buildProof(
+                        Endpoint(HttpMethod.PUT, "${wireMock.baseUrl}/mshconfigurations"),
+                        null,
+                        accessToken
+                    )
+                }
+            }
+
+            "Unexpected response when setting configurations should throw exception" {
+                val expected = UUID.randomUUID().toString()
+                mockSetMshConfigurations(201, expected)
+
+                shouldThrow<HttpException> {
+                    buildDefaultClient().setMshConfigurations(listOf(
+                        NhnMshConfiguration().herId(
+                            randomHerId()).receiveNotificationChannel(NhnReceiveNotificationChannel.API)
+                    ))
+                }.asClue {
+                    it.status shouldBe 201
+                    it.body shouldBe expected
+                    it.message shouldBe "Got HTTP status 201 when expecting 204: $expected"
+                }
+            }
+
+            "Delete configurations should make expected calls" {
+                val herIds = listOf(42, 1337)
+                mockDeleteMshConfigurations(herIds = herIds)
+
+                val accessToken = UUID.randomUUID().toString()
+                val helseIdClient = mockHelseIdClient(accessToken)
+                val proofBuilder = mockProofBuilder()
+                MshInternalClient(
+                    baseUrl = wireMock.baseUrl,
+                    sourceSystem = UUID.randomUUID().toString(),
+                    helseIdClient = helseIdClient,
+                    proofBuilder = proofBuilder,
+                ).deleteMshConfigurations(herIds)
+
+                verifySequence {
+                    helseIdClient.getAccessToken(StandardAccessTokenRequest(TokenType.DPOP))
+                    proofBuilder.buildProof(
+                        Endpoint(HttpMethod.DELETE, "${wireMock.baseUrl}/mshconfigurations"),
+                        null,
+                        accessToken
+                    )
+                }
+            }
+
+            "Client error response when deleting configurations should throw exception" {
+                val expected = UUID.randomUUID().toString()
+                mockDeleteMshConfigurations(status = 404, body = expected)
+
+                shouldThrow<HttpClientException> {
+                    buildDefaultClient().deleteMshConfigurations(listOf(randomHerId()))
+                }.asClue {
+                    it.status shouldBe 404
+                    it.body shouldBe expected
+                    it.message shouldBe "Got HTTP status 404: $expected"
                 }
             }
         }
@@ -1070,7 +1042,7 @@ class MshInternalClientTest : FreeSpec() {
                     proofBuilder = mockk { every { buildProof(any(), any(), any()) } returns dpopProof },
                 ).getMessage(id)
 
-                wireMockClient.find(getRequestedFor(urlEqualTo("/Messages/$id"))).asClue { requests ->
+                wireMockClient.find(getRequestedFor(urlEqualTo("/messages/$id"))).asClue { requests ->
                     requests shouldHaveSize 1
                     requests.single().asClue { request ->
                         request.header("Authorization").asClue { authHeaders ->
@@ -1166,6 +1138,12 @@ class MshInternalClientTest : FreeSpec() {
 
     }
 
+    private fun expectedBusinessDocument(resource: String): String =
+        objectMapper
+            .readTree(readResourceContentAsString(resource))
+            .get("businessDocument")
+            .asText()
+
     private fun buildDefaultClient(accessToken: String = UUID.randomUUID().toString()): MshInternalClient = MshInternalClient(
         baseUrl = wireMock.baseUrl,
         sourceSystem = UUID.randomUUID().toString(),
@@ -1177,21 +1155,40 @@ class MshInternalClientTest : FreeSpec() {
 
     private fun mockHelseIdClient(accessToken: String): HelseIdClient = mockk<HelseIdClient> { every { getAccessToken(any()) } returns buildTokenResponse(accessToken) }
 
-    private fun mockGetAppRec(id: UUID, status: Int = 200, body: String = readResourceContentAsString("msh/get-apprecinfo-ok.json")) {
-        wireMockClient.register(
-            get("/Messages/$id/apprec")
-                .willReturn(
-                    status(status)
-                        .withHeader("Content-Type", "application/json")
-                        .withBody(body)
-                )
-        )
-    }
 
-    private fun mockGetMessages(receiverHerId: Int, status: Int = 200, body: String = readResourceContentAsString("msh/get-messages-response.json")) {
+    private fun mockGetUnreadNotifications(
+        herIds: Collection<Int>,
+        notificationsToFetch: Int? = null,
+        status: Int = 200,
+        body: String = NhnGetUnreadNotificationsResponse()
+            .unreadNotifications(
+                listOf(
+                    NhnUnreadNotification()
+                        .notificationId("17aaeaa7-fa1e-4b60-a8e9-bdc31718dfc9")
+                        .relatedMessageId("0d5c8d05-ab57-4b2b-b480-c46c69cdf789")
+                        .type(NhnNotificationType.NEW_MESSAGE)
+                        .notificationReceiverHerId(6789)
+                        .notificationTriggeredByHerId(9876)
+                        .description("New message received (EPIKRISE).")
+                        .createdAt(OffsetDateTime.parse("2026-04-14T06:17:00+00:00")),
+                    NhnUnreadNotification()
+                        .notificationId("c5e6b600-78ef-4d2a-ad5e-e4b64e3f5230")
+                        .relatedMessageId("aa2fb53f-8454-4eed-9c13-30f7e61fee23")
+                        .type(NhnNotificationType.REFUSED_MESSAGE)
+                        .notificationReceiverHerId(1234)
+                        .notificationTriggeredByHerId(5678)
+                        .description("Receiver does not support the message type. (EPIKRISE).")
+                        .createdAt(OffsetDateTime.parse("2026-04-14T06:15:20+00:00")),
+                )
+            )
+            .toJson(),
+    ) {
         wireMockClient.register(
-            get(urlPathEqualTo("/Messages"))
-                .withQueryParam("receiverHerIds", equalTo(receiverHerId.toString()))
+            get(urlPathEqualTo("/notifications/unread"))
+                .apply {
+                    herIds.forEach { withQueryParam("HerIds", equalTo(it.toString())) }
+                    if (notificationsToFetch != null) withQueryParam("NotificationsToFetch", equalTo(notificationsToFetch.toString()))
+                }
                 .willReturn(
                     status(status)
                         .withHeader("Content-Type", "application/json")
@@ -1202,7 +1199,7 @@ class MshInternalClientTest : FreeSpec() {
 
     private fun mockGetMessage(id: UUID, status: Int = 200, body: String = readResourceContentAsString("msh/get-message-response.json")) {
         wireMockClient.register(
-            get("/Messages/$id")
+            get("/messages/$id")
                 .willReturn(
                     status(status)
                         .withHeader("Content-Type", "application/json")
@@ -1213,7 +1210,7 @@ class MshInternalClientTest : FreeSpec() {
 
     private fun mockGetBusinessDocument(id: UUID, status: Int = 200, body: String = readResourceContentAsString("msh/get-business-document-response.json")) {
         wireMockClient.register(
-            get("/Messages/$id/business-document")
+            get("/messages/$id/business-document")
                 .willReturn(
                     status(status)
                         .withHeader("Content-Type", "application/json")
@@ -1224,7 +1221,7 @@ class MshInternalClientTest : FreeSpec() {
 
     private fun mockGetStatus(id: UUID, status: Int = 200, body: String = readResourceContentAsString("msh/get-status.json")) {
         wireMockClient.register(
-            get("/Messages/$id/status")
+            get("/messages/$id/status")
                 .willReturn(
                     status(status)
                         .withHeader("Content-Type", "application/json")
@@ -1233,9 +1230,9 @@ class MshInternalClientTest : FreeSpec() {
         )
     }
 
-    private fun mockSendMessage(status: Int = 201, body: String = readResourceContentAsString("msh/post-message-response.txt")) {
+    private fun  mockSendMessage(status: Int = 202, body: String = readResourceContentAsString("msh/post-message-response.json")) {
         wireMockClient.register(
-            post("/Messages")
+            post("/messages")
                 .willReturn(
                     status(status)
                         .withHeader("Content-Type", "application/json")
@@ -1244,20 +1241,60 @@ class MshInternalClientTest : FreeSpec() {
         )
     }
 
-    private fun mockPostAppRec(appRecId: UUID, appRecSenderHerId: Int, status: Int = 201, body: String = readResourceContentAsString("msh/post-apprec-response.txt")) {
+    private fun mockPostAppRec(appRecId: UUID, senderHerId: Int, status: Int = 202, body: String = readResourceContentAsString("msh/post-apprec-response.json")) {
         wireMockClient.register(
-            post("/Messages/$appRecId/apprec/$appRecSenderHerId")
+            post("/messages/$appRecId/apprec")
                 .willReturn(
                     status(status)
-                        .withHeader("Content-Type", "text/plain")
+                        .withHeader("Content-Type", "application/json")
                         .withBody(body)
                 )
         )
     }
 
-    private fun mockMarkMessageRead(markAsReadId: UUID, markAsReadHerId: Int, status: Int = 204, body: String = "") {
+    private fun mockDeleteNotifications(status: Int = 204, body: String = "", expectedBody: NhnDeleteNotificationsRequest? = null) {
         wireMockClient.register(
-            put("/Messages/$markAsReadId/read/$markAsReadHerId")
+            post(urlPathEqualTo("/notifications/delete"))
+                .apply {
+                    if (expectedBody != null) withRequestBody(equalToJson(expectedBody.toJson()))
+                }
+                .willReturn(
+                    status(status)
+                        .withBody(body)
+                )
+        )
+    }
+
+    private fun mockMarkMessageDownloaded(markAsReadId: UUID, markAsReadHerId: Int, status: Int = 204, body: String = "") {
+        wireMockClient.register(
+            put(urlPathEqualTo("/messages/$markAsReadId/downloaded"))
+                .withRequestBody(equalToJson(NhnMarkAsDownloadedRequest().receiverHerId(markAsReadHerId).toJson()))
+                .willReturn(
+                    status(status)
+                        .withBody(body)
+                )
+        )
+    }
+
+    private fun mockSetMshConfigurations(status: Int = 204, body: String = "", expectedBody: NhnSetMshConfigurationsRequest? = null) {
+        wireMockClient.register(
+            put(urlPathEqualTo("/mshconfigurations"))
+                .apply {
+                    if (expectedBody != null) withRequestBody(equalToJson(expectedBody.toJson()))
+                }
+                .willReturn(
+                    status(status)
+                        .withBody(body)
+                )
+        )
+    }
+
+    private fun mockDeleteMshConfigurations(herIds: Collection<Int> = emptyList(), status: Int = 204, body: String = "") {
+        wireMockClient.register(
+            delete(urlPathEqualTo("/mshconfigurations"))
+                .apply {
+                    herIds.forEach { herId -> withQueryParam("HerIds", equalTo(herId.toString())) }
+                }
                 .willReturn(
                     status(status)
                         .withBody(body)
