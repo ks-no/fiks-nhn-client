@@ -19,6 +19,9 @@ import io.mockk.slot
 import no.ks.fiks.hdir.FeilmeldingForApplikasjonskvittering
 import no.ks.fiks.hdir.Helsepersonell
 import no.ks.fiks.hdir.HelsepersonellsFunksjoner
+import no.ks.fiks.hdir.MeldingensFunksjon
+import no.ks.fiks.hdir.OrganizationIdType
+import no.ks.fiks.hdir.PersonIdType
 import no.ks.fiks.hdir.StatusForMottakAvMelding
 import no.ks.fiks.nhn.*
 import no.ks.fiks.nhn.msh.MshConfiguration as ClientMshConfiguration
@@ -88,6 +91,446 @@ class ClientTest : FreeSpec() {
                 client.sendMessage(randomOutgoingBusinessDocument(), params)
                 coVerifySequence {
                     internalClient.postMessage(any(), params)
+                }
+            }
+
+            "Should be able to send OK receipt without errors" {
+                val returnedId = UUID.randomUUID()
+                val requestSlot = slot<NhnPostAppRecRequest>()
+                val internalClient = mockk<MshInternalClient> {
+                    coEvery { postAppRec(any(), capture(requestSlot), any()) } returns returnedId
+                }
+                val client = Client(internalClient, testApplicationMetadata)
+
+                val receipt = OutgoingApplicationReceipt(UUID.randomUUID(), randomHerId(), StatusForMottakAvMelding.OK, emptyList())
+                client.sendApplicationReceipt(receipt).asClue {
+                    it shouldBe returnedId
+                }
+
+                coVerifySequence {
+                    internalClient.postAppRec(receipt.acknowledgedId, any(), null)
+                }
+
+                requestSlot.captured.asClue { request ->
+                    request.appRecStatus shouldBe NhnAppRecStatus.OK
+                    request.appRecErrorList.shouldBeEmpty()
+                    request.transportMetadataOverrides should beNull()
+                }
+            }
+
+            "Should be able to send OK_FEIL_I_DELMELDING with errors" {
+                val requestSlot = slot<NhnPostAppRecRequest>()
+                val internalClient = mockk<MshInternalClient> { coEvery { postAppRec(any(), capture(requestSlot), any()) } returns UUID.randomUUID() }
+                val client = Client(internalClient, testApplicationMetadata)
+
+                val receipt = OutgoingApplicationReceipt(
+                    acknowledgedId = UUID.randomUUID(),
+                    senderHerId = randomHerId(),
+                    status = StatusForMottakAvMelding.OK_FEIL_I_DELMELDING,
+                    errors = List(nextInt(1, 5)) { randomOutgoingApplicationReceiptError() },
+                )
+                client.sendApplicationReceipt(receipt)
+
+                coVerifySequence {
+                    internalClient.postAppRec(receipt.acknowledgedId, any(), null)
+                }
+
+                requestSlot.captured.asClue { request ->
+                    val requestAppRecErrorList = request.appRecErrorList ?: emptyList()
+                    request.appRecStatus shouldBe NhnAppRecStatus.OK_ERROR_IN_MESSAGE_PART
+                    requestAppRecErrorList shouldHaveSize receipt.errors.orEmpty().size
+                    receipt.errors.orEmpty().forEach {
+                        requestAppRecErrorList shouldContain NhnAppRecError().apply {
+                            errorCode = it.type.verdi
+                            description = it.type.navn
+                            oid = it.type.kodeverk
+                            details = it.details
+                        }
+                    }
+                    request.transportMetadataOverrides should beNull()
+                }
+            }
+
+            "Should be able to send AVVIST with errors" {
+                val requestSlot = slot<NhnPostAppRecRequest>()
+                val internalClient = mockk<MshInternalClient> { coEvery { postAppRec(any(), capture(requestSlot), any()) } returns UUID.randomUUID() }
+                val client = Client(internalClient, testApplicationMetadata)
+
+                val receipt = OutgoingApplicationReceipt(
+                    acknowledgedId = UUID.randomUUID(),
+                    senderHerId = randomHerId(),
+                    status = StatusForMottakAvMelding.AVVIST,
+                    errors = List(nextInt(1, 5)) { randomOutgoingApplicationReceiptError() },
+                )
+                client.sendApplicationReceipt(receipt)
+
+                coVerifySequence {
+                    internalClient.postAppRec(receipt.acknowledgedId, any(), null)
+                }
+
+                requestSlot.captured.asClue { request ->
+                    val requestAppRecErrorList = request.appRecErrorList ?: emptyList()
+                    request.appRecStatus shouldBe NhnAppRecStatus.REJECTED
+                    requestAppRecErrorList shouldHaveSize receipt.errors.orEmpty().size
+                    receipt.errors.orEmpty().forEach {
+                        requestAppRecErrorList shouldContain NhnAppRecError().apply {
+                            errorCode = it.type.verdi
+                            description = it.type.navn
+                            oid = it.type.kodeverk
+                            details = it.details
+                        }
+                    }
+                    request.transportMetadataOverrides should beNull()
+                }
+            }
+
+            "Trying to send an OK receipt with errors should cause an exception to be thrown" {
+                val client = Client(mockk<MshInternalClient> { coEvery { postAppRec(any(), any(), any()) } returns UUID.randomUUID() }, testApplicationMetadata)
+
+                val receipt = OutgoingApplicationReceipt(
+                    acknowledgedId = UUID.randomUUID(),
+                    senderHerId = randomHerId(),
+                    status = StatusForMottakAvMelding.OK,
+                    errors = listOf(randomOutgoingApplicationReceiptError()),
+                )
+
+                shouldThrow<IllegalArgumentException> { client.sendApplicationReceipt(receipt) }.asClue {
+                    it.message shouldBe "Error messages are not allowed when status is OK"
+                }
+            }
+
+            "Trying to send an OK_FEIL_I_DELMELDING receipt without errors should cause an exception to be thrown" {
+                val client = Client(mockk<MshInternalClient> { coEvery { postAppRec(any(), any(), any()) } returns UUID.randomUUID() }, testApplicationMetadata)
+
+                val receipt = OutgoingApplicationReceipt(
+                    acknowledgedId = UUID.randomUUID(),
+                    senderHerId = randomHerId(),
+                    status = StatusForMottakAvMelding.OK_FEIL_I_DELMELDING,
+                    errors = emptyList(),
+                )
+
+                shouldThrow<IllegalArgumentException> { client.sendApplicationReceipt(receipt) }.asClue {
+                    it.message shouldBe "Must provide at least one error message if status is not OK"
+                }
+            }
+
+            "Trying to send an AVVIST receipt without errors should cause an exception to be thrown" {
+                val client = Client(mockk<MshInternalClient> { coEvery { postAppRec(any(), any(), any()) } returns UUID.randomUUID() }, testApplicationMetadata)
+
+                val receipt = OutgoingApplicationReceipt(
+                    acknowledgedId = UUID.randomUUID(),
+                    senderHerId = randomHerId(),
+                    status = StatusForMottakAvMelding.AVVIST,
+                    errors = emptyList(),
+                )
+
+                shouldThrow<IllegalArgumentException> { client.sendApplicationReceipt(receipt) }.asClue {
+                    it.message shouldBe "Must provide at least one error message if status is not OK"
+                }
+            }
+
+            "Should use child HER-id precedence and include v3 metadata for each dialog version" {
+                val applicationMetadata = ApplicationMetadata("fiks-nhn-client-test-app", "7.8.9")
+
+                listOf(DialogmeldingVersion.V1_0, DialogmeldingVersion.V1_1).forEach { version ->
+                    val senderChildHerId = 101
+                    val senderParentHerId = 102
+                    val receiverChildHerId = 201
+                    val receiverParentHerId = 202
+
+                    val requestSlot = slot<NhnPostMessageRequest>()
+                    val internalClient = mockk<MshInternalClient> {
+                        coEvery { postMessage(capture(requestSlot), any()) } returns UUID.randomUUID()
+                    }
+                    val client = Client(internalClient, applicationMetadata)
+                    val businessDocument = OutgoingBusinessDocument(
+                        id = UUID.randomUUID(),
+                        sender = Sender(
+                            parent = OrganizationCommunicationParty(
+                                ids = listOf(OrganizationId(senderParentHerId.toString(), OrganizationIdType.HER_ID)),
+                                address = null,
+                                name = "Parent sender",
+                            ),
+                            child = OrganizationCommunicationParty(
+                                ids = listOf(OrganizationId(senderChildHerId.toString(), OrganizationIdType.HER_ID)),
+                                address = null,
+                                name = "Child sender",
+                            ),
+                        ),
+                        receiver = Receiver(
+                            parent = OrganizationCommunicationParty(
+                                ids = listOf(OrganizationId(receiverParentHerId.toString(), OrganizationIdType.HER_ID)),
+                                address = null,
+                                name = "Parent receiver",
+                            ),
+                            child = PersonCommunicationParty(
+                                ids = listOf(PersonId(receiverChildHerId.toString(), PersonIdType.HER_ID)),
+                                address = null,
+                                firstName = "Receiver",
+                                middleName = null,
+                                lastName = "Child",
+                            ),
+                            patient = Patient(
+                                fnr = "01010112345",
+                                firstName = "Patient",
+                                middleName = null,
+                                lastName = "Name",
+                            ),
+                        ),
+                        message = OutgoingMessage(
+                            subject = "Subject",
+                            body = "Body",
+                            responsibleHealthcareProfessional = HealthcareProfessional(
+                                firstName = "Doc",
+                                middleName = null,
+                                lastName = "Doctor",
+                                phoneNumber = "12345678",
+                                roleToPatient = HelsepersonellsFunksjoner.BEHANDLINGSANSVARLIG_LEGE,
+                            ),
+                            recipientContact = RecipientContact(type = Helsepersonell.LEGE),
+                        ),
+                        vedlegg = emptyList(),
+                        version = version,
+                        conversationRef = null,
+                    )
+
+                    client.sendMessage(businessDocument)
+
+                    requestSlot.captured.asClue { request ->
+                        request.senderHerId shouldBe senderChildHerId
+                        request.receiverHerIds shouldBe listOf(receiverChildHerId)
+                        request.messageTypeIdentificator shouldBe when (version) {
+                            DialogmeldingVersion.V1_0 -> MeldingensFunksjon.DIALOG_FORESPORSEL.verdi
+                            DialogmeldingVersion.V1_1 -> MeldingensFunksjon.DIALOG_HELSEFAGLIG.verdi
+                        }
+                        request.applicationName shouldBe applicationMetadata.applicationName
+                        request.applicationVersion shouldBe applicationMetadata.applicationVersion
+                    }
+                }
+            }
+
+            "Should fall back to parent HER-id when child HER-id is missing" {
+                val applicationMetadata = ApplicationMetadata("fiks-nhn-client-test-app-fallback", "8.9.10")
+
+                listOf(DialogmeldingVersion.V1_0, DialogmeldingVersion.V1_1).forEach { version ->
+                    val senderParentHerId = 303
+                    val receiverParentHerId = 404
+
+                    val requestSlot = slot<NhnPostMessageRequest>()
+                    val internalClient = mockk<MshInternalClient> {
+                        coEvery { postMessage(capture(requestSlot), any()) } returns UUID.randomUUID()
+                    }
+                    val client = Client(internalClient, applicationMetadata)
+                    val businessDocument = OutgoingBusinessDocument(
+                        id = UUID.randomUUID(),
+                        sender = Sender(
+                            parent = OrganizationCommunicationParty(
+                                ids = listOf(OrganizationId(senderParentHerId.toString(), OrganizationIdType.HER_ID)),
+                                address = null,
+                                name = "Fallback sender parent",
+                            ),
+                            child = OrganizationCommunicationParty(
+                                ids = listOf(OrganizationId("1234567890", OrganizationIdType.ENH)),
+                                address = null,
+                                name = "Fallback sender child",
+                            ),
+                        ),
+                        receiver = Receiver(
+                            parent = OrganizationCommunicationParty(
+                                ids = listOf(OrganizationId(receiverParentHerId.toString(), OrganizationIdType.HER_ID)),
+                                address = null,
+                                name = "Fallback receiver parent",
+                            ),
+                            child = PersonCommunicationParty(
+                                ids = listOf(PersonId("01010112345", PersonIdType.FNR)),
+                                address = null,
+                                firstName = "Receiver",
+                                middleName = null,
+                                lastName = "Fallback",
+                            ),
+                            patient = Patient(
+                                fnr = "01010112345",
+                                firstName = "Patient",
+                                middleName = null,
+                                lastName = "Name",
+                            ),
+                        ),
+                        message = OutgoingMessage(
+                            subject = "Subject",
+                            body = "Body",
+                            responsibleHealthcareProfessional = HealthcareProfessional(
+                                firstName = "Doc",
+                                middleName = null,
+                                lastName = "Doctor",
+                                phoneNumber = "12345678",
+                                roleToPatient = HelsepersonellsFunksjoner.BEHANDLINGSANSVARLIG_LEGE,
+                            ),
+                            recipientContact = RecipientContact(type = Helsepersonell.LEGE),
+                        ),
+                        vedlegg = emptyList(),
+                        version = version,
+                        conversationRef = null,
+                    )
+
+                    client.sendMessage(businessDocument)
+
+                    requestSlot.captured.asClue { request ->
+                        request.senderHerId shouldBe senderParentHerId
+                        request.receiverHerIds shouldBe listOf(receiverParentHerId)
+                        request.messageTypeIdentificator shouldBe when (version) {
+                            DialogmeldingVersion.V1_0 -> MeldingensFunksjon.DIALOG_FORESPORSEL.verdi
+                            DialogmeldingVersion.V1_1 -> MeldingensFunksjon.DIALOG_HELSEFAGLIG.verdi
+                        }
+                        request.applicationName shouldBe applicationMetadata.applicationName
+                        request.applicationVersion shouldBe applicationMetadata.applicationVersion
+                    }
+                }
+            }
+
+            "Should reject missing sender HER-id" {
+                val client = Client(
+                    mockk<MshInternalClient> {
+                        coEvery { postMessage(any(), any()) } returns UUID.randomUUID()
+                    },
+                    testApplicationMetadata,
+                )
+                val document = OutgoingBusinessDocument(
+                    id = UUID.randomUUID(),
+                    sender = Sender(
+                        parent = OrganizationCommunicationParty(
+                            ids = listOf(OrganizationId("123456789", OrganizationIdType.ENH)),
+                            address = null,
+                            name = "Sender parent",
+                        ),
+                        child = OrganizationCommunicationParty(
+                            ids = listOf(OrganizationId("987654321", OrganizationIdType.ENH)),
+                            address = null,
+                            name = "Sender child",
+                        ),
+                    ),
+                    receiver = Receiver(
+                        parent = OrganizationCommunicationParty(
+                            ids = listOf(OrganizationId("5555", OrganizationIdType.HER_ID)),
+                            address = null,
+                            name = "Receiver parent",
+                        ),
+                        child = PersonCommunicationParty(
+                            ids = listOf(PersonId("01010112345", PersonIdType.FNR)),
+                            address = null,
+                            firstName = "Receiver",
+                            middleName = null,
+                            lastName = "Child",
+                        ),
+                        patient = Patient(
+                            fnr = "01010112345",
+                            firstName = "Patient",
+                            middleName = null,
+                            lastName = "Name",
+                        ),
+                    ),
+                    message = OutgoingMessage(
+                        subject = "Subject",
+                        body = "Body",
+                        responsibleHealthcareProfessional = HealthcareProfessional(
+                            firstName = "Doc",
+                            middleName = null,
+                            lastName = "Doctor",
+                            phoneNumber = "12345678",
+                            roleToPatient = HelsepersonellsFunksjoner.BEHANDLINGSANSVARLIG_LEGE,
+                        ),
+                        recipientContact = RecipientContact(type = Helsepersonell.LEGE),
+                    ),
+                    vedlegg = emptyList(),
+                    version = DialogmeldingVersion.V1_0,
+                    conversationRef = null,
+                )
+
+                shouldThrow<IllegalArgumentException> { client.sendMessage(document) }.asClue {
+                    it.message shouldBe "Outgoing business document is missing sender HER-id"
+                }
+            }
+
+            "Should reject missing receiver HER-id" {
+                val client = Client(
+                    mockk<MshInternalClient> {
+                        coEvery { postMessage(any(), any()) } returns UUID.randomUUID()
+                    },
+                    testApplicationMetadata,
+                )
+                val document = OutgoingBusinessDocument(
+                    id = UUID.randomUUID(),
+                    sender = Sender(
+                        parent = OrganizationCommunicationParty(
+                            ids = listOf(OrganizationId("9999", OrganizationIdType.HER_ID)),
+                            address = null,
+                            name = "Sender parent",
+                        ),
+                        child = OrganizationCommunicationParty(
+                            ids = listOf(OrganizationId("1001", OrganizationIdType.HER_ID)),
+                            address = null,
+                            name = "Sender child",
+                        ),
+                    ),
+                    receiver = Receiver(
+                        parent = OrganizationCommunicationParty(
+                            ids = listOf(OrganizationId("555555555", OrganizationIdType.ENH)),
+                            address = null,
+                            name = "Receiver parent",
+                        ),
+                        child = PersonCommunicationParty(
+                            ids = listOf(PersonId("01010112345", PersonIdType.FNR)),
+                            address = null,
+                            firstName = "Receiver",
+                            middleName = null,
+                            lastName = "Child",
+                        ),
+                        patient = Patient(
+                            fnr = "01010112345",
+                            firstName = "Patient",
+                            middleName = null,
+                            lastName = "Name",
+                        ),
+                    ),
+                    message = OutgoingMessage(
+                        subject = "Subject",
+                        body = "Body",
+                        responsibleHealthcareProfessional = HealthcareProfessional(
+                            firstName = "Doc",
+                            middleName = null,
+                            lastName = "Doctor",
+                            phoneNumber = "12345678",
+                            roleToPatient = HelsepersonellsFunksjoner.BEHANDLINGSANSVARLIG_LEGE,
+                        ),
+                        recipientContact = RecipientContact(type = Helsepersonell.LEGE),
+                    ),
+                    vedlegg = emptyList(),
+                    version = DialogmeldingVersion.V1_1,
+                    conversationRef = null,
+                )
+
+                shouldThrow<IllegalArgumentException> { client.sendMessage(document) }.asClue {
+                    it.message shouldBe "Outgoing business document is missing receiver HER-id"
+                }
+            }
+
+            "Params should be passed on" {
+                val params = RequestParameters(HelseIdTokenParameters(SingleTenantHelseIdTokenParameters(randomHerId().toString())))
+
+                val internalClient = mockk<MshInternalClient> {
+                    coEvery { postAppRec(any(), any(), any()) } returns UUID.randomUUID()
+                }
+                val client = Client(internalClient, testApplicationMetadata)
+
+                client.sendApplicationReceipt(
+                    OutgoingApplicationReceipt(
+                        acknowledgedId = UUID.randomUUID(),
+                        senderHerId = randomHerId(),
+                        status = StatusForMottakAvMelding.OK,
+                        errors = emptyList(),
+                    ), params
+                )
+                coVerifySequence {
+                    internalClient.postAppRec(any(), any(), params)
                 }
             }
         }
@@ -554,164 +997,6 @@ class ClientTest : FreeSpec() {
             }
         }
 
-        "Send application receipt" - {
-            "Should be able to send OK receipt without errors" {
-                val returnedId = UUID.randomUUID()
-                val requestSlot = slot<NhnPostAppRecRequest>()
-                val internalClient = mockk<MshInternalClient> {
-                    coEvery { postAppRec(any(), capture(requestSlot), any()) } returns returnedId
-                }
-                val client = Client(internalClient, testApplicationMetadata)
-
-                val receipt = OutgoingApplicationReceipt(UUID.randomUUID(), randomHerId(), StatusForMottakAvMelding.OK, emptyList())
-                client.sendApplicationReceipt(receipt).asClue {
-                    it shouldBe returnedId
-                }
-
-                coVerifySequence {
-                    internalClient.postAppRec(receipt.acknowledgedId, any(), null)
-                }
-
-                requestSlot.captured.asClue { request ->
-                    request.appRecStatus shouldBe NhnAppRecStatus.OK
-                    request.appRecErrorList.shouldBeEmpty()
-                    request.transportMetadataOverrides should beNull()
-                }
-            }
-
-            "Should be able to send OK_FEIL_I_DELMELDING with errors" {
-                val requestSlot = slot<NhnPostAppRecRequest>()
-                val internalClient = mockk<MshInternalClient> { coEvery { postAppRec(any(), capture(requestSlot), any()) } returns UUID.randomUUID() }
-                val client = Client(internalClient, testApplicationMetadata)
-
-                val receipt = OutgoingApplicationReceipt(
-                    acknowledgedId = UUID.randomUUID(),
-                    senderHerId = randomHerId(),
-                    status = StatusForMottakAvMelding.OK_FEIL_I_DELMELDING,
-                    errors = List(nextInt(1, 5)) { randomOutgoingApplicationReceiptError() },
-                )
-                client.sendApplicationReceipt(receipt)
-
-                coVerifySequence {
-                    internalClient.postAppRec(receipt.acknowledgedId, any(), null)
-                }
-
-                requestSlot.captured.asClue { request ->
-                    val requestAppRecErrorList = request.appRecErrorList ?: emptyList()
-                    request.appRecStatus shouldBe NhnAppRecStatus.OK_ERROR_IN_MESSAGE_PART
-                    requestAppRecErrorList shouldHaveSize receipt.errors.orEmpty().size
-                    receipt.errors.orEmpty().forEach {
-                        requestAppRecErrorList shouldContain NhnAppRecError().apply {
-                            errorCode = it.type.verdi
-                            description = it.type.navn
-                            oid = it.type.kodeverk
-                            details = it.details
-                        }
-                    }
-                    request.transportMetadataOverrides should beNull()
-                }
-            }
-
-            "Should be able to send AVVIST with errors" {
-                val requestSlot = slot<NhnPostAppRecRequest>()
-                val internalClient = mockk<MshInternalClient> { coEvery { postAppRec(any(), capture(requestSlot), any()) } returns UUID.randomUUID() }
-                val client = Client(internalClient, testApplicationMetadata)
-
-                val receipt = OutgoingApplicationReceipt(
-                    acknowledgedId = UUID.randomUUID(),
-                    senderHerId = randomHerId(),
-                    status = StatusForMottakAvMelding.AVVIST,
-                    errors = List(nextInt(1, 5)) { randomOutgoingApplicationReceiptError() },
-                )
-                client.sendApplicationReceipt(receipt)
-
-                coVerifySequence {
-                    internalClient.postAppRec(receipt.acknowledgedId, any(), null)
-                }
-
-                requestSlot.captured.asClue { request ->
-                    val requestAppRecErrorList = request.appRecErrorList ?: emptyList()
-                    request.appRecStatus shouldBe NhnAppRecStatus.REJECTED
-                    requestAppRecErrorList shouldHaveSize receipt.errors.orEmpty().size
-                    receipt.errors.orEmpty().forEach {
-                        requestAppRecErrorList shouldContain NhnAppRecError().apply {
-                            errorCode = it.type.verdi
-                            description = it.type.navn
-                            oid = it.type.kodeverk
-                            details = it.details
-                        }
-                    }
-                    request.transportMetadataOverrides should beNull()
-                }
-            }
-
-            "Trying to send an OK receipt with errors should cause an exception to be thrown" {
-                val client = Client(mockk<MshInternalClient> { coEvery { postAppRec(any(), any(), any()) } returns UUID.randomUUID() }, testApplicationMetadata)
-
-                val receipt = OutgoingApplicationReceipt(
-                    acknowledgedId = UUID.randomUUID(),
-                    senderHerId = randomHerId(),
-                    status = StatusForMottakAvMelding.OK,
-                    errors = listOf(randomOutgoingApplicationReceiptError()),
-                )
-
-                shouldThrow<IllegalArgumentException> { client.sendApplicationReceipt(receipt) }.asClue {
-                    it.message shouldBe "Error messages are not allowed when status is OK"
-                }
-            }
-
-            "Trying to send an OK_FEIL_I_DELMELDING receipt without errors should cause an exception to be thrown" {
-                val client = Client(mockk<MshInternalClient> { coEvery { postAppRec(any(), any(), any()) } returns UUID.randomUUID() }, testApplicationMetadata)
-
-                val receipt = OutgoingApplicationReceipt(
-                    acknowledgedId = UUID.randomUUID(),
-                    senderHerId = randomHerId(),
-                    status = StatusForMottakAvMelding.OK_FEIL_I_DELMELDING,
-                    errors = emptyList(),
-                )
-
-                shouldThrow<IllegalArgumentException> { client.sendApplicationReceipt(receipt) }.asClue {
-                    it.message shouldBe "Must provide at least one error message if status is not OK"
-                }
-            }
-
-            "Trying to send an AVVIST receipt without errors should cause an exception to be thrown" {
-                val client = Client(mockk<MshInternalClient> { coEvery { postAppRec(any(), any(), any()) } returns UUID.randomUUID() }, testApplicationMetadata)
-
-                val receipt = OutgoingApplicationReceipt(
-                    acknowledgedId = UUID.randomUUID(),
-                    senderHerId = randomHerId(),
-                    status = StatusForMottakAvMelding.AVVIST,
-                    errors = emptyList(),
-                )
-
-                shouldThrow<IllegalArgumentException> { client.sendApplicationReceipt(receipt) }.asClue {
-                    it.message shouldBe "Must provide at least one error message if status is not OK"
-                }
-            }
-
-            "Params should be passed on" {
-                val params = RequestParameters(HelseIdTokenParameters(SingleTenantHelseIdTokenParameters(randomHerId().toString())))
-
-                val internalClient = mockk<MshInternalClient> {
-                    coEvery { postAppRec(any(), any(), any()) } returns UUID.randomUUID()
-                }
-                val client = Client(internalClient, testApplicationMetadata)
-
-                client.sendApplicationReceipt(
-                    OutgoingApplicationReceipt(
-                        acknowledgedId = UUID.randomUUID(),
-                        senderHerId = randomHerId(),
-                        status = StatusForMottakAvMelding.OK,
-                        errors = emptyList(),
-                    ), params
-                )
-                coVerifySequence {
-                    internalClient.postAppRec(any(), any(), params)
-                }
-            }
-        }
-
         "Get unread notifications" - {
             "Unread notifications should be retrieved and mapped" {
                 val apiNotifications = List(nextInt(1, 5)) { randomApiUnreadNotification() }
@@ -994,7 +1279,7 @@ private fun randomOutgoingBusinessDocument(
             middleName = randomString(),
             lastName = randomString(),
             phoneNumber = randomString(),
-            roleToPatient = HelsepersonellsFunksjoner.entries.random(),
+            roleToPatient = HelsepersonellsFunksjoner.BEHANDLINGSANSVARLIG_LEGE,
         ),
         recipientContact = RecipientContact(
             type = Helsepersonell.entries.random(),
@@ -1013,11 +1298,6 @@ private fun randomOutgoingBusinessDocument(
         refToConversation = UUID.randomUUID().toString(),
     )
 )
-
-private fun randomApiMessageWithoutMetadata() = NhnGetMessageResponse().apply {
-    id = UUID.randomUUID().toString()
-    receiverHerIds = setOf(randomHerId())
-}
 
 private fun randomApiMessageWithMetadata() = NhnGetMessageResponse().apply {
     id = UUID.randomUUID().toString()
