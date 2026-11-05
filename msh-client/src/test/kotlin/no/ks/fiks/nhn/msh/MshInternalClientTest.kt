@@ -531,6 +531,42 @@ class MshInternalClientTest : FreeSpec() {
                     }
             }
 
+            "Should be able to parse ok error in message part response" {
+                val id = UUID.randomUUID()
+                mockGetStatus(id, body = readResourceContentAsString("msh/get-status-okerrorinmessagepart.json"))
+
+                buildDefaultClient()
+                    .getStatus(id)
+                    .asClue {
+                        it.size shouldBe 1
+                        with(it.single()) {
+                            receiverHerId shouldBe 123456
+                            transportDeliveryState shouldBe NhnDeliveryState.ACKNOWLEDGED
+                            apprecInfo?.appRecStatus shouldBe NhnAppRecStatus.OK_ERROR_IN_MESSAGE_PART
+                            apprecInfo?.appRecErrorList?.map { error -> error.errorCode } shouldBe listOf("E31", "E20")
+                            apprecInfo?.appRecErrorList?.map { error -> error.details } shouldBe listOf("Pasientens fødselsnummer er feil", "Noe gikk galt")
+                        }
+                    }
+            }
+
+            "Should be able to parse rejected response" {
+                val id = UUID.randomUUID()
+                mockGetStatus(id, body = readResourceContentAsString("msh/get-status-rejected.json"))
+
+                buildDefaultClient()
+                    .getStatus(id)
+                    .asClue {
+                        it.size shouldBe 1
+                        with(it.single()) {
+                            receiverHerId shouldBe 123456
+                            transportDeliveryState shouldBe NhnDeliveryState.ACKNOWLEDGED
+                            apprecInfo?.appRecStatus shouldBe NhnAppRecStatus.REJECTED
+                            apprecInfo?.appRecErrorList?.map { error -> error.errorCode } shouldBe listOf("E10")
+                            apprecInfo?.appRecErrorList?.map { error -> error.details } shouldBe listOf("Extra details about error")
+                        }
+                    }
+            }
+
             "Not OK response should throw exception" {
                 val id = UUID.randomUUID()
                 val expected = UUID.randomUUID().toString()
@@ -1157,7 +1193,7 @@ class MshInternalClientTest : FreeSpec() {
 
 
     private fun mockGetUnreadNotifications(
-        herIds: Collection<Int>,
+        herIds: List<Int>,
         notificationsToFetch: Int? = null,
         status: Int = 200,
         body: String = NhnGetUnreadNotificationsResponse()
@@ -1289,7 +1325,7 @@ class MshInternalClientTest : FreeSpec() {
         )
     }
 
-    private fun mockDeleteMshConfigurations(herIds: Collection<Int> = emptyList(), status: Int = 204, body: String = "") {
+    private fun mockDeleteMshConfigurations(herIds: List<Int> = emptyList(), status: Int = 204, body: String = "") {
         wireMockClient.register(
             delete(urlPathEqualTo("/mshconfigurations"))
                 .apply {
@@ -1308,3 +1344,9 @@ private fun buildTokenResponse(accessToken: String) =
     TokenResponse(accessToken, 0, UUID.randomUUID().toString(), UUID.randomUUID().toString())
 
 private fun randomOrganizationNumber() = nextInt(100000000, 1000000000).toString()
+
+
+
+
+
+

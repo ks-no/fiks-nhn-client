@@ -12,7 +12,7 @@ class GetMessagesWithMetadataTest : StringSpec({
         client.getUnreadNotifications(
             herIds = listOf(321),
         )
-            .filter { it.type == NotificationType.NewMessage }
+            .filter { it.type == NotificationType.NEW_MESSAGE }
             .mapNotNull { it.relatedMessageId }
             .map { client.getMessage(it) }
     }

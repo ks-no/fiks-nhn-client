@@ -795,207 +795,6 @@ class ClientTest : FreeSpec() {
             }
         }
 
-        "Get application receipts for message" - {
-            "Should be retrieved and mapped" {
-                val statusInfo = NhnStatusInfo().apply {
-                    receiverHerId = randomHerId()
-                    apprecInfo = NhnApprecInfo().apply {
-                        appRecStatus = NhnAppRecStatus.OK
-                        appRecErrorList = emptyList()
-                    }
-                }
-
-                val internalClient = mockk<MshInternalClient> {
-                    coEvery { getStatus(any(), any()) } returns listOf(statusInfo)
-                }
-                val client = Client(internalClient, testApplicationMetadata)
-
-                val messageId = UUID.randomUUID()
-                client.getApplicationReceiptsForMessage(messageId).asClue {
-                    it shouldHaveSize 1
-                    with(it.single()) {
-                        receiverHerId shouldBe statusInfo.receiverHerId
-                        status shouldBe StatusForMottakAvMelding.OK
-                        errors.shouldBeEmpty()
-                    }
-                }
-
-                coVerifySequence {
-                    internalClient.getStatus(messageId, null)
-                }
-            }
-
-            "Should handle rejected with error" {
-                val statusInfo = NhnStatusInfo().apply {
-                    receiverHerId = randomHerId()
-                    apprecInfo = NhnApprecInfo().apply {
-                        appRecStatus = NhnAppRecStatus.REJECTED
-                        appRecErrorList = listOf(
-                            NhnAppRecError().apply {
-                                errorCode = "E10"
-                                description = "Ugyldig meldingsidentifikator"
-                                oid = "2.16.578.1.12.4.1.1.8221"
-                                details = "Extra details about error"
-                            }
-                        )
-                    }
-                }
-
-                val client = Client(mockk<MshInternalClient> {
-                    coEvery { getStatus(any(), any()) } returns listOf(statusInfo)
-                }, testApplicationMetadata)
-
-                client.getApplicationReceiptsForMessage(UUID.randomUUID()).asClue {
-                    it shouldHaveSize 1
-                    with(it.single()) {
-                        receiverHerId shouldBe statusInfo.receiverHerId
-                        status shouldBe StatusForMottakAvMelding.AVVIST
-                        errors shouldHaveSize 1
-                        with(errors.single()) {
-                            type shouldBe FeilmeldingForApplikasjonskvittering.UGYLDIG_ID
-                            errorCode shouldBe "E10"
-                            description shouldBe "Ugyldig meldingsidentifikator"
-                            oid shouldBe "2.16.578.1.12.4.1.1.8221"
-                            details shouldBe "Extra details about error"
-                        }
-                    }
-                }
-            }
-
-            "Should handle ok error in message with errors" {
-                val statusInfo = NhnStatusInfo().apply {
-                    receiverHerId = randomHerId()
-                    apprecInfo = NhnApprecInfo().apply {
-                        appRecStatus = NhnAppRecStatus.OK_ERROR_IN_MESSAGE_PART
-                        appRecErrorList = listOf(
-                            NhnAppRecError().apply {
-                                errorCode = "E32"
-                                description = "Pasientens navn mangler"
-                                oid = "2.16.578.1.12.4.1.1.8221"
-                                details = "Noe gikk galt"
-                            },
-                            NhnAppRecError().apply {
-                                errorCode = "T02"
-                                description = "XML validerer ikke"
-                                oid = "2.16.578.1.12.4.1.1.8221"
-                                details = "Feil i XML"
-                            }
-                        )
-                    }
-                }
-
-                val client = Client(mockk<MshInternalClient> {
-                    coEvery { getStatus(any(), any()) } returns listOf(statusInfo)
-                }, testApplicationMetadata)
-
-                client.getApplicationReceiptsForMessage(UUID.randomUUID()).asClue {
-                    it shouldHaveSize 1
-                    with(it.single()) {
-                        receiverHerId shouldBe statusInfo.receiverHerId
-                        status shouldBe StatusForMottakAvMelding.OK_FEIL_I_DELMELDING
-                        errors shouldHaveSize 2
-                        with(errors[0]) {
-                            type shouldBe FeilmeldingForApplikasjonskvittering.PASIENT_MANGLER_NAVN
-                            errorCode shouldBe "E32"
-                            description shouldBe "Pasientens navn mangler"
-                            oid shouldBe "2.16.578.1.12.4.1.1.8221"
-                            details shouldBe "Noe gikk galt"
-                        }
-                        with(errors[1]) {
-                            type shouldBe FeilmeldingForApplikasjonskvittering.VALIDERINGSFEIL_XML
-                            errorCode shouldBe "T02"
-                            description shouldBe "XML validerer ikke"
-                            oid shouldBe "2.16.578.1.12.4.1.1.8221"
-                            details shouldBe "Feil i XML"
-                        }
-                    }
-                }
-            }
-
-            "Missing status should map to null" {
-                val statusInfo = NhnStatusInfo().apply {
-                    receiverHerId = randomHerId()
-                    apprecInfo = null
-                }
-
-                val client = Client(mockk<MshInternalClient> {
-                    coEvery { getStatus(any(), any()) } returns listOf(statusInfo)
-                }, testApplicationMetadata)
-
-                val messageId = UUID.randomUUID()
-                client.getApplicationReceiptsForMessage(messageId).asClue {
-                    it shouldHaveSize 1
-                    with(it.single()) {
-                        receiverHerId shouldBe statusInfo.receiverHerId
-                        status should beNull()
-                        errors.shouldBeEmpty()
-                    }
-                }
-            }
-
-            "Unknown error code should be mapped to UKJENT" {
-                val statusInfo = NhnStatusInfo().apply {
-                    receiverHerId = randomHerId()
-                    apprecInfo = NhnApprecInfo().apply {
-                        appRecStatus = NhnAppRecStatus.REJECTED
-                        appRecErrorList = listOf(
-                            NhnAppRecError().apply {
-                                errorCode = "A123"
-                                description = "Kan ikke håndteres"
-                                oid = "1.2.3.4.5.6.7.8.9"
-                                details = "Error X"
-                            },
-                        )
-                    }
-                }
-
-                val client = Client(mockk<MshInternalClient> {
-                    coEvery { getStatus(any(), any()) } returns listOf(statusInfo)
-                }, testApplicationMetadata)
-
-                val messageId = UUID.randomUUID()
-                client.getApplicationReceiptsForMessage(messageId).asClue {
-                    it shouldHaveSize 1
-                    with(it.single()) {
-                        receiverHerId shouldBe statusInfo.receiverHerId
-                        status shouldBe StatusForMottakAvMelding.AVVIST
-                        errors shouldHaveSize 1
-                        with(errors.single()) {
-                            type shouldBe FeilmeldingForApplikasjonskvittering.UKJENT
-                            errorCode shouldBe "A123"
-                            description shouldBe "Kan ikke håndteres"
-                            oid shouldBe "1.2.3.4.5.6.7.8.9"
-                            details shouldBe "Error X"
-                        }
-                    }
-                }
-            }
-
-            "Null errors should be mapped to empty list" {
-                val statusInfo = NhnStatusInfo().apply {
-                    receiverHerId = randomHerId()
-                    apprecInfo = NhnApprecInfo().apply {
-                        appRecStatus = NhnAppRecStatus.REJECTED
-                        appRecErrorList = null
-                    }
-                }
-
-                val client = Client(mockk<MshInternalClient> {
-                    coEvery { getStatus(any(), any()) } returns listOf(statusInfo)
-                }, testApplicationMetadata)
-
-                val messageId = UUID.randomUUID()
-                client.getApplicationReceiptsForMessage(messageId).asClue {
-                    it shouldHaveSize 1
-                    with(it.single()) {
-                        receiverHerId shouldBe statusInfo.receiverHerId
-                        status shouldBe StatusForMottakAvMelding.AVVIST
-                        errors shouldNot beNull()
-                        errors.shouldBeEmpty()
-                    }
-                }
-            }
-        }
 
         "Get unread notifications" - {
             "Unread notifications should be retrieved and mapped" {
@@ -1012,7 +811,7 @@ class ClientTest : FreeSpec() {
                     it.forEachIndexed { i, notification ->
                         notification.notificationId shouldBe UUID.fromString(apiNotifications[i].notificationId)
                         notification.relatedMessageId shouldBe apiNotifications[i].relatedMessageId?.let { UUID.fromString(it) }
-                        notification.type.name shouldBe apiNotifications[i].type.value
+                        notification.type.value shouldBe apiNotifications[i].type.value
                         notification.notificationReceiverHerId shouldBe apiNotifications[i].notificationReceiverHerId
                         notification.notificationTriggeredByHerId shouldBe apiNotifications[i].notificationTriggeredByHerId
                         notification.description shouldBe apiNotifications[i].description
@@ -1042,7 +841,7 @@ class ClientTest : FreeSpec() {
                     it shouldHaveSize 2
                     with(it[0]) {
                         notificationId shouldBe UUID.fromString(withoutTimestamp.notificationId)
-                        type shouldBe NotificationType.NewMessage
+                        type shouldBe NotificationType.NEW_MESSAGE
                         notificationReceiverHerId shouldBe withoutTimestamp.notificationReceiverHerId
                         relatedMessageId should beNull()
                         notificationTriggeredByHerId should beNull()
@@ -1206,11 +1005,14 @@ class ClientTest : FreeSpec() {
                 client.getStatus(id).asClue { it ->
                     it.forEachIndexed { i, status ->
                         status.receiverHerId shouldBe statuses[i].receiverHerId
-                        status.sent shouldBe statuses[i].sent
-                        status.deliveryState.name shouldBe statuses[i].transportDeliveryState.name
-                        status.appRecStatus?.name shouldBe statuses[i].apprecInfo?.appRecStatus?.name
-                        status.appRecId shouldBe statuses[i].apprecInfo?.appRecId?.takeIf { it.isNotBlank() }?.let { UUID.fromString(it) }
-                        status.appRecErrors.map { it.errorCode } shouldBe (statuses[i].apprecInfo?.appRecErrorList?.map { it.errorCode } ?: emptyList<String>())
+                        status.status shouldBe statuses[i].apprecInfo?.appRecStatus?.let { appRecStatus ->
+                            when (appRecStatus) {
+                                NhnAppRecStatus.OK -> StatusForMottakAvMelding.OK
+                                NhnAppRecStatus.REJECTED -> StatusForMottakAvMelding.AVVIST
+                                NhnAppRecStatus.OK_ERROR_IN_MESSAGE_PART -> StatusForMottakAvMelding.OK_FEIL_I_DELMELDING
+                            }
+                        }
+                        status.errors.map { it.errorCode } shouldBe (statuses[i].apprecInfo?.appRecErrorList?.map { it.errorCode } ?: emptyList<String>())
                     }
                 }
 
@@ -1219,7 +1021,7 @@ class ClientTest : FreeSpec() {
                 }
             }
 
-            "Should map populated appRecId and errors" {
+            "Should map populated appRec status and errors" {
                 val expectedAppRecId = UUID.randomUUID()
                 val statusInfo = NhnStatusInfo().apply {
                     receiverHerId = randomHerId()
@@ -1245,12 +1047,9 @@ class ClientTest : FreeSpec() {
 
                 client.getStatus(UUID.randomUUID()).single().asClue { mapped ->
                     mapped.receiverHerId shouldBe statusInfo.receiverHerId
-                    mapped.sent shouldBe true
-                    mapped.deliveryState shouldBe DeliveryState.ACKNOWLEDGED
-                    mapped.appRecStatus shouldBe AppRecStatus.REJECTED
-                    mapped.appRecId shouldBe expectedAppRecId
-                    mapped.appRecErrors shouldHaveSize 1
-                    with(mapped.appRecErrors.single()) {
+                    mapped.status shouldBe StatusForMottakAvMelding.AVVIST
+                    mapped.errors shouldHaveSize 1
+                    with(mapped.errors.single()) {
                         type shouldBe FeilmeldingForApplikasjonskvittering.UGYLDIG_ID
                         errorCode shouldBe "E10"
                         description shouldBe "Ugyldig meldingsidentifikator"
@@ -1260,7 +1059,38 @@ class ClientTest : FreeSpec() {
                 }
             }
 
-            "Should map missing receipt information to empty values" {
+            "Should map unknown error code to UKJENT" {
+                val statusInfo = NhnStatusInfo().apply {
+                    receiverHerId = randomHerId()
+                    sent = true
+                    transportDeliveryState = NhnDeliveryState.ACKNOWLEDGED
+                    apprecInfo = NhnApprecInfo().apply {
+                        appRecStatus = NhnAppRecStatus.OK
+                        appRecErrorList = listOf(
+                            NhnAppRecError().apply {
+                                errorCode = "NO_SUCH_CODE"
+                                description = "Unknown error"
+                                oid = "2.16.578.1.12.4.1.1.8221"
+                                details = "Unexpected error code"
+                            }
+                        )
+                    }
+                }
+
+                val client = Client(mockk<MshInternalClient> {
+                    coEvery { getStatus(any(), any()) } returns listOf(statusInfo)
+                }, testApplicationMetadata)
+
+                client.getStatus(UUID.randomUUID()).single().asClue { mapped ->
+                    mapped.status shouldBe StatusForMottakAvMelding.OK
+                    mapped.errors.single().type shouldBe FeilmeldingForApplikasjonskvittering.UKJENT
+                    mapped.errors.single().errorCode shouldBe "NO_SUCH_CODE"
+                    mapped.errors.single().description shouldBe "Unknown error"
+                }
+            }
+
+            "Should map empty or missing apprecInfo to empty errors and null status" {
+
                 val statusInfo = NhnStatusInfo().apply {
                     receiverHerId = randomHerId()
                     sent = false
@@ -1274,33 +1104,9 @@ class ClientTest : FreeSpec() {
 
                 client.getStatus(UUID.randomUUID()).single().asClue { mapped ->
                     mapped.receiverHerId shouldBe statusInfo.receiverHerId
-                    mapped.sent shouldBe false
-                    mapped.deliveryState shouldBe DeliveryState.UNCONFIRMED
-                    mapped.appRecStatus shouldBe null
-                    mapped.appRecId shouldBe null
-                    mapped.appRecErrors.shouldBeEmpty()
+                    mapped.status shouldBe null
+                    mapped.errors.shouldBeEmpty()
                 }
-            }
-
-            "Should throw on malformed appRecId" {
-                val statusInfo = NhnStatusInfo().apply {
-                    receiverHerId = randomHerId()
-                    sent = true
-                    transportDeliveryState = NhnDeliveryState.ACKNOWLEDGED
-                    apprecInfo = NhnApprecInfo().apply {
-                        appRecStatus = NhnAppRecStatus.OK
-                        appRecId = "not-a-uuid"
-                        appRecErrorList = emptyList()
-                    }
-                }
-
-                val client = Client(mockk<MshInternalClient> {
-                    coEvery { getStatus(any(), any()) } returns listOf(statusInfo)
-                }, testApplicationMetadata)
-
-                shouldThrow<IllegalArgumentException> {
-                    client.getStatus(UUID.randomUUID()).single()
-                }.message shouldBe "Status is missing or has malformed appRecId field"
             }
 
             "Params should be passed on" {
@@ -1424,7 +1230,6 @@ private fun randomStatusInfo() = NhnStatusInfo().apply {
 
 private fun randomMshConfiguration() = ClientMshConfiguration(
     herId = randomHerId(),
-    receiveNotificationChannel = ReceiveNotificationChannel.entries.random(),
     clientLocked = nextBoolean(),
     rejectMessageFilters = if (nextBoolean()) {
         ClientRejectMessageFilters(messageFunctions = listOf(UUID.randomUUID().toString()))
@@ -1435,12 +1240,7 @@ private fun randomMshConfiguration() = ClientMshConfiguration(
 
 private fun toNhnMshConfiguration(configuration: no.ks.fiks.nhn.msh.MshConfiguration): no.nhn.msh.v3.model.MshConfiguration = no.nhn.msh.v3.model.MshConfiguration()
     .herId(configuration.herId)
-    .receiveNotificationChannel(
-        when (configuration.receiveNotificationChannel) {
-            ReceiveNotificationChannel.Api -> no.nhn.msh.v3.model.ReceiveNotificationChannel.API
-            ReceiveNotificationChannel.Kafka -> no.nhn.msh.v3.model.ReceiveNotificationChannel.KAFKA
-        }
-    )
+    .receiveNotificationChannel(no.nhn.msh.v3.model.ReceiveNotificationChannel.API)
     .clientLocked(configuration.clientLocked)
     .rejectMessageFilters(
         configuration.rejectMessageFilters?.let { filters ->
@@ -1457,4 +1257,3 @@ private fun randomApiUnreadNotification() = no.nhn.msh.v3.model.UnreadNotificati
     description = UUID.randomUUID().toString().takeIf { nextBoolean() }
     createdAt = OffsetDateTime.now()
 }
-

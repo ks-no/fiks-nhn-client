@@ -134,7 +134,7 @@ class MshInternalClient @JvmOverloads constructor(
 
 
     suspend fun getUnreadNotifications(
-        herIds: Collection<Int>,
+        herIds: List<Int>,
         notificationsToFetch: Int? = null,
         requestParams: RequestParameters? = null,
     ): List<NhnUnreadNotification> =
@@ -149,7 +149,7 @@ class MshInternalClient @JvmOverloads constructor(
         }
 
     suspend fun deleteNotifications(
-        notificationIds: Collection<UUID>,
+        notificationIds: List<UUID>,
         requestParams: RequestParameters? = null,
     ) {
         invokeWithErrorHandling {
@@ -183,7 +183,7 @@ class MshInternalClient @JvmOverloads constructor(
     }
 
     suspend fun deleteMshConfigurations(
-        herIds: Collection<Int>,
+        herIds: List<Int>,
         requestParams: RequestParameters? = null,
     ) {
         invokeWithErrorHandling {

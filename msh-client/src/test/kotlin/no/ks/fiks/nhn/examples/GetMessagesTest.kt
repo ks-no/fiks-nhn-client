@@ -12,7 +12,5 @@ class GetMessagesTest : StringSpec({
         client.getUnreadNotifications(
             herIds = listOf(34567),
         )
-            .filter { it.type == NotificationType.NewMessage }
-            .mapNotNull { it.relatedMessageId }
     }
 })

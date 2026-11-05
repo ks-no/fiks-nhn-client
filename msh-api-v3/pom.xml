@@ -16,7 +16,6 @@
     <properties>
         <openapi-spec-name>${project.artifactId}</openapi-spec-name>
         <openapi-spec-file>${openapi-spec-name}.json</openapi-spec-file>
-        <basePackage>${project.groupId}.msh</basePackage>
 
         <jakarta.annotation-api.version>3.0.0</jakarta.annotation-api.version>
         <feign.version>13.17</feign.version>

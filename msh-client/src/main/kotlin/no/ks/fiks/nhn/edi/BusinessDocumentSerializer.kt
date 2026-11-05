@@ -97,11 +97,11 @@ object BusinessDocumentSerializer {
                 }
             }
         healthcareProfessional = child
-            .let { it as? no.ks.fiks.nhn.msh.PersonCommunicationParty }
+            .let { it as? PersonCommunicationParty }
             ?.let(::toHealthcareProfessional)
     }
 
-    private fun toHealthcareProfessional(person: no.ks.fiks.nhn.msh.PersonCommunicationParty) =
+    private fun toHealthcareProfessional(person: PersonCommunicationParty) =
         HealthcareProfessional().apply {
             givenName = person.firstName
             middleName = person.middleName
@@ -109,9 +109,6 @@ object BusinessDocumentSerializer {
             ident = person.ids.map { toIdent(it) }
             address = person.address?.let { convert(it) }
         }
-
-    fun resolveMessageTypeIdentificator(version: DialogmeldingVersion): String =
-        resolveMessageType(version).verdi
 
     fun resolveMessageType(version: DialogmeldingVersion): MeldingensFunksjon =
         when (version) {

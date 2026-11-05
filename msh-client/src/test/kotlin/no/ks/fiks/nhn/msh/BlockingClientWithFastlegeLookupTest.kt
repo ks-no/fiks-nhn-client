@@ -86,15 +86,15 @@ class BlockingClientWithFastlegeLookupTest : StringSpec() {
         "Get application receipts for message should proxy to internal client" {
             val id = UUID.randomUUID()
             val appRecs = listOf<ApplicationReceiptInfo>(mockk(), mockk())
-            val asyncClient = mockk<ClientWithFastlegeLookup> { coEvery { getApplicationReceiptsForMessage(any(), any()) } returns appRecs }
+            val asyncClient = mockk<ClientWithFastlegeLookup> { coEvery { getStatus(any(), any()) } returns appRecs }
             val blockingClient = BlockingClientWithFastlegeLookup(asyncClient)
 
             val requestParameters = RequestParameters()
-            blockingClient.getApplicationReceiptsForMessage(id, requestParameters).asClue {
+            blockingClient.getStatus(id, requestParameters).asClue {
                 it shouldBe appRecs
             }
 
-            verifySequence { blockingClient.getApplicationReceiptsForMessage(id, requestParameters) }
+            verifySequence { blockingClient.getStatus(id, requestParameters) }
         }
 
         "Send application receipt should proxy to internal client" {
@@ -173,13 +173,13 @@ class BlockingClientWithFastlegeLookupTest : StringSpec() {
 
         "Get status should proxy to internal client" {
             val id = UUID.randomUUID()
-            val statuses = listOf<StatusInfo>(mockk(), mockk(), mockk())
-            val asyncClient = mockk<ClientWithFastlegeLookup> { coEvery { getStatus(any(), any()) } returns statuses }
+            val appRecs = listOf<ApplicationReceiptInfo>(mockk(), mockk(), mockk())
+            val asyncClient = mockk<ClientWithFastlegeLookup> { coEvery { getStatus(any(), any()) } returns appRecs }
             val blockingClient = BlockingClientWithFastlegeLookup(asyncClient)
 
             val requestParameters = RequestParameters()
             blockingClient.getStatus(id, requestParameters).asClue {
-                it shouldBe statuses
+                it shouldBe appRecs
             }
 
             verifySequence { blockingClient.getStatus(id, requestParameters) }

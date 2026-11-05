@@ -2,6 +2,7 @@ package no.ks.fiks.nhn.msh
 
 import mu.KotlinLogging
 import no.ks.fiks.hdir.FeilmeldingForApplikasjonskvittering
+import no.ks.fiks.hdir.MeldingensFunksjon
 import no.ks.fiks.hdir.StatusForMottakAvMelding
 import no.ks.fiks.nhn.edi.BusinessDocumentDeserializer
 import no.ks.fiks.nhn.edi.BusinessDocumentSerializer
@@ -37,7 +38,7 @@ open class Client @JvmOverloads constructor(
             .receiverHerIds(businessDocument.resolveReceiverHerIds())
             .contentType(CONTENT_TYPE)
             .contentTransferEncoding(CONTENT_TRANSFER_ENCODING)
-            .messageTypeIdentificator(businessDocument.resolveMessageTypeIdentificator())
+            .messageTypeIdentificator(businessDocument.resolveMessageType().verdi)
             .applicationName(applicationMetadata.applicationName)
             .applicationVersion(applicationMetadata.applicationVersion)
         return internalClient.postMessage(
@@ -95,7 +96,7 @@ open class Client @JvmOverloads constructor(
             }
     }
 
-    suspend fun getApplicationReceiptsForMessage(
+    suspend fun getStatus(
         messageId: UUID,
         requestParameters: RequestParameters? = null,
     ): List<ApplicationReceiptInfo> =
@@ -116,7 +117,7 @@ open class Client @JvmOverloads constructor(
 
         val request = NhnPostAppRecRequest()
             .appRecSenderHerId(receipt.senderHerId)
-            .appRecStatus(receipt.status.toApiAppRecStatus())
+            .appRecStatus(receipt.status.toAppRecStatus())
             .appRecErrorList(receipt.errors?.toAppRecErrors())
             .applicationName(applicationMetadata.applicationName)
             .applicationVersion(applicationMetadata.applicationVersion)
@@ -128,7 +129,7 @@ open class Client @JvmOverloads constructor(
     }
 
     suspend fun getUnreadNotifications(
-        herIds: Collection<Int>,
+        herIds: List<Int>,
         notificationsToFetch: Int? = null,
         requestParameters: RequestParameters? = null,
     ): List<UnreadNotification> =
@@ -139,7 +140,7 @@ open class Client @JvmOverloads constructor(
         ).map { it.toUnreadNotification() }
 
     suspend fun deleteNotifications(
-        notificationIds: Collection<UUID>,
+        notificationIds: List<UUID>,
         requestParameters: RequestParameters? = null,
     ) {
         internalClient.deleteNotifications(
@@ -159,7 +160,7 @@ open class Client @JvmOverloads constructor(
     }
 
     suspend fun deleteMshConfigurations(
-        herIds: Collection<Int>,
+        herIds: List<Int>,
         requestParameters: RequestParameters? = null,
     ) {
         internalClient.deleteMshConfigurations(
@@ -174,11 +175,6 @@ open class Client @JvmOverloads constructor(
         requestParameters: RequestParameters? = null,
     ) = internalClient.markMessageDownloaded(id, receiverHerId, requestParameters)
 
-    suspend fun getStatus(
-        id: UUID,
-        requestParameters: RequestParameters? = null,
-    ): List<StatusInfo> = internalClient.getStatus(id, requestParameters).map { it.toStatusInfo() }
-
     private fun notifyHandlers(block: (MessageHandler) -> Unit) {
         messageHandlers.forEach { h ->
             runCatching { block(h) }
@@ -186,7 +182,7 @@ open class Client @JvmOverloads constructor(
         }
     }
 
-    private fun StatusForMottakAvMelding.toApiAppRecStatus() = when (this) {
+    private fun StatusForMottakAvMelding.toAppRecStatus() = when (this) {
         StatusForMottakAvMelding.OK -> NhnAppRecStatus.OK
         StatusForMottakAvMelding.OK_FEIL_I_DELMELDING -> NhnAppRecStatus.OK_ERROR_IN_MESSAGE_PART
         StatusForMottakAvMelding.AVVIST -> NhnAppRecStatus.REJECTED
@@ -214,8 +210,8 @@ open class Client @JvmOverloads constructor(
     private fun resolveHerId(primary: CommunicationParty, fallback: CommunicationParty): Int? =
         primary.herId ?: fallback.herId
 
-    private fun OutgoingBusinessDocument.resolveMessageTypeIdentificator(): String =
-        BusinessDocumentSerializer.resolveMessageTypeIdentificator(version)
+    private fun OutgoingBusinessDocument.resolveMessageType(): MeldingensFunksjon =
+        BusinessDocumentSerializer.resolveMessageType(version)
 
     private fun NhnGetMessageResponse.toMessageInfoWithMetadata() = MessageWithMetadata(
         id = runCatching { UUID.fromString(id) }
@@ -236,11 +232,11 @@ open class Client @JvmOverloads constructor(
                 .getOrElse { throw IllegalArgumentException("Unread notification $notificationId has malformed relatedMessageId field") }
         },
         type = when (type) {
-            no.nhn.msh.v3.model.NotificationType.NEW_MESSAGE -> NotificationType.NewMessage
-            no.nhn.msh.v3.model.NotificationType.REFUSED_MESSAGE -> NotificationType.RefusedMessage
-            no.nhn.msh.v3.model.NotificationType.MESSAGE_SENT_STATE_UPDATED -> NotificationType.MessageSentStateUpdated
-            no.nhn.msh.v3.model.NotificationType.MESSAGE_APPREC_INFO_UPDATED -> NotificationType.MessageApprecInfoUpdated
-            no.nhn.msh.v3.model.NotificationType.MESSAGE_DELIVERY_STATE_UPDATED -> NotificationType.MessageDeliveryStateUpdated
+            no.nhn.msh.v3.model.NotificationType.NEW_MESSAGE -> NotificationType.NEW_MESSAGE
+            no.nhn.msh.v3.model.NotificationType.REFUSED_MESSAGE -> NotificationType.REFUSED_MESSAGE
+            no.nhn.msh.v3.model.NotificationType.MESSAGE_SENT_STATE_UPDATED -> NotificationType.MESSAGE_SENT_STATE_UPDATED
+            no.nhn.msh.v3.model.NotificationType.MESSAGE_APPREC_INFO_UPDATED -> NotificationType.MESSAGE_APPREC_INFO_UPDATED
+            no.nhn.msh.v3.model.NotificationType.MESSAGE_DELIVERY_STATE_UPDATED -> NotificationType.MESSAGE_DELIVERY_STATE_UPDATED
         },
         notificationReceiverHerId = notificationReceiverHerId,
         notificationTriggeredByHerId = notificationTriggeredByHerId,
@@ -290,12 +286,7 @@ open class Client @JvmOverloads constructor(
 
     private fun MshConfiguration.toApiMshConfiguration() = no.nhn.msh.v3.model.MshConfiguration()
         .herId(herId)
-        .receiveNotificationChannel(
-            when (receiveNotificationChannel) {
-                ReceiveNotificationChannel.Api -> no.nhn.msh.v3.model.ReceiveNotificationChannel.API
-                ReceiveNotificationChannel.Kafka -> no.nhn.msh.v3.model.ReceiveNotificationChannel.KAFKA
-            }
-        )
+        .receiveNotificationChannel(no.nhn.msh.v3.model.ReceiveNotificationChannel.API)
         .clientLocked(clientLocked)
         .rejectMessageFilters(
             rejectMessageFilters?.let { filters ->
