@@ -13,11 +13,11 @@ import java.time.OffsetDateTime
 import java.util.*
 
 class SendMessageToHerIdTest : StringSpec({
-    "Sending an example message to GP for person" {
+    "Sending an example message to a person identified by HER-id" {
         val client = mockk<Client> { coEvery { sendMessage(any(), any()) } returns UUID.randomUUID() }
         client.sendMessage(
             OutgoingBusinessDocument(
-                id = UUID.randomUUID(), // This id will be used to connect an application receipt to this message
+                id = UUID.randomUUID(),
                 sender = Sender(
                     parent = OrganizationCommunicationParty(
                         name = "<Name of sender organization (virksomhet)>",
@@ -37,7 +37,7 @@ class SendMessageToHerIdTest : StringSpec({
                             country = Country(code = "<Country code>", name = "<Country name>"),
                         ),
                     ),
-                    child = OrganizationCommunicationParty( // This can also be PersonCommunicationParty
+                    child = OrganizationCommunicationParty(
                         name = "<Name of the sending service (tjeneste), which is owned by the organization specified above>",
                         ids = listOf(
                             OrganizationId(
@@ -75,7 +75,7 @@ class SendMessageToHerIdTest : StringSpec({
                             country = Country(code = "<Country code>", name = "<Country name>"),
                         ),
                     ),
-                    child = PersonCommunicationParty( // This can also be OrganizationCommunicationParty
+                    child = PersonCommunicationParty(
                         firstName = "<First name of receiving person>",
                         middleName = "<Middle name of receiving person>",
                         lastName = "<Last name of receiving person>",
@@ -106,27 +106,25 @@ class SendMessageToHerIdTest : StringSpec({
                     subject = "<Message subject>",
                     body = "<Message body>",
                     responsibleHealthcareProfessional = HealthcareProfessional(
-                        // Person responsible for this message at the sender
                         firstName = "<First name>",
                         middleName = "<Middle name>",
                         lastName = "<Last name>",
                         phoneNumber = "11223344",
-                        roleToPatient = HelsepersonellsFunksjoner.HELSEFAGLIG_KONTAKT, // This persons role with respect to the patient
+                        roleToPatient = HelsepersonellsFunksjoner.HELSEFAGLIG_KONTAKT,
                     ),
                     recipientContact = RecipientContact(
-                        // Required for Dialogmelding 1.1 Helsefaglig Dialog when temaKodet is "Henvendelse om pasient" (which is currently the only option and is chosen automatically)
-                        type = Helsepersonell.LEGE, // Professional group of the healthcare professional recieving the message
+                        type = Helsepersonell.LEGE,
                     )
                 ),
                 vedlegg = listOf(
-                    OutgoingVedlegg( // Only PDF is supported; add more entries for more attachments
-                        date = OffsetDateTime.now(), // Creation time for the attachment
+                    OutgoingVedlegg(
+                        date = OffsetDateTime.now(),
                         description = "<Description of the attachment>",
-                        data = ClassLoader.getSystemResourceAsStream("small.pdf")!!, // InputStream containing the bytes for the attached PDF
+                        data = ClassLoader.getSystemResourceAsStream("small.pdf")!!,
                     )
                 ),
-                version = DialogmeldingVersion.V1_1, // 1.0 is also supported, but 1.1 is preferred and will be the main focus
-                conversationRef = ConversationRef( // Should be set if this message is part of a dialogue 
+                version = DialogmeldingVersion.V1_1,
+                conversationRef = ConversationRef(
                     refToParent = "<Reference to the previous message of this dialogue, should contain the same value as the id field of that message>",
                     refToConversation = "Reference to the first message of this dialogue, should contain the same value as id field of that message>",
                 )

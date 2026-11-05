@@ -10,8 +10,8 @@ import no.ks.fiks.nhn.msh.*
 import java.time.OffsetDateTime
 import java.util.*
 
-class RequestParametersTest : StringSpec({
-    "Sending an example message to GP for person" {
+class UnreadNotificationsRequestParametersTest : StringSpec({
+    "Requesting unread notifications with multi-tenant helseId parameters" {
         val client = mockk<ClientWithFastlegeLookup> { coEvery { getUnreadNotifications(any(), any(), any()) } returns listOf() }
         client.getUnreadNotifications(
             herIds = listOf(34567),
