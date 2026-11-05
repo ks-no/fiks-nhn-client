@@ -99,13 +99,9 @@ open class Client @JvmOverloads constructor(
     suspend fun getStatus(
         messageId: UUID,
         requestParameters: RequestParameters? = null,
-    ): List<ApplicationReceiptInfo> =
+    ): List<StatusInfo> =
         internalClient.getStatus(messageId, requestParameters).map { status ->
-            ApplicationReceiptInfo(
-                receiverHerId = status.receiverHerId,
-                status = status.apprecInfo?.appRecStatus?.toIncomingReceiptStatus(),
-                errors = status.apprecInfo?.appRecErrorList?.map { it.toIncomingApplicationReceiptError() } ?: emptyList(),
-            )
+            status.toStatusInfo()
         }
 
     suspend fun sendApplicationReceipt(

@@ -72,13 +72,13 @@ class BlockingClientTest : StringSpec() {
 
         "Get application receipts for message should proxy to internal client" {
             val id = UUID.randomUUID()
-            val appRecs = listOf<ApplicationReceiptInfo>(mockk(), mockk())
-            val asyncClient = mockk<Client> { coEvery { getStatus(any(), any()) } returns appRecs }
+            val statuses = listOf<StatusInfo>(mockk(), mockk())
+            val asyncClient = mockk<Client> { coEvery { getStatus(any(), any()) } returns statuses }
             val blockingClient = BlockingClient(asyncClient)
 
             val requestParameters = RequestParameters()
             blockingClient.getStatus(id, requestParameters).asClue {
-                it shouldBe appRecs
+                it shouldBe statuses
             }
 
             verifySequence { blockingClient.getStatus(id, requestParameters) }
@@ -145,12 +145,12 @@ class BlockingClientTest : StringSpec() {
 
         "Get status should proxy to internal client" {
             val id = UUID.randomUUID()
-            val appRecs = listOf<ApplicationReceiptInfo>(mockk(), mockk(), mockk())
-            val asyncClient = mockk<Client> { coEvery { getStatus(any(), any()) } returns appRecs }
+            val statuses = listOf<StatusInfo>(mockk(), mockk(), mockk())
+            val asyncClient = mockk<Client> { coEvery { getStatus(any(), any()) } returns statuses }
             val blockingClient = BlockingClient(asyncClient)
             val requestParameters = RequestParameters()
             blockingClient.getStatus(id, requestParameters).asClue {
-                it shouldBe appRecs
+                it shouldBe statuses
             }
 
             verifySequence { blockingClient.getStatus(id, requestParameters) }

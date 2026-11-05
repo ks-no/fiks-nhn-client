@@ -1005,14 +1005,24 @@ class ClientTest : FreeSpec() {
                 client.getStatus(id).asClue { it ->
                     it.forEachIndexed { i, status ->
                         status.receiverHerId shouldBe statuses[i].receiverHerId
-                        status.status shouldBe statuses[i].apprecInfo?.appRecStatus?.let { appRecStatus ->
+                        status.sent shouldBe statuses[i].sent
+                        status.deliveryState shouldBe when (statuses[i].transportDeliveryState) {
+                            NhnDeliveryState.UNCONFIRMED -> DeliveryState.UNCONFIRMED
+                            NhnDeliveryState.ACKNOWLEDGED -> DeliveryState.ACKNOWLEDGED
+                            NhnDeliveryState.REJECTED -> DeliveryState.REJECTED
+                            NhnDeliveryState.ABANDONED -> DeliveryState.ABANDONED
+                            null -> throw IllegalArgumentException("Status is missing transportDeliveryState field")
+                        }
+
+                        status.appRecStatus shouldBe statuses[i].apprecInfo?.appRecStatus?.let { appRecStatus ->
                             when (appRecStatus) {
-                                NhnAppRecStatus.OK -> StatusForMottakAvMelding.OK
-                                NhnAppRecStatus.REJECTED -> StatusForMottakAvMelding.AVVIST
-                                NhnAppRecStatus.OK_ERROR_IN_MESSAGE_PART -> StatusForMottakAvMelding.OK_FEIL_I_DELMELDING
+                                NhnAppRecStatus.OK -> AppRecStatus.OK
+                                NhnAppRecStatus.REJECTED -> AppRecStatus.REJECTED
+                                NhnAppRecStatus.OK_ERROR_IN_MESSAGE_PART -> AppRecStatus.OK_ERROR_IN_MESSAGE_PART
                             }
                         }
-                        status.errors.map { it.errorCode } shouldBe (statuses[i].apprecInfo?.appRecErrorList?.map { it.errorCode } ?: emptyList<String>())
+                        status.appRecId shouldBe statuses[i].apprecInfo?.appRecId?.takeIf { it.isNotBlank() }?.let { UUID.fromString(it) }
+                        status.appRecErrors.map { it.errorCode } shouldBe (statuses[i].apprecInfo?.appRecErrorList?.map { it.errorCode } ?: emptyList<String>())
                     }
                 }
 
@@ -1047,9 +1057,12 @@ class ClientTest : FreeSpec() {
 
                 client.getStatus(UUID.randomUUID()).single().asClue { mapped ->
                     mapped.receiverHerId shouldBe statusInfo.receiverHerId
-                    mapped.status shouldBe StatusForMottakAvMelding.AVVIST
-                    mapped.errors shouldHaveSize 1
-                    with(mapped.errors.single()) {
+                    mapped.sent shouldBe true
+                    mapped.deliveryState shouldBe DeliveryState.ACKNOWLEDGED
+                    mapped.appRecStatus shouldBe AppRecStatus.REJECTED
+                    mapped.appRecId shouldBe expectedAppRecId
+                    mapped.appRecErrors shouldHaveSize 1
+                    with(mapped.appRecErrors.single()) {
                         type shouldBe FeilmeldingForApplikasjonskvittering.UGYLDIG_ID
                         errorCode shouldBe "E10"
                         description shouldBe "Ugyldig meldingsidentifikator"
@@ -1082,10 +1095,10 @@ class ClientTest : FreeSpec() {
                 }, testApplicationMetadata)
 
                 client.getStatus(UUID.randomUUID()).single().asClue { mapped ->
-                    mapped.status shouldBe StatusForMottakAvMelding.OK
-                    mapped.errors.single().type shouldBe FeilmeldingForApplikasjonskvittering.UKJENT
-                    mapped.errors.single().errorCode shouldBe "NO_SUCH_CODE"
-                    mapped.errors.single().description shouldBe "Unknown error"
+                    mapped.appRecStatus shouldBe AppRecStatus.OK
+                    mapped.appRecErrors.single().type shouldBe FeilmeldingForApplikasjonskvittering.UKJENT
+                    mapped.appRecErrors.single().errorCode shouldBe "NO_SUCH_CODE"
+                    mapped.appRecErrors.single().description shouldBe "Unknown error"
                 }
             }
 
@@ -1104,8 +1117,11 @@ class ClientTest : FreeSpec() {
 
                 client.getStatus(UUID.randomUUID()).single().asClue { mapped ->
                     mapped.receiverHerId shouldBe statusInfo.receiverHerId
-                    mapped.status shouldBe null
-                    mapped.errors.shouldBeEmpty()
+                    mapped.sent shouldBe false
+                    mapped.deliveryState shouldBe DeliveryState.UNCONFIRMED
+                    mapped.appRecStatus shouldBe null
+                    mapped.appRecErrors.shouldBeEmpty()
+                    mapped.appRecId shouldBe null
                 }
             }
 

@@ -41,7 +41,7 @@ class BlockingClientWithFastlegeLookup(
     fun getStatus(
         messageId: UUID,
         requestParameters: RequestParameters? = null,
-    ): List<ApplicationReceiptInfo> = runBlocking { client.getStatus(messageId, requestParameters) }
+    ): List<StatusInfo> = runBlocking { client.getStatus(messageId, requestParameters) }
 
     @JvmOverloads
     fun sendApplicationReceipt(
