@@ -8,8 +8,9 @@ open class ClientWithFastlegeLookup(
     internalClient: MshInternalClient,
     flrClient: FastlegeregisteretClient,
     arClient: AdresseregisteretClient,
+    applicationMetadata: ApplicationMetadata,
     messageHandlers: List<MessageHandler> = emptyList(),
-) : Client(internalClient, messageHandlers) {
+) : Client(internalClient, applicationMetadata, messageHandlers) {
 
     private val receiverBuilder = GpForPersonReceiverBuilder(flrClient, arClient)
 

@@ -10,7 +10,7 @@ import io.mockk.coVerify
 import io.mockk.coVerifySequence
 import io.mockk.mockk
 import no.ks.fiks.nhn.*
-import no.nhn.msh.v2.model.GetBusinessDocumentResponse
+import no.nhn.msh.v3.model.GetBusinessDocumentResponse
 import java.util.*
 
 class MessageHandlerTest : FreeSpec() {
@@ -24,7 +24,7 @@ class MessageHandlerTest : FreeSpec() {
                 val id = UUID.randomUUID()
                 val client = Client(mockk {
                     coEvery { getBusinessDocument(any(), any()) } returns validMsgHeadResponse()
-                }, listOf(handler))
+                }, testApplicationMetadata, listOf(handler))
 
                 client.getBusinessDocument(id)
 
@@ -42,7 +42,7 @@ class MessageHandlerTest : FreeSpec() {
                 val id = UUID.randomUUID()
                 val client = Client(mockk {
                     coEvery { getBusinessDocument(any(), any()) } returns validAppRecResponse()
-                }, listOf(handler))
+                }, testApplicationMetadata, listOf(handler))
 
                 shouldThrow<IllegalArgumentException> { client.getBusinessDocument(id) }
 
@@ -60,7 +60,7 @@ class MessageHandlerTest : FreeSpec() {
                 val id = UUID.randomUUID()
                 val client = Client(mockk {
                     coEvery { getBusinessDocument(any(), any()) } returns invalidBase64Response()
-                }, listOf(handler))
+                }, testApplicationMetadata, listOf(handler))
 
                 shouldThrow<IllegalArgumentException> { client.getBusinessDocument(id) }.asClue {
                     it.message shouldStartWith "Illegal base64 character"
@@ -86,7 +86,7 @@ class MessageHandlerTest : FreeSpec() {
                 }
                 val client = Client(mockk {
                     coEvery { getBusinessDocument(any(), any()) } returns response
-                }, listOf(handler))
+                }, testApplicationMetadata, listOf(handler))
 
                 client.getBusinessDocument(UUID.randomUUID())
 
@@ -103,7 +103,7 @@ class MessageHandlerTest : FreeSpec() {
                 }
                 val client = Client(mockk {
                     coEvery { getBusinessDocument(any(), any()) } returns response
-                }, listOf(handler))
+                }, testApplicationMetadata, listOf(handler))
 
                 shouldThrow<IllegalArgumentException> { client.getBusinessDocument(UUID.randomUUID()) }.asClue {
                     it.message shouldStartWith "Illegal base64 character"
@@ -120,7 +120,7 @@ class MessageHandlerTest : FreeSpec() {
                 val id = UUID.randomUUID()
                 val client = Client(mockk {
                     coEvery { getBusinessDocument(any(), any()) } returns validMsgHeadResponse()
-                }, listOf(failingHandler, secondHandler))
+                }, testApplicationMetadata, listOf(failingHandler, secondHandler))
 
                 client.getBusinessDocument(id)
 
@@ -138,7 +138,7 @@ class MessageHandlerTest : FreeSpec() {
                 }
                 val client = Client(mockk {
                     coEvery { getBusinessDocument(any(), any()) } returns validMsgHeadResponse()
-                }, listOf(handler))
+                }, testApplicationMetadata, listOf(handler))
 
                 val result = client.getBusinessDocument(UUID.randomUUID())
                 result.id shouldBe "6ddb98ed-9e34-4efa-9163-62e4ea0cbf43"
@@ -153,7 +153,7 @@ class MessageHandlerTest : FreeSpec() {
                 val id = UUID.randomUUID()
                 val client = Client(mockk {
                     coEvery { getBusinessDocument(any(), any()) } returns validAppRecResponse()
-                }, listOf(handler))
+                }, testApplicationMetadata, listOf(handler))
 
                 client.getApplicationReceipt(id)
 
@@ -171,7 +171,7 @@ class MessageHandlerTest : FreeSpec() {
                 val id = UUID.randomUUID()
                 val client = Client(mockk {
                     coEvery { getBusinessDocument(any(), any()) } returns validMsgHeadResponse()
-                }, listOf(handler))
+                }, testApplicationMetadata, listOf(handler))
 
                 shouldThrow<IllegalArgumentException> { client.getApplicationReceipt(id) }
 
@@ -189,7 +189,7 @@ class MessageHandlerTest : FreeSpec() {
                 val id = UUID.randomUUID()
                 val client = Client(mockk {
                     coEvery { getBusinessDocument(any(), any()) } returns invalidBase64Response()
-                }, listOf(handler))
+                }, testApplicationMetadata, listOf(handler))
 
                 shouldThrow<IllegalArgumentException> { client.getApplicationReceipt(id) }.asClue {
                     it.message shouldStartWith "Illegal base64 character"
@@ -214,7 +214,7 @@ class MessageHandlerTest : FreeSpec() {
                 }
                 val client = Client(mockk {
                     coEvery { getBusinessDocument(any(), any()) } returns response
-                }, listOf(handler))
+                }, testApplicationMetadata, listOf(handler))
 
                 shouldThrow<IllegalArgumentException> { client.getApplicationReceipt(UUID.randomUUID()) }.asClue {
                     it.message shouldStartWith "Illegal base64 character"
@@ -234,7 +234,7 @@ class MessageHandlerTest : FreeSpec() {
                 }
                 val client = Client(mockk {
                     coEvery { getBusinessDocument(any(), any()) } returns response
-                }, listOf(handler))
+                }, testApplicationMetadata, listOf(handler))
 
                 client.getApplicationReceipt(UUID.randomUUID())
 
@@ -249,7 +249,7 @@ class MessageHandlerTest : FreeSpec() {
                 val id = UUID.randomUUID()
                 val client = Client(mockk {
                     coEvery { getBusinessDocument(any(), any()) } returns validAppRecResponse()
-                }, listOf(failingHandler, secondHandler))
+                }, testApplicationMetadata, listOf(failingHandler, secondHandler))
 
                 client.getApplicationReceipt(id)
 
@@ -267,7 +267,7 @@ class MessageHandlerTest : FreeSpec() {
                 }
                 val client = Client(mockk {
                     coEvery { getBusinessDocument(any(), any()) } returns validAppRecResponse()
-                }, listOf(handler))
+                }, testApplicationMetadata, listOf(handler))
 
                 val result = client.getApplicationReceipt(UUID.randomUUID())
                 result.id shouldBe "a761e9b9-3495-4f5a-a964-c13d544d2ceb"

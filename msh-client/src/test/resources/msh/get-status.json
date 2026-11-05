@@ -1,1 +1,10 @@
-[{"receiverHerId":8094866,"transportDeliveryState":"Unconfirmed","appRecStatus":null}]
+{
+  "statusList": [
+    {
+      "receiverHerId": 8094866,
+      "transportDeliveryState": "Unconfirmed",
+      "sent": false,
+      "apprecInfo": null
+    }
+  ]
+}

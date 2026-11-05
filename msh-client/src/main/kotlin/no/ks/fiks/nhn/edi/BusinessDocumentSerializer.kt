@@ -97,11 +97,11 @@ object BusinessDocumentSerializer {
                 }
             }
         healthcareProfessional = child
-            .let { it as? no.ks.fiks.nhn.msh.PersonCommunicationParty }
+            .let { it as? PersonCommunicationParty }
             ?.let(::toHealthcareProfessional)
     }
 
-    private fun toHealthcareProfessional(person: no.ks.fiks.nhn.msh.PersonCommunicationParty) =
+    private fun toHealthcareProfessional(person: PersonCommunicationParty) =
         HealthcareProfessional().apply {
             givenName = person.firstName
             middleName = person.middleName
@@ -110,11 +110,14 @@ object BusinessDocumentSerializer {
             address = person.address?.let { convert(it) }
         }
 
-    private fun buildMsgInfoType(version: DialogmeldingVersion) =
+    fun resolveMessageType(version: DialogmeldingVersion): MeldingensFunksjon =
         when (version) {
             DialogmeldingVersion.V1_0 -> MeldingensFunksjon.DIALOG_FORESPORSEL
             DialogmeldingVersion.V1_1 -> MeldingensFunksjon.DIALOG_HELSEFAGLIG
-        }.run {
+        }
+
+    private fun buildMsgInfoType(version: DialogmeldingVersion) =
+        resolveMessageType(version).run {
             CS().apply {
                 v = verdi
                 dn = navn

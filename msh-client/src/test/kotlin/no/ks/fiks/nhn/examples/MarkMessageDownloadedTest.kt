@@ -8,10 +8,10 @@ import io.mockk.runs
 import no.ks.fiks.nhn.msh.ClientWithFastlegeLookup
 import java.util.*
 
-class MarkMessageReadTest : StringSpec({
-    "Example for marking message as read" {
-        val client = mockk<ClientWithFastlegeLookup> { coEvery { markMessageRead(any(), any()) } just runs }
-        client.markMessageRead(
+class MarkMessageDownloadedTest : StringSpec({
+    "Example for marking message as downloaded" {
+        val client = mockk<ClientWithFastlegeLookup> { coEvery { markMessageDownloaded(any(), any()) } just runs }
+        client.markMessageDownloaded(
             id = UUID.randomUUID(),
             receiverHerId = 2345,
         )

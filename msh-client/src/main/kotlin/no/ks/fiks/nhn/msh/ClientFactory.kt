@@ -14,6 +14,7 @@ object ClientFactory {
     fun createClient(configuration: Configuration, messageHandlers: List<MessageHandler> = emptyList()): Client =
         Client(
             internalClient = createMshInternalClient(configuration.helseId, configuration.mshBaseUrl, configuration.sourceSystem),
+            applicationMetadata = configuration.applicationMetadata,
             messageHandlers = messageHandlers,
         )
 
@@ -23,6 +24,7 @@ object ClientFactory {
             internalClient = createMshInternalClient(configuration.helseId, configuration.mshBaseUrl, configuration.sourceSystem),
             flrClient = createFlrClient(configuration.fastlegeregister),
             arClient = createArClient(configuration.adresseregister, configuration.helseId),
+            applicationMetadata = configuration.applicationMetadata,
             messageHandlers = messageHandlers,
         )
 
