@@ -827,6 +827,12 @@ class MshInternalClientTest : FreeSpec() {
                     proofBuilder = proofBuilder,
                 ).setMshConfigurations(listOf(configuration))
 
+                wireMockClient.verifyThat(
+                    1,
+                    putRequestedFor(urlPathEqualTo("/mshconfigurations"))
+                        .withRequestBody(equalToJson(NhnSetMshConfigurationsRequest().configurations(listOf(configuration)).toJson()))
+                )
+
                 verifySequence {
                     helseIdClient.getAccessToken(StandardAccessTokenRequest(TokenType.DPOP))
                     proofBuilder.buildProof(
@@ -1344,7 +1350,6 @@ private fun buildTokenResponse(accessToken: String) =
     TokenResponse(accessToken, 0, UUID.randomUUID().toString(), UUID.randomUUID().toString())
 
 private fun randomOrganizationNumber() = nextInt(100000000, 1000000000).toString()
-
 
 
 
