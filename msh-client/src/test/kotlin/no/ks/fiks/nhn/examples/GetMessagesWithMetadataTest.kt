@@ -23,9 +23,9 @@ class GetMessagesWithMetadataTest : StringSpec({
     }
 
     "returns message metadata for unread notifications with related messages" {
-        val relatedMessageId = UUID.randomUUID()
+        val relatedMessageId = UUID.randomUUID().toString()
         val expected = MessageWithMetadata(
-            id = relatedMessageId,
+            id = relatedMessageId.toString(),
             contentType = "application/xml",
             receiverHerIds = listOf(321),
             senderHerId = 123,
@@ -37,8 +37,8 @@ class GetMessagesWithMetadataTest : StringSpec({
         val client = mockk<ClientWithFastlegeLookup> {
             coEvery { getUnreadNotifications(any(), any(), any()) } returns listOf(
                 UnreadNotification(
-                    notificationId = UUID.randomUUID(),
-                    relatedMessageId = relatedMessageId,
+                    notificationId = UUID.randomUUID().toString(),
+                    relatedMessageId = relatedMessageId.toString(),
                     type = NotificationType.NEW_MESSAGE,
                     notificationReceiverHerId = 321,
                     notificationTriggeredByHerId = 123,
@@ -46,7 +46,7 @@ class GetMessagesWithMetadataTest : StringSpec({
                     createdAt = OffsetDateTime.now(),
                 ),
                 UnreadNotification(
-                    notificationId = UUID.randomUUID(),
+                    notificationId = UUID.randomUUID().toString(),
                     relatedMessageId = null,
                     type = NotificationType.NEW_MESSAGE,
                     notificationReceiverHerId = 321,
@@ -55,8 +55,8 @@ class GetMessagesWithMetadataTest : StringSpec({
                     createdAt = OffsetDateTime.now(),
                 ),
                 UnreadNotification(
-                    notificationId = UUID.randomUUID(),
-                    relatedMessageId = UUID.randomUUID(),
+                    notificationId = UUID.randomUUID().toString(),
+                    relatedMessageId = UUID.randomUUID().toString(),
                     type = NotificationType.REFUSED_MESSAGE,
                     notificationReceiverHerId = 321,
                     notificationTriggeredByHerId = 123,

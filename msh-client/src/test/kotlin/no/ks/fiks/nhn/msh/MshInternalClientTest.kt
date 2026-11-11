@@ -136,8 +136,8 @@ class MshInternalClientTest : FreeSpec() {
 
             "Delete notifications should make expected calls" {
                 val notificationIds = listOf(
-                    UUID.fromString("17aaeaa7-fa1e-4b60-a8e9-bdc31718dfc9"),
-                    UUID.fromString("c5e6b600-78ef-4d2a-ad5e-e4b64e3f5230"),
+                    UUID.fromString("17aaeaa7-fa1e-4b60-a8e9-bdc31718dfc9").toString(),
+                    UUID.fromString("c5e6b600-78ef-4d2a-ad5e-e4b64e3f5230").toString(),
                 )
                 mockDeleteNotifications(
                     expectedBody = NhnDeleteNotificationsRequest()
@@ -165,7 +165,7 @@ class MshInternalClientTest : FreeSpec() {
                 mockDeleteNotifications(status = 404, body = expected)
 
                 shouldThrow<HttpClientException> {
-                    buildDefaultClient().deleteNotifications(listOf(UUID.randomUUID()))
+                    buildDefaultClient().deleteNotifications(listOf(UUID.randomUUID().toString()))
                 }.asClue {
                     it.status shouldBe 404
                     it.body shouldBe expected
@@ -189,7 +189,7 @@ class MshInternalClientTest : FreeSpec() {
                 )
                 client.postMessage(PostMessageRequest())
                     .asClue {
-                        it shouldBe UUID.fromString("0556bccf-ccf9-4597-9673-14cbd1a96d99")
+                        it shouldBe "0556bccf-ccf9-4597-9673-14cbd1a96d99"
                     }
 
                 verifySequence {
@@ -253,7 +253,7 @@ class MshInternalClientTest : FreeSpec() {
 
         "Get message" - {
             "Should make expected calls and parse response" {
-                val id = UUID.randomUUID()
+                val id = UUID.randomUUID().toString()
                 mockGetMessage(id)
 
                 val accessToken = UUID.randomUUID().toString()
@@ -284,7 +284,7 @@ class MshInternalClientTest : FreeSpec() {
             }
 
             "Should be able to parse apprec response" {
-                val id = UUID.randomUUID()
+                val id = UUID.randomUUID().toString()
                 mockGetMessage(id, body = readResourceContentAsString("msh/get-message-apprec-response.json"))
 
                 val accessToken = UUID.randomUUID().toString()
@@ -302,7 +302,7 @@ class MshInternalClientTest : FreeSpec() {
             }
 
             "Not OK response should throw exception" {
-                val id = UUID.randomUUID()
+                val id = UUID.randomUUID().toString()
                 val expected = UUID.randomUUID().toString()
                 mockGetMessage(id, 201, expected)
 
@@ -316,7 +316,7 @@ class MshInternalClientTest : FreeSpec() {
             }
 
             "Redirect response should throw exception" {
-                val id = UUID.randomUUID()
+                val id = UUID.randomUUID().toString()
                 val expected = UUID.randomUUID().toString()
                 mockGetMessage(id, 307, expected)
 
@@ -330,7 +330,7 @@ class MshInternalClientTest : FreeSpec() {
             }
 
             "Client error response should throw exception" {
-                val id = UUID.randomUUID()
+                val id = UUID.randomUUID().toString()
                 val expected = UUID.randomUUID().toString()
                 mockGetMessage(id, 403, expected)
 
@@ -344,7 +344,7 @@ class MshInternalClientTest : FreeSpec() {
             }
 
             "Client server response should throw exception" {
-                val id = UUID.randomUUID()
+                val id = UUID.randomUUID().toString()
                 val expected = UUID.randomUUID().toString()
                 mockGetMessage(id, 500, expected)
 
@@ -358,7 +358,7 @@ class MshInternalClientTest : FreeSpec() {
             }
 
             "Unknown JSON properties should be ignored" {
-                val id = UUID.randomUUID()
+                val id = UUID.randomUUID().toString()
                 mockGetMessage(id, body = readResourceContentAsString("msh/get-message-response-with-unknown-property.json"))
 
                 val client = buildDefaultClient()
@@ -378,7 +378,7 @@ class MshInternalClientTest : FreeSpec() {
 
         "Get business document" - {
             "Should make expected calls and parse response" {
-                val id = UUID.randomUUID()
+                val id = UUID.randomUUID().toString()
                 mockGetBusinessDocument(id)
 
                 val accessToken = UUID.randomUUID().toString()
@@ -409,7 +409,7 @@ class MshInternalClientTest : FreeSpec() {
             }
 
             "Should be able to parse apprec response" {
-                val id = UUID.randomUUID()
+                val id = UUID.randomUUID().toString()
                 mockGetBusinessDocument(id, body = readResourceContentAsString("msh/get-business-document-apprec-response.json"))
 
                 val accessToken = UUID.randomUUID().toString()
@@ -423,7 +423,7 @@ class MshInternalClientTest : FreeSpec() {
             }
 
             "Not OK response should throw exception" {
-                val id = UUID.randomUUID()
+                val id = UUID.randomUUID().toString()
                 val expected = UUID.randomUUID().toString()
                 mockGetBusinessDocument(id, 201, expected)
 
@@ -437,7 +437,7 @@ class MshInternalClientTest : FreeSpec() {
             }
 
             "Redirect response should throw exception" {
-                val id = UUID.randomUUID()
+                val id = UUID.randomUUID().toString()
                 val expected = UUID.randomUUID().toString()
                 mockGetBusinessDocument(id, 302, expected)
 
@@ -451,7 +451,7 @@ class MshInternalClientTest : FreeSpec() {
             }
 
             "Client error response should throw exception" {
-                val id = UUID.randomUUID()
+                val id = UUID.randomUUID().toString()
                 val expected = UUID.randomUUID().toString()
                 mockGetBusinessDocument(id, 403, expected)
 
@@ -465,7 +465,7 @@ class MshInternalClientTest : FreeSpec() {
             }
 
             "Server error response should throw exception" {
-                val id = UUID.randomUUID()
+                val id = UUID.randomUUID().toString()
                 val expected = UUID.randomUUID().toString()
                 mockGetBusinessDocument(id, 503, expected)
 
@@ -481,7 +481,7 @@ class MshInternalClientTest : FreeSpec() {
 
         "Get status" - {
             "Should make expected calls and parse response" {
-                val id = UUID.randomUUID()
+                val id = UUID.randomUUID().toString()
                 mockGetStatus(id)
 
                 val accessToken = UUID.randomUUID().toString()
@@ -495,6 +495,7 @@ class MshInternalClientTest : FreeSpec() {
                 )
                 client
                     .getStatus(id)
+                    .statusList.orEmpty()
                     .asClue {
                         it.size shouldBe 1
                         with(it.single()) {
@@ -515,12 +516,13 @@ class MshInternalClientTest : FreeSpec() {
             }
 
             "Should be able to parse acknowledged response" {
-                val id = UUID.randomUUID()
+                val id = UUID.randomUUID().toString()
                 mockGetStatus(id, body = readResourceContentAsString("msh/get-status-acked.json"))
 
                 val accessToken = UUID.randomUUID().toString()
                 buildDefaultClient(accessToken)
                     .getStatus(id)
+                    .statusList.orEmpty()
                     .asClue {
                         it.size shouldBe 1
                         with(it.single()) {
@@ -532,11 +534,12 @@ class MshInternalClientTest : FreeSpec() {
             }
 
             "Should be able to parse ok error in message part response" {
-                val id = UUID.randomUUID()
+                val id = UUID.randomUUID().toString()
                 mockGetStatus(id, body = readResourceContentAsString("msh/get-status-okerrorinmessagepart.json"))
 
                 buildDefaultClient()
                     .getStatus(id)
+                    .statusList.orEmpty()
                     .asClue {
                         it.size shouldBe 1
                         with(it.single()) {
@@ -550,11 +553,12 @@ class MshInternalClientTest : FreeSpec() {
             }
 
             "Should be able to parse rejected response" {
-                val id = UUID.randomUUID()
+                val id = UUID.randomUUID().toString()
                 mockGetStatus(id, body = readResourceContentAsString("msh/get-status-rejected.json"))
 
                 buildDefaultClient()
                     .getStatus(id)
+                    .statusList.orEmpty()
                     .asClue {
                         it.size shouldBe 1
                         with(it.single()) {
@@ -568,7 +572,7 @@ class MshInternalClientTest : FreeSpec() {
             }
 
             "Not OK response should throw exception" {
-                val id = UUID.randomUUID()
+                val id = UUID.randomUUID().toString()
                 val expected = UUID.randomUUID().toString()
                 mockGetStatus(id, 201, expected)
 
@@ -582,7 +586,7 @@ class MshInternalClientTest : FreeSpec() {
             }
 
             "Redirect response should throw exception" {
-                val id = UUID.randomUUID()
+                val id = UUID.randomUUID().toString()
                 val expected = UUID.randomUUID().toString()
                 mockGetStatus(id, 307, expected)
 
@@ -596,7 +600,7 @@ class MshInternalClientTest : FreeSpec() {
             }
 
             "Client error response should throw exception" {
-                val id = UUID.randomUUID()
+                val id = UUID.randomUUID().toString()
                 val expected = UUID.randomUUID().toString()
                 mockGetStatus(id, 400, expected)
 
@@ -610,7 +614,7 @@ class MshInternalClientTest : FreeSpec() {
             }
 
             "Server error response should throw exception" {
-                val id = UUID.randomUUID()
+                val id = UUID.randomUUID().toString()
                 val expected = UUID.randomUUID().toString()
                 mockGetStatus(id, 504, expected)
 
@@ -626,7 +630,7 @@ class MshInternalClientTest : FreeSpec() {
 
         "Post app rec" - {
             "Should make expected calls and parse response" {
-                val id = UUID.randomUUID()
+                val id = UUID.randomUUID().toString()
                 val senderHerId = nextInt(1, 1000000)
                 mockPostAppRec(id, senderHerId)
 
@@ -642,7 +646,7 @@ class MshInternalClientTest : FreeSpec() {
                 client
                     .postAppRec(id, PostAppRecRequest().appRecSenderHerId(senderHerId))
                     .asClue {
-                        it shouldBe UUID.fromString("680bb102-4541-4ca9-8210-07251b3206a3")
+                        it shouldBe "680bb102-4541-4ca9-8210-07251b3206a3"
                     }
 
                 verifySequence {
@@ -657,7 +661,7 @@ class MshInternalClientTest : FreeSpec() {
             }
 
             "Not CREATED response should throw exception" {
-                val id = UUID.randomUUID()
+                val id = UUID.randomUUID().toString()
                 val senderHerId = nextInt(1, 1000000)
                 val expected = UUID.randomUUID().toString()
                 mockPostAppRec(id, senderHerId, 200, expected)
@@ -672,7 +676,7 @@ class MshInternalClientTest : FreeSpec() {
             }
 
             "Redirect response should throw exception" {
-                val id = UUID.randomUUID()
+                val id = UUID.randomUUID().toString()
                 val senderHerId = nextInt(1, 1000000)
                 val expected = UUID.randomUUID().toString()
                 mockPostAppRec(id, senderHerId, 301, expected)
@@ -687,7 +691,7 @@ class MshInternalClientTest : FreeSpec() {
             }
 
             "Client error response should throw exception" {
-                val id = UUID.randomUUID()
+                val id = UUID.randomUUID().toString()
                 val senderHerId = nextInt(1, 1000000)
                 val expected = UUID.randomUUID().toString()
                 mockPostAppRec(id, senderHerId, 401, expected)
@@ -702,7 +706,7 @@ class MshInternalClientTest : FreeSpec() {
             }
 
             "Server error response should throw exception" {
-                val id = UUID.randomUUID()
+                val id = UUID.randomUUID().toString()
                 val senderHerId = nextInt(1, 1000000)
                 val expected = UUID.randomUUID().toString()
                 mockPostAppRec(id, senderHerId, 500, expected)
@@ -719,7 +723,7 @@ class MshInternalClientTest : FreeSpec() {
 
         "Mark message downloaded" - {
             "Should make expected calls" {
-                val id = UUID.randomUUID()
+                val id = UUID.randomUUID().toString()
                 val receiverHerId = nextInt(1, 1000000)
                 mockMarkMessageDownloaded(id, receiverHerId)
 
@@ -744,7 +748,7 @@ class MshInternalClientTest : FreeSpec() {
             }
 
             "Not NO_CONTENT response should throw exception" {
-                val id = UUID.randomUUID()
+                val id = UUID.randomUUID().toString()
                 val receiverHerId = nextInt(1, 1000000)
                 val expected = UUID.randomUUID().toString()
                 mockMarkMessageDownloaded(id, receiverHerId, 201, expected)
@@ -759,7 +763,7 @@ class MshInternalClientTest : FreeSpec() {
             }
 
             "Redirect response should throw exception" {
-                val id = UUID.randomUUID()
+                val id = UUID.randomUUID().toString()
                 val receiverHerId = nextInt(1, 1000000)
                 val expected = UUID.randomUUID().toString()
                 mockMarkMessageDownloaded(id, receiverHerId, 302, expected)
@@ -774,7 +778,7 @@ class MshInternalClientTest : FreeSpec() {
             }
 
             "Client error response should throw exception" {
-                val id = UUID.randomUUID()
+                val id = UUID.randomUUID().toString()
                 val receiverHerId = nextInt(1, 1000000)
                 val expected = UUID.randomUUID().toString()
                 mockMarkMessageDownloaded(id, receiverHerId, 404, expected)
@@ -789,7 +793,7 @@ class MshInternalClientTest : FreeSpec() {
             }
 
             "Server error response should throw exception" {
-                val id = UUID.randomUUID()
+                val id = UUID.randomUUID().toString()
                 val receiverHerId = nextInt(1, 1000000)
                 val expected = UUID.randomUUID().toString()
                 mockMarkMessageDownloaded(id, receiverHerId, 501, expected)
@@ -899,7 +903,7 @@ class MshInternalClientTest : FreeSpec() {
 
         "Test HelseID parameters" - {
             "If no token params are passed, should get token with standard DPoP token request" {
-                val id = UUID.randomUUID()
+                val id = UUID.randomUUID().toString()
                 mockGetMessage(id)
 
                 val helseIdClient = mockHelseIdClient("")
@@ -916,7 +920,7 @@ class MshInternalClientTest : FreeSpec() {
             }
 
             "Should support single tenant access tokens" {
-                val id = UUID.randomUUID()
+                val id = UUID.randomUUID().toString()
                 mockGetMessage(id)
                 val childOrganization = randomOrganizationNumber()
 
@@ -939,7 +943,7 @@ class MshInternalClientTest : FreeSpec() {
             }
 
             "Should support multi tenant access tokens with parent and child" {
-                val id = UUID.randomUUID()
+                val id = UUID.randomUUID().toString()
                 mockGetMessage(id)
                 val parentOrganization = randomOrganizationNumber()
                 val childOrganization = randomOrganizationNumber()
@@ -970,7 +974,7 @@ class MshInternalClientTest : FreeSpec() {
             }
 
             "Should support multi tenant access tokens with only parent" {
-                val id = UUID.randomUUID()
+                val id = UUID.randomUUID().toString()
                 mockGetMessage(id)
                 val parentOrganization = randomOrganizationNumber()
 
@@ -993,7 +997,7 @@ class MshInternalClientTest : FreeSpec() {
             }
 
             "Should support requesting single tenant access tokens using thread local configuration which overrides static configuration" {
-                val id = UUID.randomUUID()
+                val id = UUID.randomUUID().toString()
                 mockGetMessage(id)
                 val configuredClientChildOrganization = randomOrganizationNumber()
                 val requestChildOrganization = randomOrganizationNumber()
@@ -1024,7 +1028,7 @@ class MshInternalClientTest : FreeSpec() {
             }
 
             "Should support requesting multi tenant access tokens using thread local configuration which overrides static configuration" {
-                val id = UUID.randomUUID()
+                val id = UUID.randomUUID().toString()
                 mockGetMessage(id)
                 val configuredClientParentOrganization = randomOrganizationNumber()
                 val configuredClientChildOrganization = randomOrganizationNumber()
@@ -1072,7 +1076,7 @@ class MshInternalClientTest : FreeSpec() {
             }
 
             "Should add access token and DPoP proof headers" {
-                val id = UUID.randomUUID()
+                val id = UUID.randomUUID().toString()
                 mockGetMessage(id)
                 val accessToken = UUID.randomUUID().toString()
                 val dpopProof = UUID.randomUUID().toString()
@@ -1115,7 +1119,7 @@ class MshInternalClientTest : FreeSpec() {
                         else -> null
                     }
                 }
-                val requestIds = List(requestParameters.size) { UUID.randomUUID() }.onEach {
+                val requestIds = List(requestParameters.size) { UUID.randomUUID().toString() }.onEach {
                     mockGetMessage(it)
                 }
 
@@ -1239,7 +1243,7 @@ class MshInternalClientTest : FreeSpec() {
         )
     }
 
-    private fun mockGetMessage(id: UUID, status: Int = 200, body: String = readResourceContentAsString("msh/get-message-response.json")) {
+    private fun mockGetMessage(id: String, status: Int = 200, body: String = readResourceContentAsString("msh/get-message-response.json")) {
         wireMockClient.register(
             get("/messages/$id")
                 .willReturn(
@@ -1250,7 +1254,7 @@ class MshInternalClientTest : FreeSpec() {
         )
     }
 
-    private fun mockGetBusinessDocument(id: UUID, status: Int = 200, body: String = readResourceContentAsString("msh/get-business-document-response.json")) {
+    private fun mockGetBusinessDocument(id: String, status: Int = 200, body: String = readResourceContentAsString("msh/get-business-document-response.json")) {
         wireMockClient.register(
             get("/messages/$id/business-document")
                 .willReturn(
@@ -1261,7 +1265,7 @@ class MshInternalClientTest : FreeSpec() {
         )
     }
 
-    private fun mockGetStatus(id: UUID, status: Int = 200, body: String = readResourceContentAsString("msh/get-status.json")) {
+    private fun mockGetStatus(id: String, status: Int = 200, body: String = readResourceContentAsString("msh/get-status.json")) {
         wireMockClient.register(
             get("/messages/$id/status")
                 .willReturn(
@@ -1283,7 +1287,7 @@ class MshInternalClientTest : FreeSpec() {
         )
     }
 
-    private fun mockPostAppRec(appRecId: UUID, senderHerId: Int, status: Int = 202, body: String = readResourceContentAsString("msh/post-apprec-response.json")) {
+    private fun mockPostAppRec(appRecId: String, senderHerId: Int, status: Int = 202, body: String = readResourceContentAsString("msh/post-apprec-response.json")) {
         wireMockClient.register(
             post("/messages/$appRecId/apprec")
                 .willReturn(
@@ -1307,7 +1311,7 @@ class MshInternalClientTest : FreeSpec() {
         )
     }
 
-    private fun mockMarkMessageDownloaded(markAsReadId: UUID, markAsReadHerId: Int, status: Int = 204, body: String = "") {
+    private fun mockMarkMessageDownloaded(markAsReadId: String, markAsReadHerId: Int, status: Int = 204, body: String = "") {
         wireMockClient.register(
             put(urlPathEqualTo("/messages/$markAsReadId/downloaded"))
                 .withRequestBody(equalToJson(NhnMarkAsDownloadedRequest().receiverHerId(markAsReadHerId).toJson()))
@@ -1350,8 +1354,5 @@ private fun buildTokenResponse(accessToken: String) =
     TokenResponse(accessToken, 0, UUID.randomUUID().toString(), UUID.randomUUID().toString())
 
 private fun randomOrganizationNumber() = nextInt(100000000, 1000000000).toString()
-
-
-
 
 

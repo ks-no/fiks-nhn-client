@@ -1,13 +1,19 @@
 package no.ks.fiks.nhn.msh
 
-import java.util.UUID
+data class GetStatusResponse(
+    val statusList: List<StatusInfo>?,
+)
 
 data class StatusInfo(
     val receiverHerId: Int,
     val sent: Boolean,
     val deliveryState: DeliveryState,
+    val apprecInfo: AppRecInfo?,
+)
+
+data class AppRecInfo(
     val appRecStatus: AppRecStatus?,
-    val appRecId: UUID? = null,
+    val appRecId: String?,
     val appRecErrors: List<IncomingApplicationReceiptError> = emptyList(),
 )
 

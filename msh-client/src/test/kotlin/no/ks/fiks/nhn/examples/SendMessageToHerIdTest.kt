@@ -14,7 +14,7 @@ import java.util.*
 
 class SendMessageToHerIdTest : StringSpec({
     "Sending an example message to a person identified by HER-id" {
-        val client = mockk<Client> { coEvery { sendMessage(any(), any()) } returns UUID.randomUUID() }
+        val client = mockk<Client> { coEvery { sendMessage(any(), any()) } returns UUID.randomUUID().toString() }
         client.sendMessage(
             OutgoingBusinessDocument(
                 id = UUID.randomUUID(),

@@ -2,8 +2,6 @@ package no.ks.fiks.nhn.msh
 
 import no.ks.fiks.nhn.ar.rest.AdresseregisteretClient
 import no.ks.fiks.nhn.flr.FastlegeregisteretClient
-import java.util.UUID
-
 open class ClientWithFastlegeLookup(
     internalClient: MshInternalClient,
     flrClient: FastlegeregisteretClient,
@@ -17,7 +15,7 @@ open class ClientWithFastlegeLookup(
     suspend fun sendMessageToGPForPerson(
         businessDocument: GPForPersonOutgoingBusinessDocument,
         requestParameters: RequestParameters? = null,
-    ): UUID =
+    ): String? =
         sendMessage(
             OutgoingBusinessDocument(
                 id = businessDocument.id,

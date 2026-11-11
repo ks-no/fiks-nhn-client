@@ -31,7 +31,7 @@ open class Client @JvmOverloads constructor(
     suspend fun sendMessage(
         businessDocument: OutgoingBusinessDocument,
         requestParameters: RequestParameters? = null,
-    ): UUID {
+    ): String? {
         val request = NhnPostMessageRequest()
             .businessDocument(Base64.getEncoder().encodeToString(BusinessDocumentSerializer.serializeNhnMessage(businessDocument).toByteArray()))
             .senderHerId(businessDocument.resolveSenderHerId())
@@ -48,14 +48,14 @@ open class Client @JvmOverloads constructor(
     }
 
     suspend fun getMessage(
-        id: UUID,
+        id: String,
         requestParameters: RequestParameters? = null,
     ): MessageWithMetadata {
         return internalClient.getMessage(id, requestParameters).toMessageInfoWithMetadata()
     }
 
     suspend fun getBusinessDocument(
-        id: UUID,
+        id: String,
         requestParameters: RequestParameters? = null,
     ): IncomingBusinessDocument {
         return internalClient
@@ -76,7 +76,7 @@ open class Client @JvmOverloads constructor(
     }
 
     suspend fun getApplicationReceipt(
-        id: UUID,
+        id: String,
         requestParameters: RequestParameters? = null,
     ): IncomingApplicationReceipt {
         return internalClient
@@ -97,17 +97,19 @@ open class Client @JvmOverloads constructor(
     }
 
     suspend fun getStatus(
-        messageId: UUID,
+        messageId: String,
         requestParameters: RequestParameters? = null,
-    ): List<StatusInfo> =
-        internalClient.getStatus(messageId, requestParameters).map { status ->
-            status.toStatusInfo()
-        }
+    ): GetStatusResponse =
+        GetStatusResponse(
+            statusList = internalClient.getStatus(messageId, requestParameters).statusList?.map { status ->
+                status.toStatusInfo()
+            },
+        )
 
     suspend fun sendApplicationReceipt(
         receipt: OutgoingApplicationReceipt,
         requestParameters: RequestParameters? = null,
-    ): UUID {
+    ): String? {
         if (receipt.status == StatusForMottakAvMelding.OK && !receipt.errors.isNullOrEmpty()) throw IllegalArgumentException("Error messages are not allowed when status is OK")
         if (receipt.status != StatusForMottakAvMelding.OK && receipt.errors.isNullOrEmpty()) throw IllegalArgumentException("Must provide at least one error message if status is not OK")
 
@@ -136,7 +138,7 @@ open class Client @JvmOverloads constructor(
         ).map { it.toUnreadNotification() }
 
     suspend fun deleteNotifications(
-        notificationIds: List<UUID>,
+        notificationIds: List<String>,
         requestParameters: RequestParameters? = null,
     ) {
         internalClient.deleteNotifications(
@@ -166,7 +168,7 @@ open class Client @JvmOverloads constructor(
     }
 
     suspend fun markMessageDownloaded(
-        id: UUID,
+        id: String,
         receiverHerId: Int,
         requestParameters: RequestParameters? = null,
     ) = internalClient.markMessageDownloaded(id, receiverHerId, requestParameters)
@@ -210,8 +212,7 @@ open class Client @JvmOverloads constructor(
         BusinessDocumentSerializer.resolveMessageType(version)
 
     private fun NhnGetMessageResponse.toMessageInfoWithMetadata() = MessageWithMetadata(
-        id = runCatching { UUID.fromString(id) }
-            .getOrElse { throw IllegalArgumentException("Message has malformed id field") },
+        id = id,
         contentType = contentType,
         receiverHerIds = receiverHerIds?.toList(),
         senderHerId = senderHerId,
@@ -221,12 +222,9 @@ open class Client @JvmOverloads constructor(
     )
 
     private fun NhnUnreadNotification.toUnreadNotification() = UnreadNotification(
-        notificationId = runCatching { UUID.fromString(notificationId) }
-            .getOrElse { throw IllegalArgumentException("Unread notification has malformed notificationId field") },
-        relatedMessageId = relatedMessageId?.let { rawId ->
-            runCatching { UUID.fromString(rawId) }
-                .getOrElse { throw IllegalArgumentException("Unread notification $notificationId has malformed relatedMessageId field") }
-        },
+        notificationId = notificationId,
+        relatedMessageId = relatedMessageId,
+
         type = when (type) {
             no.nhn.msh.v3.model.NotificationType.NEW_MESSAGE -> NotificationType.NEW_MESSAGE
             no.nhn.msh.v3.model.NotificationType.REFUSED_MESSAGE -> NotificationType.REFUSED_MESSAGE
@@ -244,32 +242,26 @@ open class Client @JvmOverloads constructor(
         receiverHerId = receiverHerId,
         sent = sent,
         deliveryState = transportDeliveryState.toDeliveryState(),
-        appRecStatus = apprecInfo?.appRecStatus?.toAppRecStatus(),
-        appRecId = apprecInfo?.appRecId?.takeIf { it.isNotBlank() }?.let { rawId ->
-            runCatching { UUID.fromString(rawId) }
-                .getOrElse { throw IllegalArgumentException("Status is missing or has malformed appRecId field") }
+        apprecInfo = apprecInfo?.let { info ->
+            AppRecInfo(
+                appRecStatus = info.appRecStatus?.toAppRecStatus(),
+                appRecId = info.appRecId,
+                appRecErrors = info.appRecErrorList?.map { it.toIncomingApplicationReceiptError() } ?: emptyList(),
+            )
         },
-        appRecErrors = apprecInfo?.appRecErrorList?.map { it.toIncomingApplicationReceiptError() } ?: emptyList(),
     )
 
-    private fun NhnDeliveryState?.toDeliveryState() = when (this) {
+    private fun NhnDeliveryState.toDeliveryState() = when (this) {
         NhnDeliveryState.UNCONFIRMED -> DeliveryState.UNCONFIRMED
         NhnDeliveryState.ACKNOWLEDGED -> DeliveryState.ACKNOWLEDGED
         NhnDeliveryState.REJECTED -> DeliveryState.REJECTED
         NhnDeliveryState.ABANDONED -> DeliveryState.ABANDONED
-        null -> throw IllegalArgumentException("Status is missing transportDeliveryState field")
     }
 
     private fun NhnAppRecStatus.toAppRecStatus() = when (this) {
         NhnAppRecStatus.OK -> AppRecStatus.OK
         NhnAppRecStatus.REJECTED -> AppRecStatus.REJECTED
         NhnAppRecStatus.OK_ERROR_IN_MESSAGE_PART -> AppRecStatus.OK_ERROR_IN_MESSAGE_PART
-    }
-
-    private fun NhnAppRecStatus.toIncomingReceiptStatus() = when (this) {
-        NhnAppRecStatus.OK -> StatusForMottakAvMelding.OK
-        NhnAppRecStatus.REJECTED -> StatusForMottakAvMelding.AVVIST
-        NhnAppRecStatus.OK_ERROR_IN_MESSAGE_PART -> StatusForMottakAvMelding.OK_FEIL_I_DELMELDING
     }
 
     private fun NhnAppRecError.toIncomingApplicationReceiptError() = IncomingApplicationReceiptError(

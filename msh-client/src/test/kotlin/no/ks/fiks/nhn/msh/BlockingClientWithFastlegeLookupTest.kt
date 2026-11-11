@@ -15,7 +15,7 @@ class BlockingClientWithFastlegeLookupTest : StringSpec() {
 
     init {
         "Send message to GP for person should proxy to internal client" {
-            val id = UUID.randomUUID()
+            val id = UUID.randomUUID().toString()
             val asyncClient = mockk<ClientWithFastlegeLookup> { coEvery { sendMessageToGPForPerson(any(), any()) } returns id }
             val blockingClient = BlockingClientWithFastlegeLookup(asyncClient)
 
@@ -28,7 +28,7 @@ class BlockingClientWithFastlegeLookupTest : StringSpec() {
             verifySequence { blockingClient.sendMessageToGPForPerson(businessDocument, requestParameters) }
         }
         "Send message should proxy to internal client" {
-            val id = UUID.randomUUID()
+            val id = UUID.randomUUID().toString()
             val asyncClient = mockk<ClientWithFastlegeLookup> { coEvery { sendMessage(any(), any()) } returns id }
             val blockingClient = BlockingClientWithFastlegeLookup(asyncClient)
 
@@ -42,7 +42,7 @@ class BlockingClientWithFastlegeLookupTest : StringSpec() {
         }
 
         "Get message should proxy to internal client" {
-            val id = UUID.randomUUID()
+            val id = UUID.randomUUID().toString()
             val message = mockk<MessageWithMetadata>()
             val asyncClient = mockk<ClientWithFastlegeLookup> { coEvery { getMessage(any(), any()) } returns message }
             val blockingClient = BlockingClientWithFastlegeLookup(asyncClient)
@@ -56,7 +56,7 @@ class BlockingClientWithFastlegeLookupTest : StringSpec() {
         }
 
         "Get business document should proxy to internal client" {
-            val id = UUID.randomUUID()
+            val id = UUID.randomUUID().toString()
             val businessDocument = mockk<IncomingBusinessDocument>()
             val asyncClient = mockk<ClientWithFastlegeLookup> { coEvery { getBusinessDocument(any(), any()) } returns businessDocument }
             val blockingClient = BlockingClientWithFastlegeLookup(asyncClient)
@@ -70,7 +70,7 @@ class BlockingClientWithFastlegeLookupTest : StringSpec() {
         }
 
         "Get application receipt should proxy to internal client" {
-            val id = UUID.randomUUID()
+            val id = UUID.randomUUID().toString()
             val appRec = mockk<IncomingApplicationReceipt>()
             val asyncClient = mockk<ClientWithFastlegeLookup> { coEvery { getApplicationReceipt(any(), any()) } returns appRec }
             val blockingClient = BlockingClientWithFastlegeLookup(asyncClient)
@@ -84,21 +84,22 @@ class BlockingClientWithFastlegeLookupTest : StringSpec() {
         }
 
         "Get application receipts for message should proxy to internal client" {
-            val id = UUID.randomUUID()
+            val id = UUID.randomUUID().toString()
             val statuses = listOf<StatusInfo>(mockk(), mockk())
-            val asyncClient = mockk<ClientWithFastlegeLookup> { coEvery { getStatus(any(), any()) } returns statuses }
+            val response = GetStatusResponse(statuses)
+            val asyncClient = mockk<ClientWithFastlegeLookup> { coEvery { getStatus(any(), any()) } returns response }
             val blockingClient = BlockingClientWithFastlegeLookup(asyncClient)
 
             val requestParameters = RequestParameters()
             blockingClient.getStatus(id, requestParameters).asClue {
-                it shouldBe statuses
+                it shouldBe response
             }
 
             verifySequence { blockingClient.getStatus(id, requestParameters) }
         }
 
         "Send application receipt should proxy to internal client" {
-            val id = UUID.randomUUID()
+            val id = UUID.randomUUID().toString().toString()
             val asyncClient = mockk<ClientWithFastlegeLookup> { coEvery { sendApplicationReceipt(any(), any()) } returns id }
             val blockingClient = BlockingClientWithFastlegeLookup(asyncClient)
 
@@ -130,7 +131,7 @@ class BlockingClientWithFastlegeLookupTest : StringSpec() {
             val asyncClient = mockk<ClientWithFastlegeLookup> { coEvery { deleteNotifications(any(), any()) } just runs }
             val blockingClient = BlockingClientWithFastlegeLookup(asyncClient)
 
-            val notificationIds = listOf(UUID.randomUUID(), UUID.randomUUID())
+            val notificationIds = listOf(UUID.randomUUID().toString(), UUID.randomUUID().toString())
             val requestParameters = RequestParameters()
             blockingClient.deleteNotifications(notificationIds, requestParameters)
 
@@ -160,7 +161,7 @@ class BlockingClientWithFastlegeLookupTest : StringSpec() {
         }
 
         "Mark message downloaded should proxy to internal client" {
-            val id = UUID.randomUUID()
+            val id = UUID.randomUUID().toString()
             val asyncClient = mockk<ClientWithFastlegeLookup> { coEvery { markMessageDownloaded(any(), any(), any()) } just runs }
             val blockingClient = BlockingClientWithFastlegeLookup(asyncClient)
 
@@ -172,14 +173,15 @@ class BlockingClientWithFastlegeLookupTest : StringSpec() {
         }
 
         "Get status should proxy to internal client" {
-            val id = UUID.randomUUID()
+            val id = UUID.randomUUID().toString()
             val statuses = listOf<StatusInfo>(mockk(), mockk(), mockk())
-            val asyncClient = mockk<ClientWithFastlegeLookup> { coEvery { getStatus(any(), any()) } returns statuses }
+            val response = GetStatusResponse(statuses)
+            val asyncClient = mockk<ClientWithFastlegeLookup> { coEvery { getStatus(any(), any()) } returns response }
             val blockingClient = BlockingClientWithFastlegeLookup(asyncClient)
 
             val requestParameters = RequestParameters()
             blockingClient.getStatus(id, requestParameters).asClue {
-                it shouldBe statuses
+                it shouldBe response
             }
 
             verifySequence { blockingClient.getStatus(id, requestParameters) }

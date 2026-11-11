@@ -13,7 +13,7 @@ import java.util.*
 
 class SendToPersonGPTest : StringSpec({
     "Sending an example message to GP for person" {
-        val client = mockk<ClientWithFastlegeLookup> { coEvery { sendMessageToGPForPerson(any(), any()) } returns UUID.randomUUID() }
+        val client = mockk<ClientWithFastlegeLookup> { coEvery { sendMessageToGPForPerson(any(), any()) } returns UUID.randomUUID().toString() }
         client.sendMessageToGPForPerson(
             GPForPersonOutgoingBusinessDocument(
                 id = UUID.randomUUID(), // This id will be used to connect an application receipt to this message

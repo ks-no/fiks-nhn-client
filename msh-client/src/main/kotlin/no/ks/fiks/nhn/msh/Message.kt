@@ -4,7 +4,7 @@ import java.time.OffsetDateTime
 import java.util.*
 
 data class MessageWithMetadata(
-    val id: UUID,
+    val id: String,
     val contentType: String?,
     val receiverHerIds: List<Int>?,
     val senderHerId: Int?,

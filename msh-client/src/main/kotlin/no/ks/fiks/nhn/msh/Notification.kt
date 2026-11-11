@@ -15,8 +15,8 @@ enum class NotificationType(val value: String) {
 }
 
 data class UnreadNotification(
-    val notificationId: UUID,
-    val relatedMessageId: UUID?,
+    val notificationId: String,
+    val relatedMessageId: String?,
     val type: NotificationType,
     val notificationReceiverHerId: Int,
     val notificationTriggeredByHerId: Int?,

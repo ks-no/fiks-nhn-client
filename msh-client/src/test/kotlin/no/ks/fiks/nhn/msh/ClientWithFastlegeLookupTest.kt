@@ -47,7 +47,7 @@ class ClientWithFastlegeLookupTest : FreeSpec() {
                 val (gpFirstName, gpLastName) = gpCommunicationParty.name?.split(" ")!!
 
                 val requestSlot = slot<PostMessageRequest>()
-                val apiService = mockk<MshInternalClient> { coEvery { postMessage(capture(requestSlot), any()) } returns UUID.randomUUID() }
+                val apiService = mockk<MshInternalClient> { coEvery { postMessage(capture(requestSlot), any()) } returns UUID.randomUUID().toString() }
                 val flrClient = mockk<FastlegeregisteretClient> { every { getPatientGP(any()) } returns patientGP }
                 val arClient = mockk<AdresseregisteretClient> { every { lookupHerId(any()) } returns gpCommunicationParty }
                 val client = ClientWithFastlegeLookup(apiService, flrClient, arClient, testApplicationMetadata)
@@ -121,7 +121,7 @@ class ClientWithFastlegeLookupTest : FreeSpec() {
                 val gpCommunicationParty = randomCommunicationPartyPerson().name("Ola Kari Nordmann")
 
                 val requestSlot = slot<PostMessageRequest>()
-                val apiService = mockk<MshInternalClient> { coEvery { postMessage(capture(requestSlot), any()) } returns UUID.randomUUID() }
+                val apiService = mockk<MshInternalClient> { coEvery { postMessage(capture(requestSlot), any()) } returns UUID.randomUUID().toString() }
                 val flrClient = mockk<FastlegeregisteretClient> { every { getPatientGP(any()) } returns patientGP }
                 val arClient = mockk<AdresseregisteretClient> { every { lookupHerId(any()) } returns gpCommunicationParty }
                 val client = ClientWithFastlegeLookup(apiService, flrClient, arClient, testApplicationMetadata)
@@ -185,7 +185,7 @@ class ClientWithFastlegeLookupTest : FreeSpec() {
             val patientGP = randomPatientGP()
             val gpCommunicationParty = randomCommunicationPartyPerson().name(randomString())
 
-            val apiService = mockk<MshInternalClient> { coEvery { postMessage(any(), any()) } returns UUID.randomUUID() }
+            val apiService = mockk<MshInternalClient> { coEvery { postMessage(any(), any()) } returns UUID.randomUUID().toString() }
             val flrClient = mockk<FastlegeregisteretClient> { every { getPatientGP(any()) } returns patientGP }
             val arClient = mockk<AdresseregisteretClient> { every { lookupHerId(any()) } returns gpCommunicationParty }
             val client = ClientWithFastlegeLookup(apiService, flrClient, arClient, testApplicationMetadata)
@@ -209,7 +209,7 @@ class ClientWithFastlegeLookupTest : FreeSpec() {
                     )
             )
 
-            val apiService = mockk<MshInternalClient> { coEvery { postMessage(any(), any()) } returns UUID.randomUUID() }
+            val apiService = mockk<MshInternalClient> { coEvery { postMessage(any(), any()) } returns UUID.randomUUID().toString() }
             val flrClient = mockk<FastlegeregisteretClient> { every { getPatientGP(any()) } returns patientGP }
             val arClient = mockk<AdresseregisteretClient> { every { lookupHerId(any()) } returns gpCommunicationParty }
             val client = ClientWithFastlegeLookup(apiService, flrClient, arClient, testApplicationMetadata)
@@ -223,7 +223,7 @@ class ClientWithFastlegeLookupTest : FreeSpec() {
             val params = RequestParameters(HelseIdTokenParameters(SingleTenantHelseIdTokenParameters(randomHerId().toString())))
 
             val internalClient = mockk<MshInternalClient> {
-                coEvery { postMessage(any(), any()) } returns UUID.randomUUID()
+                coEvery { postMessage(any(), any()) } returns UUID.randomUUID().toString()
             }
             val flrClient = mockk<FastlegeregisteretClient> { every { getPatientGP(any()) } returns randomPatientGP() }
             val arClient = mockk<AdresseregisteretClient>(relaxed = true) { every { lookupHerId(any()) } returns randomCommunicationPartyPerson() }
@@ -307,4 +307,3 @@ private fun randomCommunicationPartyPerson(): CommunicationParty = Communication
     )
 
 private fun randomPatientGP(): PatientGP = PatientGP(randomString(), randomHerId())
-

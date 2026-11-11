@@ -21,7 +21,7 @@ class MessageHandlerTest : FreeSpec() {
 
             "onIncomingBusinessDocumentReceived is called on successful deserialization" {
                 val handler = mockk<MessageHandler>(relaxed = true)
-                val id = UUID.randomUUID()
+                val id = UUID.randomUUID().toString()
                 val client = Client(mockk {
                     coEvery { getBusinessDocument(any(), any()) } returns validMsgHeadResponse()
                 }, testApplicationMetadata, listOf(handler))
@@ -39,7 +39,7 @@ class MessageHandlerTest : FreeSpec() {
 
             "onIncomingBusinessDocumentDeserializationFailed is called when deserialization fails" {
                 val handler = mockk<MessageHandler>(relaxed = true)
-                val id = UUID.randomUUID()
+                val id = UUID.randomUUID().toString()
                 val client = Client(mockk {
                     coEvery { getBusinessDocument(any(), any()) } returns validAppRecResponse()
                 }, testApplicationMetadata, listOf(handler))
@@ -57,7 +57,7 @@ class MessageHandlerTest : FreeSpec() {
 
             "onIncomingBusinessDocumentDecodingFailed is called when Base64 decoding fails" {
                 val handler = mockk<MessageHandler>(relaxed = true)
-                val id = UUID.randomUUID()
+                val id = UUID.randomUUID().toString()
                 val client = Client(mockk {
                     coEvery { getBusinessDocument(any(), any()) } returns invalidBase64Response()
                 }, testApplicationMetadata, listOf(handler))
@@ -80,7 +80,7 @@ class MessageHandlerTest : FreeSpec() {
                 val expectedXml = String(Base64.getDecoder().decode(response.businessDocument))
                 var capturedRawXml: String? = null
                 val handler = object : MessageHandler {
-                    override fun onIncomingBusinessDocumentReceived(id: UUID, rawXml: String, document: IncomingBusinessDocument) {
+                    override fun onIncomingBusinessDocumentReceived(id: String, rawXml: String, document: IncomingBusinessDocument) {
                         capturedRawXml = rawXml
                     }
                 }
@@ -88,7 +88,7 @@ class MessageHandlerTest : FreeSpec() {
                     coEvery { getBusinessDocument(any(), any()) } returns response
                 }, testApplicationMetadata, listOf(handler))
 
-                client.getBusinessDocument(UUID.randomUUID())
+                client.getBusinessDocument(UUID.randomUUID().toString())
 
                 capturedRawXml shouldBe expectedXml
             }
@@ -97,7 +97,7 @@ class MessageHandlerTest : FreeSpec() {
                 val response = invalidBase64Response()
                 var capturedRawBusinessDocument: String? = null
                 val handler = object : MessageHandler {
-                    override fun onIncomingBusinessDocumentDecodingFailed(id: UUID, rawBusinessDocument: String, exception: Throwable) {
+                    override fun onIncomingBusinessDocumentDecodingFailed(id: String, rawBusinessDocument: String, exception: Throwable) {
                         capturedRawBusinessDocument = rawBusinessDocument
                     }
                 }
@@ -105,7 +105,7 @@ class MessageHandlerTest : FreeSpec() {
                     coEvery { getBusinessDocument(any(), any()) } returns response
                 }, testApplicationMetadata, listOf(handler))
 
-                shouldThrow<IllegalArgumentException> { client.getBusinessDocument(UUID.randomUUID()) }.asClue {
+                shouldThrow<IllegalArgumentException> { client.getBusinessDocument(UUID.randomUUID().toString()) }.asClue {
                     it.message shouldStartWith "Illegal base64 character"
                 }
 
@@ -117,7 +117,7 @@ class MessageHandlerTest : FreeSpec() {
                     coEvery { onIncomingBusinessDocumentReceived(any(), any(), any()) } throws RuntimeException("handler error")
                 }
                 val secondHandler = mockk<MessageHandler>(relaxed = true)
-                val id = UUID.randomUUID()
+                val id = UUID.randomUUID().toString()
                 val client = Client(mockk {
                     coEvery { getBusinessDocument(any(), any()) } returns validMsgHeadResponse()
                 }, testApplicationMetadata, listOf(failingHandler, secondHandler))
@@ -132,7 +132,7 @@ class MessageHandlerTest : FreeSpec() {
 
             "a throwing handler does not prevent the result from being returned" {
                 val handler = object : MessageHandler {
-                    override fun onIncomingBusinessDocumentReceived(id: UUID, rawXml: String, document: IncomingBusinessDocument) {
+                    override fun onIncomingBusinessDocumentReceived(id: String, rawXml: String, document: IncomingBusinessDocument) {
                         throw RuntimeException("handler error")
                     }
                 }
@@ -140,7 +140,7 @@ class MessageHandlerTest : FreeSpec() {
                     coEvery { getBusinessDocument(any(), any()) } returns validMsgHeadResponse()
                 }, testApplicationMetadata, listOf(handler))
 
-                val result = client.getBusinessDocument(UUID.randomUUID())
+                val result = client.getBusinessDocument(UUID.randomUUID().toString())
                 result.id shouldBe "6ddb98ed-9e34-4efa-9163-62e4ea0cbf43"
             }
 
@@ -150,7 +150,7 @@ class MessageHandlerTest : FreeSpec() {
 
             "onIncomingApplicationReceiptReceived is called on successful deserialization" {
                 val handler = mockk<MessageHandler>(relaxed = true)
-                val id = UUID.randomUUID()
+                val id = UUID.randomUUID().toString()
                 val client = Client(mockk {
                     coEvery { getBusinessDocument(any(), any()) } returns validAppRecResponse()
                 }, testApplicationMetadata, listOf(handler))
@@ -168,7 +168,7 @@ class MessageHandlerTest : FreeSpec() {
 
             "onIncomingApplicationReceiptDeserializationFailed is called when deserialization fails" {
                 val handler = mockk<MessageHandler>(relaxed = true)
-                val id = UUID.randomUUID()
+                val id = UUID.randomUUID().toString()
                 val client = Client(mockk {
                     coEvery { getBusinessDocument(any(), any()) } returns validMsgHeadResponse()
                 }, testApplicationMetadata, listOf(handler))
@@ -186,7 +186,7 @@ class MessageHandlerTest : FreeSpec() {
 
             "onIncomingApplicationReceiptDecodingFailed is called when Base64 decoding fails" {
                 val handler = mockk<MessageHandler>(relaxed = true)
-                val id = UUID.randomUUID()
+                val id = UUID.randomUUID().toString()
                 val client = Client(mockk {
                     coEvery { getBusinessDocument(any(), any()) } returns invalidBase64Response()
                 }, testApplicationMetadata, listOf(handler))
@@ -208,7 +208,7 @@ class MessageHandlerTest : FreeSpec() {
                 val response = invalidBase64Response()
                 var capturedRawBusinessDocument: String? = null
                 val handler = object : MessageHandler {
-                    override fun onIncomingApplicationReceiptDecodingFailed(id: UUID, rawBusinessDocument: String, exception: Throwable) {
+                    override fun onIncomingApplicationReceiptDecodingFailed(id: String, rawBusinessDocument: String, exception: Throwable) {
                         capturedRawBusinessDocument = rawBusinessDocument
                     }
                 }
@@ -216,7 +216,7 @@ class MessageHandlerTest : FreeSpec() {
                     coEvery { getBusinessDocument(any(), any()) } returns response
                 }, testApplicationMetadata, listOf(handler))
 
-                shouldThrow<IllegalArgumentException> { client.getApplicationReceipt(UUID.randomUUID()) }.asClue {
+                shouldThrow<IllegalArgumentException> { client.getApplicationReceipt(UUID.randomUUID().toString()) }.asClue {
                     it.message shouldStartWith "Illegal base64 character"
                 }
 
@@ -228,7 +228,7 @@ class MessageHandlerTest : FreeSpec() {
                 val expectedXml = String(Base64.getDecoder().decode(response.businessDocument))
                 var capturedRawXml: String? = null
                 val handler = object : MessageHandler {
-                    override fun onIncomingApplicationReceiptReceived(id: UUID, rawXml: String, receipt: IncomingApplicationReceipt) {
+                    override fun onIncomingApplicationReceiptReceived(id: String, rawXml: String, receipt: IncomingApplicationReceipt) {
                         capturedRawXml = rawXml
                     }
                 }
@@ -236,7 +236,7 @@ class MessageHandlerTest : FreeSpec() {
                     coEvery { getBusinessDocument(any(), any()) } returns response
                 }, testApplicationMetadata, listOf(handler))
 
-                client.getApplicationReceipt(UUID.randomUUID())
+                client.getApplicationReceipt(UUID.randomUUID().toString())
 
                 capturedRawXml shouldBe expectedXml
             }
@@ -246,7 +246,7 @@ class MessageHandlerTest : FreeSpec() {
                     coEvery { onIncomingApplicationReceiptReceived(any(), any(), any()) } throws RuntimeException("handler error")
                 }
                 val secondHandler = mockk<MessageHandler>(relaxed = true)
-                val id = UUID.randomUUID()
+                val id = UUID.randomUUID().toString()
                 val client = Client(mockk {
                     coEvery { getBusinessDocument(any(), any()) } returns validAppRecResponse()
                 }, testApplicationMetadata, listOf(failingHandler, secondHandler))
@@ -261,7 +261,7 @@ class MessageHandlerTest : FreeSpec() {
 
             "a throwing handler does not prevent the result from being returned" {
                 val handler = object : MessageHandler {
-                    override fun onIncomingApplicationReceiptReceived(id: UUID, rawXml: String, receipt: IncomingApplicationReceipt) {
+                    override fun onIncomingApplicationReceiptReceived(id: String, rawXml: String, receipt: IncomingApplicationReceipt) {
                         throw RuntimeException("handler error")
                     }
                 }
@@ -269,7 +269,7 @@ class MessageHandlerTest : FreeSpec() {
                     coEvery { getBusinessDocument(any(), any()) } returns validAppRecResponse()
                 }, testApplicationMetadata, listOf(handler))
 
-                val result = client.getApplicationReceipt(UUID.randomUUID())
+                val result = client.getApplicationReceipt(UUID.randomUUID().toString())
                 result.id shouldBe "a761e9b9-3495-4f5a-a964-c13d544d2ceb"
             }
 

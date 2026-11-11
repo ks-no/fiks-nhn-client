@@ -12,7 +12,7 @@ class MarkMessageDownloadedTest : StringSpec({
     "Example for marking message as downloaded" {
         val client = mockk<ClientWithFastlegeLookup> { coEvery { markMessageDownloaded(any(), any()) } just runs }
         client.markMessageDownloaded(
-            id = UUID.randomUUID(),
+            id = UUID.randomUUID().toString(),
             receiverHerId = 2345,
         )
     }

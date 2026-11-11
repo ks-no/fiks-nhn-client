@@ -1,8 +1,6 @@
 package no.ks.fiks.nhn.msh
 
 import kotlinx.coroutines.runBlocking
-import java.util.*
-
 class BlockingClientWithFastlegeLookup(
     private val client: ClientWithFastlegeLookup,
 ) {
@@ -11,43 +9,43 @@ class BlockingClientWithFastlegeLookup(
     fun sendMessageToGPForPerson(
         businessDocument: GPForPersonOutgoingBusinessDocument,
         requestParameters: RequestParameters? = null,
-    ): UUID = runBlocking { client.sendMessageToGPForPerson(businessDocument, requestParameters) }
+    ): String? = runBlocking { client.sendMessageToGPForPerson(businessDocument, requestParameters) }
 
     @JvmOverloads
     fun sendMessage(
         businessDocument: OutgoingBusinessDocument,
         requestParameters: RequestParameters? = null,
-    ): UUID = runBlocking { client.sendMessage(businessDocument, requestParameters) }
+    ): String? = runBlocking { client.sendMessage(businessDocument, requestParameters) }
 
     @JvmOverloads
     fun getMessage(
-        id: UUID,
+        id: String,
         requestParameters: RequestParameters? = null,
     ): MessageWithMetadata = runBlocking { client.getMessage(id, requestParameters) }
 
     @JvmOverloads
     fun getBusinessDocument(
-        id: UUID,
+        id: String,
         requestParameters: RequestParameters? = null,
     ): IncomingBusinessDocument = runBlocking { client.getBusinessDocument(id, requestParameters) }
 
     @JvmOverloads
     fun getApplicationReceipt(
-        id: UUID,
+        id: String,
         requestParameters: RequestParameters? = null,
     ): IncomingApplicationReceipt = runBlocking { client.getApplicationReceipt(id, requestParameters) }
 
     @JvmOverloads
     fun getStatus(
-        messageId: UUID,
+        messageId: String,
         requestParameters: RequestParameters? = null,
-    ): List<StatusInfo> = runBlocking { client.getStatus(messageId, requestParameters) }
+    ): GetStatusResponse = runBlocking { client.getStatus(messageId, requestParameters) }
 
     @JvmOverloads
     fun sendApplicationReceipt(
         receipt: OutgoingApplicationReceipt,
         requestParameters: RequestParameters? = null,
-    ) : UUID = runBlocking { client.sendApplicationReceipt(receipt, requestParameters) }
+    ) : String? = runBlocking { client.sendApplicationReceipt(receipt, requestParameters) }
 
     @JvmOverloads
     fun getUnreadNotifications(
@@ -58,7 +56,7 @@ class BlockingClientWithFastlegeLookup(
 
     @JvmOverloads
     fun deleteNotifications(
-        notificationIds: List<UUID>,
+        notificationIds: List<String>,
         requestParameters: RequestParameters? = null,
     ) {
         runBlocking {
@@ -88,7 +86,7 @@ class BlockingClientWithFastlegeLookup(
 
     @JvmOverloads
     fun markMessageDownloaded(
-        id: UUID,
+        id: String,
         receiverHerId: Int,
         requestParameters: RequestParameters? = null,
     ) {

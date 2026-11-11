@@ -34,10 +34,8 @@ import no.nhn.msh.v3.model.PostApprecResponse as NhnPostApprecResponse
 import no.nhn.msh.v3.model.PostMessageRequest as NhnPostMessageRequest
 import no.nhn.msh.v3.model.PostMessageResponse as NhnPostMessageResponse
 import no.nhn.msh.v3.model.SetMshConfigurationsRequest as NhnSetMshConfigurationsRequest
-import no.nhn.msh.v3.model.StatusInfo as NhnStatusInfo
 import no.nhn.msh.v3.model.UnreadNotification as NhnUnreadNotification
 import java.time.OffsetDateTime
-import java.util.UUID
 
 private const val API_VERSION_HEADER = "api-version"
 private const val API_VERSION_NHN = "3"
@@ -62,16 +60,16 @@ class MshInternalClient @JvmOverloads constructor(
     suspend fun postMessage(
         request: NhnPostMessageRequest,
         requestParams: RequestParameters? = null,
-    ): UUID =
+    ): String? =
         invokeWithErrorHandling {
             client.postWithParams("$baseUrl/messages", request, requestParams)
         }.let { response ->
             if (response.status != HttpStatusCode.Accepted) throw response.toHttpException(expectedStatus = HttpStatusCode.Accepted.value)
-            response.body<NhnPostMessageResponse>().id?.toUuid() ?: throw IllegalArgumentException("PostMessageResponse is missing id field")
+            response.body<NhnPostMessageResponse>().id
         }
 
     suspend fun getMessage(
-        id: UUID,
+        id: String,
         requestParams: RequestParameters? = null,
     ): NhnGetMessageResponse =
         invokeWithErrorHandling {
@@ -82,7 +80,7 @@ class MshInternalClient @JvmOverloads constructor(
         }
 
     suspend fun getBusinessDocument(
-        id: UUID,
+        id: String,
         requestParams: RequestParameters? = null,
     ): NhnGetBusinessDocumentResponse =
         invokeWithErrorHandling {
@@ -93,31 +91,31 @@ class MshInternalClient @JvmOverloads constructor(
         }
 
     suspend fun getStatus(
-        id: UUID,
+        id: String,
         requestParams: RequestParameters? = null,
-    ): List<NhnStatusInfo> =
+    ): NhnGetStatusResponse =
         invokeWithErrorHandling {
             client.getWithParams("$baseUrl/messages/$id/status", requestParams)
         }.let { response ->
             if (response.status != HttpStatusCode.OK) throw response.toHttpException(expectedStatus = HttpStatusCode.OK.value)
-            response.body<NhnGetStatusResponse>().statusList ?: emptyList()
+            response.body()
         }
 
     suspend fun postAppRec(
-        id: UUID,
+        id: String,
         request: NhnPostAppRecRequest,
         requestParams: RequestParameters? = null,
-    ): UUID {
+    ): String? {
         return invokeWithErrorHandling {
             client.postWithParams("$baseUrl/messages/$id/apprec", request, requestParams)
         }.let {
             if (it.status != HttpStatusCode.Accepted) throw it.toHttpException(expectedStatus = HttpStatusCode.Accepted.value)
-            it.body<NhnPostApprecResponse>().id?.toUuid() ?: throw IllegalArgumentException("PostApprecResponse is missing id field")
+            it.body<NhnPostApprecResponse>().id
         }
     }
 
     suspend fun markMessageDownloaded(
-        id: UUID,
+        id: String,
         receiverHerId: Int,
         requestParams: RequestParameters? = null,
     ) {
@@ -149,14 +147,14 @@ class MshInternalClient @JvmOverloads constructor(
         }
 
     suspend fun deleteNotifications(
-        notificationIds: List<UUID>,
+        notificationIds: List<String>,
         requestParams: RequestParameters? = null,
     ) {
         invokeWithErrorHandling {
             client.postWithParams(
                 "$baseUrl/notifications/delete",
                 no.nhn.msh.v3.model.DeleteNotificationsRequest().also { req ->
-                    notificationIds.forEach { req.addNotificationIdsItem(it.toString()) }
+                    notificationIds.forEach { req.addNotificationIdsItem(it) }
                 },
                 requestParams,
             )
@@ -293,9 +291,6 @@ class MshInternalClient @JvmOverloads constructor(
         headers.set(Endpoint(HttpMethod.DELETE, url), requestParams)
         customConfig()
     }
-
-    // Replaces leading and/or trailing quote
-    private fun String.toUuid() = UUID.fromString(replace(Regex("^\"|\"$"), ""))
 
     private suspend fun HttpResponse.toHttpException(expectedStatus: Int) =
         when (status.value) {
