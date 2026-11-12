@@ -17,7 +17,7 @@ class SendMessageToHerIdTest : StringSpec({
         val client = mockk<Client> { coEvery { sendMessage(any(), any()) } returns UUID.randomUUID().toString() }
         client.sendMessage(
             OutgoingBusinessDocument(
-                id = UUID.randomUUID(),
+                id = UUID.randomUUID(), // This id will be used to connect an application receipt to this message
                 sender = Sender(
                     parent = OrganizationCommunicationParty(
                         name = "<Name of sender organization (virksomhet)>",
@@ -37,7 +37,7 @@ class SendMessageToHerIdTest : StringSpec({
                             country = Country(code = "<Country code>", name = "<Country name>"),
                         ),
                     ),
-                    child = OrganizationCommunicationParty(
+                    child = OrganizationCommunicationParty( // This can also be PersonCommunicationParty
                         name = "<Name of the sending service (tjeneste), which is owned by the organization specified above>",
                         ids = listOf(
                             OrganizationId(
@@ -75,7 +75,7 @@ class SendMessageToHerIdTest : StringSpec({
                             country = Country(code = "<Country code>", name = "<Country name>"),
                         ),
                     ),
-                    child = PersonCommunicationParty(
+                    child = PersonCommunicationParty( // This can also be OrganizationCommunicationParty
                         firstName = "<First name of receiving person>",
                         middleName = "<Middle name of receiving person>",
                         lastName = "<Last name of receiving person>",
@@ -106,25 +106,26 @@ class SendMessageToHerIdTest : StringSpec({
                     subject = "<Message subject>",
                     body = "<Message body>",
                     responsibleHealthcareProfessional = HealthcareProfessional(
+                        // Person responsible for this message at the sender
                         firstName = "<First name>",
                         middleName = "<Middle name>",
                         lastName = "<Last name>",
                         phoneNumber = "11223344",
-                        roleToPatient = HelsepersonellsFunksjoner.HELSEFAGLIG_KONTAKT,
+                        roleToPatient = HelsepersonellsFunksjoner.HELSEFAGLIG_KONTAKT, // This persons role with respect to the patient
                     ),
                     recipientContact = RecipientContact(
                         type = Helsepersonell.LEGE,
                     )
                 ),
                 vedlegg = listOf(
-                    OutgoingVedlegg(
-                        date = OffsetDateTime.now(),
+                    OutgoingVedlegg( // Only PDF is supported; add more entries for more attachments
+                        date = OffsetDateTime.now(), // Creation time for the attachment
                         description = "<Description of the attachment>",
-                        data = ClassLoader.getSystemResourceAsStream("small.pdf")!!,
+                        data = ClassLoader.getSystemResourceAsStream("small.pdf")!!, // InputStream containing the bytes for the attached PDF
                     )
                 ),
-                version = DialogmeldingVersion.V1_1,
-                conversationRef = ConversationRef(
+                version = DialogmeldingVersion.V1_1, // 1.0 is also supported, but 1.1 is preferred and will be the main focus
+                conversationRef = ConversationRef( // Should be set if this message is part of a dialogue
                     refToParent = "<Reference to the previous message of this dialogue, should contain the same value as the id field of that message>",
                     refToConversation = "Reference to the first message of this dialogue, should contain the same value as id field of that message>",
                 )
