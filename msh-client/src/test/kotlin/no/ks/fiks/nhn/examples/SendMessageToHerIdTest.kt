@@ -13,8 +13,8 @@ import java.time.OffsetDateTime
 import java.util.*
 
 class SendMessageToHerIdTest : StringSpec({
-    "Sending an example message to GP for person" {
-        val client = mockk<Client> { coEvery { sendMessage(any(), any()) } returns UUID.randomUUID() }
+    "Sending an example message to a person identified by HER-id" {
+        val client = mockk<Client> { coEvery { sendMessage(any(), any()) } returns UUID.randomUUID().toString() }
         client.sendMessage(
             OutgoingBusinessDocument(
                 id = UUID.randomUUID(), // This id will be used to connect an application receipt to this message
@@ -114,8 +114,7 @@ class SendMessageToHerIdTest : StringSpec({
                         roleToPatient = HelsepersonellsFunksjoner.HELSEFAGLIG_KONTAKT, // This persons role with respect to the patient
                     ),
                     recipientContact = RecipientContact(
-                        // Required for Dialogmelding 1.1 Helsefaglig Dialog when temaKodet is "Henvendelse om pasient" (which is currently the only option and is chosen automatically)
-                        type = Helsepersonell.LEGE, // Professional group of the healthcare professional recieving the message
+                        type = Helsepersonell.LEGE,
                     )
                 ),
                 vedlegg = listOf(
@@ -126,7 +125,7 @@ class SendMessageToHerIdTest : StringSpec({
                     )
                 ),
                 version = DialogmeldingVersion.V1_1, // 1.0 is also supported, but 1.1 is preferred and will be the main focus
-                conversationRef = ConversationRef( // Should be set if this message is part of a dialogue 
+                conversationRef = ConversationRef( // Should be set if this message is part of a dialogue
                     refToParent = "<Reference to the previous message of this dialogue, should contain the same value as the id field of that message>",
                     refToConversation = "Reference to the first message of this dialogue, should contain the same value as id field of that message>",
                 )

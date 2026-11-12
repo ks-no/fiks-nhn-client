@@ -2,7 +2,6 @@ package no.ks.fiks.nhn.msh
 
 import no.ks.fiks.hdir.FeilmeldingForApplikasjonskvittering
 import no.ks.fiks.hdir.StatusForMottakAvMelding
-import java.util.*
 
 data class IncomingApplicationReceipt(
     val id: String,
@@ -28,7 +27,7 @@ data class IncomingApplicationReceiptError(
 )
 
 data class OutgoingApplicationReceipt(
-    val acknowledgedId: UUID,
+    val acknowledgedId: String,
     val senderHerId: Int,
     val status: StatusForMottakAvMelding,
     val errors: List<OutgoingApplicationReceiptError>? = null,

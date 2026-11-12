@@ -15,7 +15,7 @@ class GetApplicationReceiptTest : StringSpec({
         // Gets a business document that is an application receipt, using the business document id returned when getting messages with metadata
         // Includes the status sent by the recipient of the original message and, if it is an error, any relevant error messages
         client.getApplicationReceipt(
-            id = UUID.randomUUID(),
+            id = UUID.randomUUID().toString(),
         )
     }
 })

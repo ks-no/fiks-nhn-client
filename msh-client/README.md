@@ -18,7 +18,7 @@ Four different clients are provided:
 
 ## Notes
 
-- The generated `msh-api-v2` client models are sourced from `../fiks-nhn-specs/specs/msh-api-v2.json`.
+- The generated `msh-api-v3` client models are sourced from `../fiks-nhn-specs/specs/msh-api-v3.json`.
 - Initialize/update git submodules before regenerating sources or building from a fresh clone.
 
 The clients support using access tokens with organization numbers for use with single-/multi-tenancy as discussed [here](https://utviklerportal.nhn.no/informasjonstjenester/helseid/bruksmoenstre-og-eksempelkode/bruk-av-helseid/docs/tekniske-mekanismer/organisasjonsnumre_enmd).

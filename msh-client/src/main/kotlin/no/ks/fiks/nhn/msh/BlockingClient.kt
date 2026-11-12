@@ -1,8 +1,6 @@
 package no.ks.fiks.nhn.msh
 
 import kotlinx.coroutines.runBlocking
-import java.util.*
-
 class BlockingClient(
     private val client: Client,
 ) {
@@ -11,65 +9,84 @@ class BlockingClient(
     fun sendMessage(
         businessDocument: OutgoingBusinessDocument,
         requestParameters: RequestParameters? = null,
-    ): UUID = runBlocking { client.sendMessage(businessDocument, requestParameters) }
-
-    @JvmOverloads
-    fun getMessages(
-        receiverHerId: Int,
-        requestParameters: RequestParameters? = null,
-    ): List<Message> = runBlocking { client.getMessages(receiverHerId, requestParameters) }
-
-    @JvmOverloads
-    fun getMessagesWithMetadata(
-        receiverHerId: Int,
-        requestParameters: RequestParameters? = null,
-    ): List<MessageWithMetadata> = runBlocking { client.getMessagesWithMetadata(receiverHerId, requestParameters) }
+    ): String? = runBlocking { client.sendMessage(businessDocument, requestParameters) }
 
     @JvmOverloads
     fun getMessage(
-        id: UUID,
+        id: String,
         requestParameters: RequestParameters? = null,
     ): MessageWithMetadata = runBlocking { client.getMessage(id, requestParameters) }
 
     @JvmOverloads
     fun getBusinessDocument(
-        id: UUID,
+        id: String,
         requestParameters: RequestParameters? = null,
     ): IncomingBusinessDocument = runBlocking { client.getBusinessDocument(id, requestParameters) }
 
     @JvmOverloads
     fun getApplicationReceipt(
-        id: UUID,
+        id: String,
         requestParameters: RequestParameters? = null,
     ): IncomingApplicationReceipt = runBlocking { client.getApplicationReceipt(id, requestParameters) }
 
     @JvmOverloads
-    fun getApplicationReceiptsForMessage(
-        messageId: UUID,
+    fun getStatus(
+        messageId: String,
         requestParameters: RequestParameters? = null,
-    ): List<ApplicationReceiptInfo> = runBlocking { client.getApplicationReceiptsForMessage(messageId, requestParameters) }
+    ): GetStatusResponse = runBlocking { client.getStatus(messageId, requestParameters) }
 
     @JvmOverloads
     fun sendApplicationReceipt(
         receipt: OutgoingApplicationReceipt,
         requestParameters: RequestParameters? = null,
-    ) : UUID = runBlocking { client.sendApplicationReceipt(receipt, requestParameters) }
+    ) : String? = runBlocking { client.sendApplicationReceipt(receipt, requestParameters) }
 
     @JvmOverloads
-    fun markMessageRead(
-        id: UUID,
-        receiverHerId: Int,
+    fun getUnreadNotifications(
+        herIds: List<Int>,
+        notificationsToFetch: Int? = null,
+        requestParameters: RequestParameters? = null,
+    ): List<UnreadNotification> = runBlocking { client.getUnreadNotifications(herIds, notificationsToFetch, requestParameters) }
+
+    @JvmOverloads
+    fun deleteNotifications(
+        notificationIds: List<String>,
         requestParameters: RequestParameters? = null,
     ) {
         runBlocking {
-            client.markMessageRead(id, receiverHerId, requestParameters)
+            client.deleteNotifications(notificationIds, requestParameters)
         }
     }
 
     @JvmOverloads
-    fun getStatus(
-        id: UUID,
+    fun setMshConfigurations(
+        configurations: List<MshConfiguration>,
         requestParameters: RequestParameters? = null,
-    ): List<StatusInfo> = runBlocking { client.getStatus(id, requestParameters) }
+    ) {
+        runBlocking {
+            client.setMshConfigurations(configurations, requestParameters)
+        }
+    }
+
+    @JvmOverloads
+    fun deleteMshConfigurations(
+        herIds: List<Int>,
+        requestParameters: RequestParameters? = null,
+    ) {
+        runBlocking {
+            client.deleteMshConfigurations(herIds, requestParameters)
+        }
+    }
+
+    @JvmOverloads
+    fun markMessageDownloaded(
+        id: String,
+        receiverHerId: Int,
+        requestParameters: RequestParameters? = null,
+    ) {
+        runBlocking {
+            client.markMessageDownloaded(id, receiverHerId, requestParameters)
+        }
+    }
 
 }

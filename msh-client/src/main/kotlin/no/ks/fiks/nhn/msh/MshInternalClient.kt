@@ -23,19 +23,30 @@ import no.ks.fiks.helseid.dpop.HttpMethod
 import no.ks.fiks.helseid.dpop.ProofBuilder
 import no.ks.fiks.helseid.http.DpopHttpRequestHelper
 import no.ks.fiks.nhn.parseOffsetDateTimeOrNull
-import no.nhn.msh.v2.model.*
-import no.nhn.msh.v2.model.Message
-import no.nhn.msh.v2.model.StatusInfo
+import no.nhn.msh.v3.model.GetBusinessDocumentResponse as NhnGetBusinessDocumentResponse
+import no.nhn.msh.v3.model.GetMessageResponse as NhnGetMessageResponse
+import no.nhn.msh.v3.model.GetStatusResponse as NhnGetStatusResponse
+import no.nhn.msh.v3.model.GetUnreadNotificationsResponse as NhnGetUnreadNotificationsResponse
+import no.nhn.msh.v3.model.MarkAsDownloadedRequest as NhnMarkAsDownloadedRequest
+import no.nhn.msh.v3.model.MshConfiguration as NhnMshConfiguration
+import no.nhn.msh.v3.model.PostAppRecRequest as NhnPostAppRecRequest
+import no.nhn.msh.v3.model.PostApprecResponse as NhnPostApprecResponse
+import no.nhn.msh.v3.model.PostMessageRequest as NhnPostMessageRequest
+import no.nhn.msh.v3.model.PostMessageResponse as NhnPostMessageResponse
+import no.nhn.msh.v3.model.SetMshConfigurationsRequest as NhnSetMshConfigurationsRequest
+import no.nhn.msh.v3.model.UnreadNotification as NhnUnreadNotification
 import java.time.OffsetDateTime
-import java.util.*
 
 private const val API_VERSION_HEADER = "api-version"
-private const val API_VERSION = "2"
+private const val API_VERSION_NHN = "3"
 
 private const val SOURCE_SYSTEM_HEADER = "nhn-source-system"
-
-private const val RECEIVER_HER_ID_PARAM = "receiverHerIds"
-private const val INCLUDE_METADATA_PARAM = "includeMetadata"
+private const val HER_IDS_PARAM = "HerIds"
+private const val NOTIFICATIONS_TO_FETCH_PARAM = "NotificationsToFetch"
+private const val MAX_HER_IDS_PER_REQUEST = 1500
+private const val MIN_NOTIFICATIONS_TO_FETCH = 1
+private const val MAX_NOTIFICATIONS_TO_FETCH = 1000
+private const val MAX_NOTIFICATION_IDS_PER_REQUEST = 1000
 
 private val log = KotlinLogging.logger { }
 
@@ -50,98 +61,158 @@ class MshInternalClient @JvmOverloads constructor(
 
     private val httpHelper = DpopHttpRequestHelper(helseIdClient, proofBuilder)
 
-    suspend fun getAppRecInfo(
-        id: UUID,
-        requestParams: RequestParameters? = null,
-    ): List<ApprecInfo> =
-        invokeWithErrorHandling {
-            client.getWithParams("$baseUrl/Messages/$id/apprec", requestParams)
-        }.let {
-            if (it.status != HttpStatusCode.OK) throw it.toHttpException(expectedStatus = HttpStatusCode.OK.value)
-            it.body()
-        }
-
-    suspend fun getMessages(
-        receiverHerId: Int,
-        includeMetadata: Boolean = false,
-        requestParams: RequestParameters? = null,
-    ): List<Message> =
-        invokeWithErrorHandling {
-            client.getWithParams("$baseUrl/Messages", requestParams) {
-                parameter(RECEIVER_HER_ID_PARAM, receiverHerId)
-                parameter(INCLUDE_METADATA_PARAM, includeMetadata)
-            }
-        }.let {
-            if (it.status != HttpStatusCode.OK) throw it.toHttpException(expectedStatus = HttpStatusCode.OK.value)
-            it.body()
-        }
-
     suspend fun postMessage(
-        request: PostMessageRequest,
+        request: NhnPostMessageRequest,
         requestParams: RequestParameters? = null,
-    ): UUID =
+    ): String? =
         invokeWithErrorHandling {
-            client.postWithParams("$baseUrl/Messages", request, requestParams)
-        }.let {
-            if (it.status != HttpStatusCode.Created) throw it.toHttpException(expectedStatus = HttpStatusCode.Created.value)
-            it.bodyAsText().toUuid()
+            client.postWithParams("$baseUrl/messages", request, requestParams)
+        }.let { response ->
+            if (response.status != HttpStatusCode.Accepted) throw response.toHttpException(expectedStatus = HttpStatusCode.Accepted.value)
+            response.body<NhnPostMessageResponse>().id
         }
 
     suspend fun getMessage(
-        id: UUID,
+        id: String,
         requestParams: RequestParameters? = null,
-    ): Message =
+    ): NhnGetMessageResponse =
         invokeWithErrorHandling {
-            client.getWithParams("$baseUrl/Messages/$id", requestParams)
+            client.getWithParams("$baseUrl/messages/$id", requestParams)
         }.let {
             if (it.status != HttpStatusCode.OK) throw it.toHttpException(expectedStatus = HttpStatusCode.OK.value)
             it.body()
         }
 
     suspend fun getBusinessDocument(
-        id: UUID,
+        id: String,
         requestParams: RequestParameters? = null,
-    ): GetBusinessDocumentResponse =
+    ): NhnGetBusinessDocumentResponse =
         invokeWithErrorHandling {
-            client.getWithParams("$baseUrl/Messages/$id/business-document", requestParams)
+            client.getWithParams("$baseUrl/messages/$id/business-document", requestParams)
         }.let {
             if (it.status != HttpStatusCode.OK) throw it.toHttpException(expectedStatus = HttpStatusCode.OK.value)
             it.body()
         }
 
     suspend fun getStatus(
-        id: UUID,
+        id: String,
         requestParams: RequestParameters? = null,
-    ): List<StatusInfo> =
+    ): NhnGetStatusResponse =
         invokeWithErrorHandling {
-            client.getWithParams("$baseUrl/Messages/$id/status", requestParams)
-        }.let {
-            if (it.status != HttpStatusCode.OK) throw it.toHttpException(expectedStatus = HttpStatusCode.OK.value)
-            it.body()
+            client.getWithParams("$baseUrl/messages/$id/status", requestParams)
+        }.let { response ->
+            if (response.status != HttpStatusCode.OK) throw response.toHttpException(expectedStatus = HttpStatusCode.OK.value)
+            response.body()
         }
 
     suspend fun postAppRec(
-        id: UUID,
-        senderHerId: Int,
-        request: PostAppRecRequest,
+        id: String,
+        request: NhnPostAppRecRequest,
         requestParams: RequestParameters? = null,
-    ): UUID =
-        invokeWithErrorHandling {
-            client.postWithParams("$baseUrl/Messages/$id/apprec/$senderHerId", request, requestParams)
+    ): String? {
+        return invokeWithErrorHandling {
+            client.postWithParams("$baseUrl/messages/$id/apprec", request, requestParams)
         }.let {
-            if (it.status != HttpStatusCode.Created) throw it.toHttpException(expectedStatus = HttpStatusCode.Created.value)
-            it.bodyAsText().toUuid()
+            if (it.status != HttpStatusCode.Accepted) throw it.toHttpException(expectedStatus = HttpStatusCode.Accepted.value)
+            it.body<NhnPostApprecResponse>().id
         }
+    }
 
-    suspend fun markMessageRead(
-        id: UUID,
-        senderHerId: Int,
+    suspend fun markMessageDownloaded(
+        id: String,
+        receiverHerId: Int,
         requestParams: RequestParameters? = null,
     ) {
         invokeWithErrorHandling {
-            client.putWithParams("$baseUrl/Messages/$id/read/$senderHerId", requestParams)
+            client.putWithParams(
+                "$baseUrl/messages/$id/downloaded",
+                NhnMarkAsDownloadedRequest().receiverHerId(receiverHerId),
+                requestParams,
+            )
         }.also {
             if (it.status != HttpStatusCode.NoContent) throw it.toHttpException(expectedStatus = HttpStatusCode.NoContent.value)
+        }
+    }
+
+
+    suspend fun getUnreadNotifications(
+        herIds: List<Int>,
+        notificationsToFetch: Int? = null,
+        requestParams: RequestParameters? = null,
+    ): List<NhnUnreadNotification> {
+        require(herIds.isNotEmpty()) { "At least one HER-id must be provided" }
+        require(herIds.size <= MAX_HER_IDS_PER_REQUEST) {
+            "No more than $MAX_HER_IDS_PER_REQUEST HER-ids may be provided"
+        }
+        require(herIds.toSet().size == herIds.size) { "HER-ids must be unique" }
+        require(notificationsToFetch == null || notificationsToFetch in MIN_NOTIFICATIONS_TO_FETCH..MAX_NOTIFICATIONS_TO_FETCH) {
+            "NotificationsToFetch must be between $MIN_NOTIFICATIONS_TO_FETCH and $MAX_NOTIFICATIONS_TO_FETCH"
+        }
+
+        return invokeWithErrorHandling {
+            client.getWithParams("$baseUrl/notifications/unread", requestParams) {
+                herIds.forEach { herId -> parameter(HER_IDS_PARAM, herId) }
+                notificationsToFetch?.let { parameter(NOTIFICATIONS_TO_FETCH_PARAM, it) }
+            }
+        }.let {
+            if (it.status != HttpStatusCode.OK) throw it.toHttpException(expectedStatus = HttpStatusCode.OK.value)
+            it.body<NhnGetUnreadNotificationsResponse>().unreadNotifications
+        }
+    }
+
+    suspend fun deleteNotifications(
+        notificationIds: List<String>,
+        requestParams: RequestParameters? = null,
+    ) {
+        require(notificationIds.size <= MAX_NOTIFICATION_IDS_PER_REQUEST) {
+            "No more than $MAX_NOTIFICATION_IDS_PER_REQUEST notification IDs may be provided"
+        }
+        require(notificationIds.toSet().size == notificationIds.size) { "Notification IDs must be unique" }
+
+        invokeWithErrorHandling {
+            client.postWithParams(
+                "$baseUrl/notifications/delete",
+                no.nhn.msh.v3.model.DeleteNotificationsRequest().also { req ->
+                    notificationIds.forEach { req.addNotificationIdsItem(it) }
+                },
+                requestParams,
+            )
+        }.also {
+            if (it.status != HttpStatusCode.NoContent) throw it.toHttpException(expectedStatus = HttpStatusCode.NoContent.value)
+        }
+    }
+
+    suspend fun setMshConfigurations(
+        configurations: List<NhnMshConfiguration>,
+        requestParams: RequestParameters? = null,
+    ) {
+        invokeWithErrorHandling {
+            client.putWithParams(
+                "$baseUrl/mshconfigurations",
+                NhnSetMshConfigurationsRequest().also { req ->
+                    configurations.forEach { req.addConfigurationsItem(it) }
+                },
+                requestParams,
+            )
+        }.also {
+            if (it.status != HttpStatusCode.NoContent) throw it.toHttpException(expectedStatus = HttpStatusCode.NoContent.value)
+        }
+    }
+
+    suspend fun deleteMshConfigurations(
+        herIds: List<Int>,
+        requestParams: RequestParameters? = null,
+    ) {
+        invokeWithErrorHandling {
+            client.deleteWithParams("$baseUrl/mshconfigurations", requestParams) {
+                herIds.forEach { herId ->
+                    parameter(HER_IDS_PARAM, herId)
+                }
+            }
+        }.also {
+            if (it.status != HttpStatusCode.OK && it.status != HttpStatusCode.NoContent) {
+                throw it.toHttpException(expectedStatus = HttpStatusCode.NoContent.value)
+            }
         }
     }
 
@@ -153,7 +224,7 @@ class MshInternalClient @JvmOverloads constructor(
         }
 
     private fun HeadersBuilder.set(endpoint: Endpoint, requestParams: RequestParameters?) {
-        append(API_VERSION_HEADER, API_VERSION)
+        append(API_VERSION_HEADER, API_VERSION_NHN)
         append(SOURCE_SYSTEM_HEADER, sourceSystem)
         appendHelseId(endpoint, requestParams)
     }
@@ -221,16 +292,24 @@ class MshInternalClient @JvmOverloads constructor(
 
     private suspend fun HttpClient.putWithParams(
         url: String,
+        body: Any,
         requestParams: RequestParameters? = null,
         customConfig: HttpRequestBuilder.() -> Unit = {}
     ): HttpResponse = put(url) {
         headers.set(Endpoint(HttpMethod.PUT, url), requestParams)
         contentType(ContentType.Application.Json)
+        setBody(body)
         customConfig()
     }
 
-    // Replaces leading and/or trailing quote
-    private fun String.toUuid() = UUID.fromString(replace(Regex("^\"|\"$"), ""))
+    private suspend fun HttpClient.deleteWithParams(
+        url: String,
+        requestParams: RequestParameters? = null,
+        customConfig: HttpRequestBuilder.() -> Unit = {}
+    ): HttpResponse = delete(url) {
+        headers.set(Endpoint(HttpMethod.DELETE, url), requestParams)
+        customConfig()
+    }
 
     private suspend fun HttpResponse.toHttpException(expectedStatus: Int) =
         when (status.value) {

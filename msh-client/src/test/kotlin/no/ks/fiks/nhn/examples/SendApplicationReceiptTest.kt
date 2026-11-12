@@ -14,10 +14,10 @@ import java.util.*
 
 class SendApplicationReceiptTest : StringSpec({
     "Sending an OK example application receipt" {
-        val client = mockk<ClientWithFastlegeLookup> { coEvery { sendApplicationReceipt(any(), any()) } returns UUID.randomUUID() }
+        val client = mockk<ClientWithFastlegeLookup> { coEvery { sendApplicationReceipt(any(), any()) } returns UUID.randomUUID().toString() }
         client.sendApplicationReceipt(
             OutgoingApplicationReceipt(
-                acknowledgedId = UUID.randomUUID(), // Id of the received message that this app rec is acknowledging
+                acknowledgedId = UUID.randomUUID().toString(), // Id of the received message that this app rec is acknowledging
                 senderHerId = 1234,
                 status = StatusForMottakAvMelding.OK,
             )
@@ -25,10 +25,10 @@ class SendApplicationReceiptTest : StringSpec({
     }
 
     "Sending an OK_FEIL_I_DELMELDING example application receipt" {
-        val client = mockk<ClientWithFastlegeLookup> { coEvery { sendApplicationReceipt(any(), any()) } returns UUID.randomUUID() }
+        val client = mockk<ClientWithFastlegeLookup> { coEvery { sendApplicationReceipt(any(), any()) } returns UUID.randomUUID().toString() }
         client.sendApplicationReceipt(
             OutgoingApplicationReceipt(
-                acknowledgedId = UUID.randomUUID(),
+                acknowledgedId = UUID.randomUUID().toString(),
                 senderHerId = 1234,
                 status = StatusForMottakAvMelding.OK_FEIL_I_DELMELDING,
                 errors = listOf(
@@ -45,10 +45,10 @@ class SendApplicationReceiptTest : StringSpec({
     }
 
     "Sending an AVVIST example application receipt" {
-        val client = mockk<ClientWithFastlegeLookup> { coEvery { sendApplicationReceipt(any(), any()) } returns UUID.randomUUID() }
+        val client = mockk<ClientWithFastlegeLookup> { coEvery { sendApplicationReceipt(any(), any()) } returns UUID.randomUUID().toString() }
         client.sendApplicationReceipt(
             OutgoingApplicationReceipt(
-                acknowledgedId = UUID.randomUUID(),
+                acknowledgedId = UUID.randomUUID().toString(),
                 senderHerId = 1234,
                 status = StatusForMottakAvMelding.AVVIST,
                 errors = listOf(
