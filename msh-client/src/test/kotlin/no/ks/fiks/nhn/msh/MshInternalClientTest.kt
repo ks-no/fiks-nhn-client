@@ -172,6 +172,54 @@ class MshInternalClientTest : FreeSpec() {
                     it.message shouldBe "Got HTTP status 404: $expected"
                 }
             }
+
+            "Get unread notifications should validate request limits" - {
+                "requires at least one HER-id" {
+                    shouldThrow<IllegalArgumentException> {
+                        buildDefaultClient().getUnreadNotifications(emptyList())
+                    }
+                }
+
+                "allows no more than 1500 unique HER-ids" {
+                    shouldThrow<IllegalArgumentException> {
+                        buildDefaultClient().getUnreadNotifications((1..1501).toList())
+                    }
+                    shouldThrow<IllegalArgumentException> {
+                        buildDefaultClient().getUnreadNotifications(listOf(42, 42))
+                    }
+                }
+
+                "requires NotificationsToFetch between 1 and 1000" {
+                    val client = buildDefaultClient()
+                    listOf(0, 1001).forEach { count ->
+                        shouldThrow<IllegalArgumentException> {
+                            client.getUnreadNotifications(listOf(42), count)
+                        }
+                    }
+                }
+
+                "accepts NotificationsToFetch at the minimum and maximum" {
+                    val herIds = listOf(42)
+                    mockGetUnreadNotifications(herIds, notificationsToFetch = 1)
+                    mockGetUnreadNotifications(herIds, notificationsToFetch = 1000)
+
+                    val client = buildDefaultClient()
+                    client.getUnreadNotifications(herIds, 1)
+                    client.getUnreadNotifications(herIds, 1000)
+                }
+            }
+
+            "Delete notifications should validate request limits" - {
+                "allows no more than 1000 unique notification IDs" {
+                    val client = buildDefaultClient()
+                    shouldThrow<IllegalArgumentException> {
+                        client.deleteNotifications((1..1001).map { it.toString() })
+                    }
+                    shouldThrow<IllegalArgumentException> {
+                        client.deleteNotifications(listOf("notification-id", "notification-id"))
+                    }
+                }
+            }
         }
 
         "Send message" - {
@@ -1354,5 +1402,3 @@ private fun buildTokenResponse(accessToken: String) =
     TokenResponse(accessToken, 0, UUID.randomUUID().toString(), UUID.randomUUID().toString())
 
 private fun randomOrganizationNumber() = nextInt(100000000, 1000000000).toString()
-
-

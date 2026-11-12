@@ -43,6 +43,10 @@ private const val API_VERSION_NHN = "3"
 private const val SOURCE_SYSTEM_HEADER = "nhn-source-system"
 private const val HER_IDS_PARAM = "HerIds"
 private const val NOTIFICATIONS_TO_FETCH_PARAM = "NotificationsToFetch"
+private const val MAX_HER_IDS_PER_REQUEST = 1500
+private const val MIN_NOTIFICATIONS_TO_FETCH = 1
+private const val MAX_NOTIFICATIONS_TO_FETCH = 1000
+private const val MAX_NOTIFICATION_IDS_PER_REQUEST = 1000
 
 private val log = KotlinLogging.logger { }
 
@@ -135,8 +139,17 @@ class MshInternalClient @JvmOverloads constructor(
         herIds: List<Int>,
         notificationsToFetch: Int? = null,
         requestParams: RequestParameters? = null,
-    ): List<NhnUnreadNotification> =
-        invokeWithErrorHandling {
+    ): List<NhnUnreadNotification> {
+        require(herIds.isNotEmpty()) { "At least one HER-id must be provided" }
+        require(herIds.size <= MAX_HER_IDS_PER_REQUEST) {
+            "No more than $MAX_HER_IDS_PER_REQUEST HER-ids may be provided"
+        }
+        require(herIds.toSet().size == herIds.size) { "HER-ids must be unique" }
+        require(notificationsToFetch == null || notificationsToFetch in MIN_NOTIFICATIONS_TO_FETCH..MAX_NOTIFICATIONS_TO_FETCH) {
+            "NotificationsToFetch must be between $MIN_NOTIFICATIONS_TO_FETCH and $MAX_NOTIFICATIONS_TO_FETCH"
+        }
+
+        return invokeWithErrorHandling {
             client.getWithParams("$baseUrl/notifications/unread", requestParams) {
                 herIds.forEach { herId -> parameter(HER_IDS_PARAM, herId) }
                 notificationsToFetch?.let { parameter(NOTIFICATIONS_TO_FETCH_PARAM, it) }
@@ -145,11 +158,17 @@ class MshInternalClient @JvmOverloads constructor(
             if (it.status != HttpStatusCode.OK) throw it.toHttpException(expectedStatus = HttpStatusCode.OK.value)
             it.body<NhnGetUnreadNotificationsResponse>().unreadNotifications
         }
+    }
 
     suspend fun deleteNotifications(
         notificationIds: List<String>,
         requestParams: RequestParameters? = null,
     ) {
+        require(notificationIds.size <= MAX_NOTIFICATION_IDS_PER_REQUEST) {
+            "No more than $MAX_NOTIFICATION_IDS_PER_REQUEST notification IDs may be provided"
+        }
+        require(notificationIds.toSet().size == notificationIds.size) { "Notification IDs must be unique" }
+
         invokeWithErrorHandling {
             client.postWithParams(
                 "$baseUrl/notifications/delete",
