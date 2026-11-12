@@ -13,7 +13,6 @@ import no.nhn.msh.v3.model.DeliveryState as NhnDeliveryState
 import no.nhn.msh.v3.model.GetMessageResponse as NhnGetMessageResponse
 import no.nhn.msh.v3.model.MshConfiguration as NhnMshConfiguration
 import no.nhn.msh.v3.model.MshConfigurationRejectMessageFilters as NhnMshConfigurationRejectMessageFilters
-import no.nhn.msh.v3.model.NotificationType as NhnNotificationType
 import no.nhn.msh.v3.model.PostAppRecRequest as NhnPostAppRecRequest
 import no.nhn.msh.v3.model.PostMessageRequest as NhnPostMessageRequest
 import no.nhn.msh.v3.model.ReceiveNotificationChannel as NhnReceiveNotificationChannel
@@ -229,13 +228,7 @@ open class Client @JvmOverloads constructor(
         notificationId = notificationId,
         relatedMessageId = relatedMessageId,
 
-        type = when (type) {
-            NhnNotificationType.NEW_MESSAGE -> NotificationType.NEW_MESSAGE
-            NhnNotificationType.REFUSED_MESSAGE -> NotificationType.REFUSED_MESSAGE
-            NhnNotificationType.MESSAGE_SENT_STATE_UPDATED -> NotificationType.MESSAGE_SENT_STATE_UPDATED
-            NhnNotificationType.MESSAGE_APPREC_INFO_UPDATED -> NotificationType.MESSAGE_APPREC_INFO_UPDATED
-            NhnNotificationType.MESSAGE_DELIVERY_STATE_UPDATED -> NotificationType.MESSAGE_DELIVERY_STATE_UPDATED
-        },
+        type = type.toNotificationType(),
         notificationReceiverHerId = notificationReceiverHerId,
         notificationTriggeredByHerId = notificationTriggeredByHerId,
         description = description,

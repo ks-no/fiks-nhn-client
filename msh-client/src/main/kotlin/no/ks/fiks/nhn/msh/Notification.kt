@@ -1,7 +1,7 @@
 package no.ks.fiks.nhn.msh
 
 import java.time.OffsetDateTime
-import java.util.UUID
+import no.nhn.msh.v3.model.NotificationType as NhnNotificationType
 
 enum class NotificationType(val value: String) {
     NEW_MESSAGE("NewMessage"),
@@ -12,6 +12,14 @@ enum class NotificationType(val value: String) {
     ;
 
     override fun toString() = value
+}
+
+internal fun NhnNotificationType.toNotificationType() = when (this) {
+    NhnNotificationType.NEW_MESSAGE -> NotificationType.NEW_MESSAGE
+    NhnNotificationType.REFUSED_MESSAGE -> NotificationType.REFUSED_MESSAGE
+    NhnNotificationType.MESSAGE_SENT_STATE_UPDATED -> NotificationType.MESSAGE_SENT_STATE_UPDATED
+    NhnNotificationType.MESSAGE_APPREC_INFO_UPDATED -> NotificationType.MESSAGE_APPREC_INFO_UPDATED
+    NhnNotificationType.MESSAGE_DELIVERY_STATE_UPDATED -> NotificationType.MESSAGE_DELIVERY_STATE_UPDATED
 }
 
 data class UnreadNotification(
