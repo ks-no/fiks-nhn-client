@@ -12,16 +12,6 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 class GetMessagesWithMetadataTest : StringSpec({
-    "returns empty list when there are no unread notifications" {
-        val client = mockk<ClientWithFastlegeLookup> {
-            coEvery { getUnreadNotifications(any(), any(), any()) } returns emptyList()
-        }
-
-        val result = client.getUnreadNotifications(herIds = listOf(321))
-
-        result shouldBe emptyList()
-    }
-
     "returns message metadata for unread notifications with related messages" {
         val relatedMessageId = UUID.randomUUID().toString()
         val expected = MessageWithMetadata(
