@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.nimbusds.jose.jwk.gen.RSAKeyGenerator
 import com.sun.net.httpserver.HttpServer
 import io.kotest.core.spec.style.StringSpec
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockkConstructor
@@ -16,6 +17,16 @@ import java.net.InetSocketAddress
 import java.util.concurrent.LinkedBlockingQueue
 
 class ClientFactoryApplicationMetadataTest : StringSpec({
+    "Application metadata name and version must not be blank" {
+        shouldThrow<IllegalArgumentException> {
+            ApplicationMetadata("", "1.0")
+        }.message shouldBe "Application name must not be blank"
+
+        shouldThrow<IllegalArgumentException> {
+            ApplicationMetadata("application", "  ")
+        }.message shouldBe "Application version must not be blank"
+    }
+
     "Both factory clients use the same application metadata in the header and receipt body" {
         val requests = LinkedBlockingQueue<Pair<String?, String>>()
         val server = HttpServer.create(InetSocketAddress("127.0.0.1", 0), 0)

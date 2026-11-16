@@ -20,7 +20,12 @@ data class ConfigurationWithFastlegeLookup(
 data class ApplicationMetadata(
     val applicationName: String,
     val applicationVersion: String,
-)
+) {
+    init {
+        require(applicationName.isNotBlank()) { "Application name must not be blank" }
+        require(applicationVersion.isNotBlank()) { "Application version must not be blank" }
+    }
+}
 
 data class HelseIdConfiguration(
     val environment: HelseIdEnvironment,
