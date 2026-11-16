@@ -114,7 +114,8 @@ class SendMessageToHerIdTest : StringSpec({
                         roleToPatient = HelsepersonellsFunksjoner.HELSEFAGLIG_KONTAKT, // This persons role with respect to the patient
                     ),
                     recipientContact = RecipientContact(
-                        type = Helsepersonell.LEGE,
+                        // Required for Dialogmelding 1.1 Helsefaglig Dialog when temaKodet is "Henvendelse om pasient" (which is currently the only option and is chosen automatically)
+                        type = Helsepersonell.LEGE, // Professional group of the healthcare professional recieving the message
                     )
                 ),
                 vedlegg = listOf(
