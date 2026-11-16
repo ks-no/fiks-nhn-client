@@ -268,33 +268,52 @@ class ClientTest : FreeSpec() {
                 }
             }
 
-            "Trying to send an OK receipt with errors should cause an exception to be thrown" {
-                val client = Client(mockk<MshInternalClient> { coEvery { postAppRec(any(), any(), any()) } returns UUID.randomUUID().toString() }, testApplicationMetadata)
-
+            "An OK receipt may include errors" {
+                val requestSlot = slot<NhnPostAppRecRequest>()
+                val internalClient = mockk<MshInternalClient> {
+                    coEvery { postAppRec(any(), capture(requestSlot), any()) } returns UUID.randomUUID().toString()
+                }
+                val client = Client(internalClient, testApplicationMetadata)
+                val error = randomOutgoingApplicationReceiptError()
                 val receipt = OutgoingApplicationReceipt(
                     acknowledgedId = UUID.randomUUID().toString(),
                     senderHerId = randomHerId(),
                     status = StatusForMottakAvMelding.OK,
-                    errors = listOf(randomOutgoingApplicationReceiptError()),
+                    errors = listOf(error),
                 )
 
-                shouldThrow<IllegalArgumentException> { client.sendApplicationReceipt(receipt) }.asClue {
-                    it.message shouldBe "Error messages are not allowed when status is OK"
+                client.sendApplicationReceipt(receipt)
+
+                requestSlot.captured.asClue { request ->
+                    request.appRecStatus shouldBe NhnAppRecStatus.OK
+                    request.appRecErrorList shouldBe listOf(
+                        NhnAppRecError().apply {
+                            errorCode = error.type.verdi
+                            description = error.type.navn
+                            oid = error.type.kodeverk
+                            details = error.details
+                        }
+                    )
                 }
             }
 
-            "Trying to send an OK_FEIL_I_DELMELDING receipt without errors should cause an exception to be thrown" {
-                val client = Client(mockk<MshInternalClient> { coEvery { postAppRec(any(), any(), any()) } returns UUID.randomUUID().toString() }, testApplicationMetadata)
-
+            "An OK_FEIL_I_DELMELDING receipt may omit errors" {
+                val requestSlot = slot<NhnPostAppRecRequest>()
+                val internalClient = mockk<MshInternalClient> {
+                    coEvery { postAppRec(any(), capture(requestSlot), any()) } returns UUID.randomUUID().toString()
+                }
+                val client = Client(internalClient, testApplicationMetadata)
                 val receipt = OutgoingApplicationReceipt(
                     acknowledgedId = UUID.randomUUID().toString(),
                     senderHerId = randomHerId(),
                     status = StatusForMottakAvMelding.OK_FEIL_I_DELMELDING,
-                    errors = emptyList(),
                 )
 
-                shouldThrow<IllegalArgumentException> { client.sendApplicationReceipt(receipt) }.asClue {
-                    it.message shouldBe "Must provide at least one error message if status is not OK"
+                client.sendApplicationReceipt(receipt)
+
+                requestSlot.captured.asClue { request ->
+                    request.appRecStatus shouldBe NhnAppRecStatus.OK_ERROR_IN_MESSAGE_PART
+                    request.appRecErrorList should beNull()
                 }
             }
 
@@ -309,7 +328,7 @@ class ClientTest : FreeSpec() {
                 )
 
                 shouldThrow<IllegalArgumentException> { client.sendApplicationReceipt(receipt) }.asClue {
-                    it.message shouldBe "Must provide at least one error message if status is not OK"
+                    it.message shouldBe "Must provide at least one error message when status is AVVIST"
                 }
             }
 

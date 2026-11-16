@@ -116,8 +116,9 @@ open class Client @JvmOverloads constructor(
         receipt: OutgoingApplicationReceipt,
         requestParameters: RequestParameters? = null,
     ): String? {
-        if (receipt.status == StatusForMottakAvMelding.OK && !receipt.errors.isNullOrEmpty()) throw IllegalArgumentException("Error messages are not allowed when status is OK")
-        if (receipt.status != StatusForMottakAvMelding.OK && receipt.errors.isNullOrEmpty()) throw IllegalArgumentException("Must provide at least one error message if status is not OK")
+        if (receipt.status == StatusForMottakAvMelding.AVVIST && receipt.errors.isNullOrEmpty()) {
+            throw IllegalArgumentException("Must provide at least one error message when status is AVVIST")
+        }
 
         val request = NhnPostAppRecRequest()
             .appRecSenderHerId(receipt.senderHerId)
