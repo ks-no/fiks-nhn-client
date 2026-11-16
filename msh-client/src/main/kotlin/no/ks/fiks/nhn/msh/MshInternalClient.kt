@@ -140,18 +140,18 @@ class MshInternalClient @JvmOverloads constructor(
         notificationsToFetch: Int? = null,
         requestParams: RequestParameters? = null,
     ): List<NhnUnreadNotification> {
-        require(herIds.isNotEmpty()) { "At least one HER-id must be provided" }
-        require(herIds.size <= MAX_HER_IDS_PER_REQUEST) {
+        val uniqueHerIds = herIds.distinct()
+        if (uniqueHerIds.isEmpty()) return emptyList()
+        require(uniqueHerIds.size <= MAX_HER_IDS_PER_REQUEST) {
             "No more than $MAX_HER_IDS_PER_REQUEST HER-ids may be provided"
         }
-        require(herIds.toSet().size == herIds.size) { "HER-ids must be unique" }
         require(notificationsToFetch == null || notificationsToFetch in MIN_NOTIFICATIONS_TO_FETCH..MAX_NOTIFICATIONS_TO_FETCH) {
             "NotificationsToFetch must be between $MIN_NOTIFICATIONS_TO_FETCH and $MAX_NOTIFICATIONS_TO_FETCH"
         }
 
         return invokeWithErrorHandling {
             client.getWithParams("$baseUrl/notifications/unread", requestParams) {
-                herIds.forEach { herId -> parameter(HER_IDS_PARAM, herId) }
+                uniqueHerIds.forEach { herId -> parameter(HER_IDS_PARAM, herId) }
                 notificationsToFetch?.let { parameter(NOTIFICATIONS_TO_FETCH_PARAM, it) }
             }
         }.let {
@@ -164,16 +164,16 @@ class MshInternalClient @JvmOverloads constructor(
         notificationIds: List<String>,
         requestParams: RequestParameters? = null,
     ) {
-        require(notificationIds.size <= MAX_NOTIFICATION_IDS_PER_REQUEST) {
+        val uniqueNotificationIds = notificationIds.distinct()
+        require(uniqueNotificationIds.size <= MAX_NOTIFICATION_IDS_PER_REQUEST) {
             "No more than $MAX_NOTIFICATION_IDS_PER_REQUEST notification IDs may be provided"
         }
-        require(notificationIds.toSet().size == notificationIds.size) { "Notification IDs must be unique" }
 
         invokeWithErrorHandling {
             client.postWithParams(
                 "$baseUrl/notifications/delete",
                 no.nhn.msh.v3.model.DeleteNotificationsRequest().also { req ->
-                    notificationIds.forEach { req.addNotificationIdsItem(it) }
+                    uniqueNotificationIds.forEach { req.addNotificationIdsItem(it) }
                 },
                 requestParams,
             )

@@ -14,6 +14,7 @@ import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.mockk.every
+import io.mockk.Called
 import io.mockk.mockk
 import io.mockk.verifySequence
 import kotlinx.coroutines.asCoroutineDispatcher
@@ -184,19 +185,37 @@ class MshInternalClientTest : FreeSpec() {
             }
 
             "Get unread notifications should validate request limits" - {
-                "requires at least one HER-id" {
-                    shouldThrow<IllegalArgumentException> {
-                        buildDefaultClient().getUnreadNotifications(emptyList())
-                    }
+                "returns an empty list without authentication when no HER-ids are provided" {
+                    val helseIdClient = mockk<HelseIdClient>()
+                    val proofBuilder = mockk<ProofBuilder>()
+                    val client = MshInternalClient(
+                        baseUrl = wireMock.baseUrl,
+                        applicationMetadata = ApplicationMetadata("test-application", "1.2.3"),
+                        helseIdClient = helseIdClient,
+                        proofBuilder = proofBuilder,
+                    )
+
+                    client.getUnreadNotifications(emptyList()).shouldBeEmpty()
+
+                    io.mockk.verify { listOf(helseIdClient, proofBuilder) wasNot Called }
                 }
 
                 "allows no more than 1500 unique HER-ids" {
                     shouldThrow<IllegalArgumentException> {
                         buildDefaultClient().getUnreadNotifications((1..1501).toList())
                     }
-                    shouldThrow<IllegalArgumentException> {
-                        buildDefaultClient().getUnreadNotifications(listOf(42, 42))
-                    }
+                }
+
+                "removes duplicate HER-ids before checking the limit and sending the request" {
+                    val herIds = listOf(randomHerId(), randomHerId()).distinct()
+                    mockGetUnreadNotifications(herIds)
+
+                    buildDefaultClient().getUnreadNotifications(List(1501) { herIds[it % herIds.size] })
+
+                    wireMockClient.find(
+                        getRequestedFor(urlPathEqualTo("/notifications/unread"))
+                            .withQueryParam("HerIds", equalTo(herIds.first().toString()))
+                    ).single().queryParams["HerIds"]?.values() shouldBe herIds.map { it.toString() }
                 }
 
                 "requires NotificationsToFetch between 1 and 1000" {
@@ -225,9 +244,20 @@ class MshInternalClientTest : FreeSpec() {
                     shouldThrow<IllegalArgumentException> {
                         client.deleteNotifications((1..1001).map { it.toString() })
                     }
-                    shouldThrow<IllegalArgumentException> {
-                        client.deleteNotifications(listOf("notification-id", "notification-id"))
-                    }
+                }
+
+                "removes duplicate notification IDs before checking the limit and sending the request" {
+                    val notificationIds = List(2) { UUID.randomUUID().toString() }
+                    val expectedBody = NhnDeleteNotificationsRequest().notificationIds(notificationIds.toSet())
+                    mockDeleteNotifications(expectedBody = expectedBody)
+
+                    buildDefaultClient().deleteNotifications(List(1001) { notificationIds[it % notificationIds.size] })
+
+                    wireMockClient.verifyThat(
+                        1,
+                        postRequestedFor(urlPathEqualTo("/notifications/delete"))
+                            .withRequestBody(equalToJson(expectedBody.toJson()))
+                    )
                 }
             }
         }
