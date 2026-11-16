@@ -276,7 +276,7 @@ open class Client @JvmOverloads constructor(
             AppRecInfo(
                 appRecStatus = info.appRecStatus?.toAppRecStatus(),
                 appRecId = info.appRecId,
-                appRecErrors = info.appRecErrorList?.map { it.toIncomingApplicationReceiptError() } ?: emptyList(),
+                appRecErrors = info.appRecErrorList?.map { it.toIncomingApplicationReceiptError() },
             )
         },
     )

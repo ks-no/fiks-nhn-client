@@ -1126,7 +1126,7 @@ class ClientTest : FreeSpec() {
                         }
                         status.apprecInfo?.appRecId shouldBe statuses[i].apprecInfo?.appRecId
                         status.apprecInfo?.appRecErrors?.map { it.errorCode } shouldBe
-                            (statuses[i].apprecInfo?.appRecErrorList?.map { it.errorCode } ?: emptyList<String>())
+                            statuses[i].apprecInfo?.appRecErrorList?.map { it.errorCode }
                     }
                 }
 
@@ -1206,13 +1206,17 @@ class ClientTest : FreeSpec() {
                 }
             }
 
-            "Should map empty or missing apprecInfo to empty errors and null status" {
+            "Should preserve null apprec errors" {
 
                 val statusInfo = NhnStatusInfo().apply {
                     receiverHerId = randomHerId()
                     sent = false
                     transportDeliveryState = NhnDeliveryState.UNCONFIRMED
-                    apprecInfo = null
+                    apprecInfo = NhnApprecInfo().apply {
+                        appRecStatus = NhnAppRecStatus.OK
+                        appRecId = UUID.randomUUID().toString()
+                        appRecErrorList = null
+                    }
                 }
 
                 val client = Client(mockk<MshInternalClient> {
@@ -1223,7 +1227,28 @@ class ClientTest : FreeSpec() {
                     mapped.receiverHerId shouldBe statusInfo.receiverHerId
                     mapped.sent shouldBe false
                     mapped.deliveryState shouldBe DeliveryState.UNCONFIRMED
-                    mapped.apprecInfo shouldBe null
+                    mapped.apprecInfo?.appRecErrors shouldBe null
+                }
+            }
+
+            "Should preserve empty apprec errors" {
+                val statusInfo = NhnStatusInfo().apply {
+                    receiverHerId = randomHerId()
+                    sent = false
+                    transportDeliveryState = NhnDeliveryState.UNCONFIRMED
+                    apprecInfo = NhnApprecInfo().apply {
+                        appRecStatus = NhnAppRecStatus.OK
+                        appRecId = UUID.randomUUID().toString()
+                        appRecErrorList = emptyList()
+                    }
+                }
+
+                val client = Client(mockk<MshInternalClient> {
+                    coEvery { getStatus(any(), any()) } returns NhnGetStatusResponse().statusList(listOf(statusInfo))
+                }, testApplicationMetadata)
+
+                client.getStatus(UUID.randomUUID().toString()).statusList.orEmpty().single().asClue { mapped ->
+                    mapped.apprecInfo?.appRecErrors shouldBe emptyList()
                 }
             }
 

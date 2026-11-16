@@ -14,7 +14,7 @@ data class StatusInfo(
 data class AppRecInfo(
     val appRecStatus: AppRecStatus?,
     val appRecId: String?,
-    val appRecErrors: List<IncomingApplicationReceiptError> = emptyList(),
+    val appRecErrors: List<IncomingApplicationReceiptError>?,
 )
 
 enum class DeliveryState(val value: String) {
