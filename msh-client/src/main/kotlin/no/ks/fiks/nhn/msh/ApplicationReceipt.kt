@@ -31,6 +31,22 @@ data class OutgoingApplicationReceipt(
     val senderHerId: Int,
     val status: StatusForMottakAvMelding,
     val errors: List<OutgoingApplicationReceiptError>? = null,
+    val transportMetadataOverrides: AppRecTransportMetadataOverrides? = null,
+)
+
+data class AppRecTransportMetadataOverrides(
+    val transportSenderHerId: Int? = null,
+    val transportReceiverHerId: Int? = null,
+    val cpaId: String? = null,
+    val conversationId: String? = null,
+    val service: String? = null,
+    val serviceType: String? = null,
+    val action: String? = null,
+    val senderRole: String? = null,
+    val receiverRole: String? = null,
+    val middlewareName: String? = null,
+    val middlewareVersion: String? = null,
+    val compressPayload: Boolean? = null,
 )
 
 data class OutgoingApplicationReceiptError(

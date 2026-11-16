@@ -28,11 +28,13 @@ import no.ks.fiks.nhn.msh.MshConfiguration as ClientMshConfiguration
 import no.ks.fiks.nhn.msh.RejectMessageFilters as ClientRejectMessageFilters
 import no.nhn.msh.v3.model.AppRecError as NhnAppRecError
 import no.nhn.msh.v3.model.AppRecStatus as NhnAppRecStatus
+import no.nhn.msh.v3.model.AppRecTransportMetadataOverrides as NhnAppRecTransportMetadataOverrides
 import no.nhn.msh.v3.model.ApprecInfo as NhnApprecInfo
 import no.nhn.msh.v3.model.DeliveryState as NhnDeliveryState
 import no.nhn.msh.v3.model.GetBusinessDocumentResponse as NhnGetBusinessDocumentResponse
 import no.nhn.msh.v3.model.GetMessageResponse as NhnGetMessageResponse
 import no.nhn.msh.v3.model.GetStatusResponse as NhnGetStatusResponse
+import no.nhn.msh.v3.model.MessageTransportMetadataOverrides as NhnMessageTransportMetadataOverrides
 import no.nhn.msh.v3.model.PostAppRecRequest as NhnPostAppRecRequest
 import no.nhn.msh.v3.model.PostMessageRequest as NhnPostMessageRequest
 import no.nhn.msh.v3.model.StatusInfo as NhnStatusInfo
@@ -95,6 +97,40 @@ class ClientTest : FreeSpec() {
                 }
             }
 
+            "Message transport metadata overrides should be passed to the service" {
+                val overrides = MessageTransportMetadataOverrides(
+                    cpaId = "cpa-id",
+                    conversationId = "conversation-id",
+                    service = "service",
+                    serviceType = "service-type",
+                    action = "action",
+                    senderRole = "sender-role",
+                    receiverRole = "receiver-role",
+                    middlewareName = "middleware",
+                    middlewareVersion = "1.2.3",
+                    compressPayload = true,
+                )
+                val requestSlot = slot<NhnPostMessageRequest>()
+                val internalClient = mockk<MshInternalClient> {
+                    coEvery { postMessage(capture(requestSlot), any()) } returns UUID.randomUUID().toString()
+                }
+                val client = Client(internalClient, testApplicationMetadata)
+
+                client.sendMessage(randomOutgoingBusinessDocument().copy(transportMetadataOverrides = overrides))
+
+                requestSlot.captured.transportMetadataOverrides shouldBe NhnMessageTransportMetadataOverrides()
+                    .cpaId("cpa-id")
+                    .conversationId("conversation-id")
+                    .service("service")
+                    .serviceType("service-type")
+                    .action("action")
+                    .senderRole("sender-role")
+                    .receiverRole("receiver-role")
+                    .middlewareName("middleware")
+                    .middlewareVersion("1.2.3")
+                    .compressPayload(true)
+            }
+
             "Should be able to send OK receipt without errors" {
                 val returnedId = UUID.randomUUID().toString()
                 val requestSlot = slot<NhnPostAppRecRequest>()
@@ -119,6 +155,51 @@ class ClientTest : FreeSpec() {
                     request.applicationVersion shouldBe testApplicationMetadata.applicationVersion
                     request.transportMetadataOverrides should beNull()
                 }
+            }
+
+            "Application receipt transport metadata overrides should be passed to the service" {
+                val overrides = AppRecTransportMetadataOverrides(
+                    transportSenderHerId = 101,
+                    transportReceiverHerId = 202,
+                    cpaId = "cpa-id",
+                    conversationId = "conversation-id",
+                    service = "service",
+                    serviceType = "service-type",
+                    action = "action",
+                    senderRole = "sender-role",
+                    receiverRole = "receiver-role",
+                    middlewareName = "middleware",
+                    middlewareVersion = "1.2.3",
+                    compressPayload = true,
+                )
+                val requestSlot = slot<NhnPostAppRecRequest>()
+                val internalClient = mockk<MshInternalClient> {
+                    coEvery { postAppRec(any(), capture(requestSlot), any()) } returns UUID.randomUUID().toString()
+                }
+                val client = Client(internalClient, testApplicationMetadata)
+                val receipt = OutgoingApplicationReceipt(
+                    acknowledgedId = UUID.randomUUID().toString(),
+                    senderHerId = randomHerId(),
+                    status = StatusForMottakAvMelding.AVVIST,
+                    errors = listOf(randomOutgoingApplicationReceiptError()),
+                    transportMetadataOverrides = overrides,
+                )
+
+                client.sendApplicationReceipt(receipt)
+
+                requestSlot.captured.transportMetadataOverrides shouldBe NhnAppRecTransportMetadataOverrides()
+                    .transportSenderHerId(101)
+                    .transportReceiverHerId(202)
+                    .cpaId("cpa-id")
+                    .conversationId("conversation-id")
+                    .service("service")
+                    .serviceType("service-type")
+                    .action("action")
+                    .senderRole("sender-role")
+                    .receiverRole("receiver-role")
+                    .middlewareName("middleware")
+                    .middlewareVersion("1.2.3")
+                    .compressPayload(true)
             }
 
             "Should be able to send OK_FEIL_I_DELMELDING with errors" {

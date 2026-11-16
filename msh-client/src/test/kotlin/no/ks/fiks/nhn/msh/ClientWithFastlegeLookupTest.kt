@@ -20,6 +20,7 @@ import no.ks.fiks.nhn.randomOrganizationHerId
 import no.ks.fiks.nhn.randomString
 import no.ks.fiks.nhn.testApplicationMetadata
 import no.ks.fiks.nhn.validateXmlAgainst
+import no.nhn.msh.v3.model.MessageTransportMetadataOverrides as NhnMessageTransportMetadataOverrides
 import no.nhn.msh.v3.model.PostMessageRequest
 import java.io.ByteArrayInputStream
 import java.time.OffsetDateTime
@@ -41,6 +42,12 @@ class ClientWithFastlegeLookupTest : FreeSpec() {
                         OutgoingVedlegg(OffsetDateTime.now(), randomString(), ByteArrayInputStream(vedleggBytes)),
                         OutgoingVedlegg(OffsetDateTime.now().plusDays(1), randomString(), ByteArrayInputStream(secondVedleggBytes)),
                     )
+                ).copy(
+                    transportMetadataOverrides = MessageTransportMetadataOverrides(
+                        cpaId = "cpa-id",
+                        conversationId = "conversation-id",
+                        compressPayload = true,
+                    ),
                 )
                 val patientGP = randomPatientGP()
                 val gpCommunicationParty = randomCommunicationPartyPerson()
@@ -63,6 +70,10 @@ class ClientWithFastlegeLookupTest : FreeSpec() {
                 requestSlot.captured.asClue { request ->
                     request.contentType shouldBe "application/xml"
                     request.contentTransferEncoding shouldBe "base64"
+                    request.transportMetadataOverrides shouldBe NhnMessageTransportMetadataOverrides()
+                        .cpaId("cpa-id")
+                        .conversationId("conversation-id")
+                        .compressPayload(true)
                     val xml = String(Base64.getDecoder().decode(request.businessDocument))
                     val parentOrganization = gpCommunicationParty.personDetails!!.parentOrganization
                     val postalAddress = gpCommunicationParty.postalAddress

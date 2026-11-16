@@ -9,8 +9,10 @@ import no.ks.fiks.nhn.edi.BusinessDocumentSerializer
 import no.ks.fiks.nhn.parseOffsetDateTimeOrNull
 import no.nhn.msh.v3.model.AppRecError as NhnAppRecError
 import no.nhn.msh.v3.model.AppRecStatus as NhnAppRecStatus
+import no.nhn.msh.v3.model.AppRecTransportMetadataOverrides as NhnAppRecTransportMetadataOverrides
 import no.nhn.msh.v3.model.DeliveryState as NhnDeliveryState
 import no.nhn.msh.v3.model.GetMessageResponse as NhnGetMessageResponse
+import no.nhn.msh.v3.model.MessageTransportMetadataOverrides as NhnMessageTransportMetadataOverrides
 import no.nhn.msh.v3.model.MshConfiguration as NhnMshConfiguration
 import no.nhn.msh.v3.model.MshConfigurationRejectMessageFilters as NhnMshConfigurationRejectMessageFilters
 import no.nhn.msh.v3.model.PostAppRecRequest as NhnPostAppRecRequest
@@ -44,6 +46,7 @@ open class Client @JvmOverloads constructor(
             .messageTypeIdentificator(businessDocument.resolveMessageType().verdi)
             .applicationName(applicationMetadata.applicationName)
             .applicationVersion(applicationMetadata.applicationVersion)
+            .transportMetadataOverrides(businessDocument.transportMetadataOverrides?.toApiTransportMetadataOverrides())
         return internalClient.postMessage(
             request = request,
             requestParams = requestParameters,
@@ -122,6 +125,7 @@ open class Client @JvmOverloads constructor(
             .appRecErrorList(receipt.errors?.toAppRecErrors())
             .applicationName(applicationMetadata.applicationName)
             .applicationVersion(applicationMetadata.applicationVersion)
+            .transportMetadataOverrides(receipt.transportMetadataOverrides?.toApiTransportMetadataOverrides())
         return internalClient.postAppRec(
             id = receipt.acknowledgedId,
             request = request,
@@ -199,6 +203,34 @@ open class Client @JvmOverloads constructor(
     }
 
     private fun List<OutgoingApplicationReceiptError>.toAppRecErrors() = map { it.toAppRecError() }
+
+    private fun MessageTransportMetadataOverrides.toApiTransportMetadataOverrides() =
+        NhnMessageTransportMetadataOverrides()
+            .cpaId(cpaId)
+            .conversationId(conversationId)
+            .service(service)
+            .serviceType(serviceType)
+            .action(action)
+            .senderRole(senderRole)
+            .receiverRole(receiverRole)
+            .middlewareName(middlewareName)
+            .middlewareVersion(middlewareVersion)
+            .compressPayload(compressPayload)
+
+    private fun AppRecTransportMetadataOverrides.toApiTransportMetadataOverrides() =
+        NhnAppRecTransportMetadataOverrides()
+            .transportSenderHerId(transportSenderHerId)
+            .transportReceiverHerId(transportReceiverHerId)
+            .cpaId(cpaId)
+            .conversationId(conversationId)
+            .service(service)
+            .serviceType(serviceType)
+            .action(action)
+            .senderRole(senderRole)
+            .receiverRole(receiverRole)
+            .middlewareName(middlewareName)
+            .middlewareVersion(middlewareVersion)
+            .compressPayload(compressPayload)
 
     private fun OutgoingBusinessDocument.resolveSenderHerId(): Int =
         resolveHerId(sender.child, sender.parent)
