@@ -30,7 +30,6 @@ class CreateClientTest : StringSpec({
                     jwk = "<HelseID JWK string>",
                 ),
                 mshBaseUrl = "<MSH base URL>",
-                sourceSystem = "<Name describing the system using the client>",
                 applicationMetadata = ApplicationMetadata(
                     applicationName = "<Application name>",
                     applicationVersion = "<Application version>",
@@ -57,7 +56,6 @@ class CreateClientTest : StringSpec({
                     ),
                 ),
                 mshBaseUrl = "<MSH base URL>",
-                sourceSystem = "<Name describing the system using the client>",
                 applicationMetadata = ApplicationMetadata(
                     applicationName = "<Application name>",
                     applicationVersion = "<Application version>",

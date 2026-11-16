@@ -6,7 +6,6 @@ import no.ks.fiks.helseid.Environment as HelseIdEnvironment
 data class Configuration(
     val helseId: HelseIdConfiguration,
     val mshBaseUrl: String,
-    val sourceSystem: String,
     val applicationMetadata: ApplicationMetadata,
 )
 
@@ -15,7 +14,6 @@ data class ConfigurationWithFastlegeLookup(
     val adresseregister: AdresseregisterConfiguration,
     val fastlegeregister: FastlegeregisterConfiguration,
     val mshBaseUrl: String,
-    val sourceSystem: String,
     val applicationMetadata: ApplicationMetadata,
 )
 

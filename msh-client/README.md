@@ -10,6 +10,12 @@ Prod: TODO: Missing
 Usage examples can be found in tests defined [here](src/test/kotlin/no/ks/fiks/nhn/examples).
 
 The easiest way to create a client is using the `ClientFactory`, see examples.  
+Configure `ApplicationMetadata` with the application name and version. These values are used
+in message and application receipt requests and in the `nhn-source-system` header, formatted
+as `applicationName applicationVersion` with a space between them. When migrating existing
+configurations, remove the separate `sourceSystem` field; direct `MshInternalClient` callers
+must pass `ApplicationMetadata` instead.
+
 Four different clients are provided:
 - `Client` - Standard client. Receiver HER-id has to be provided when sending messages. All functions are suspendable.
 - `ClientWithFastlegeLookup` - In addition to everything `Client` can do, this can also send messages to the GP of a person identified by fødselsnummer, using Adresseregisteret and Fastlegeregisteret for lookup.

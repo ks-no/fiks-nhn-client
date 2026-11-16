@@ -52,7 +52,7 @@ private val log = KotlinLogging.logger { }
 
 class MshInternalClient @JvmOverloads constructor(
     private val baseUrl: String,
-    private val sourceSystem: String,
+    private val applicationMetadata: ApplicationMetadata,
     private val defaultTokenParams: HelseIdTokenParameters? = null,
     private val client: HttpClient = buildDefaultClient(),
     helseIdClient: HelseIdClient,
@@ -225,7 +225,7 @@ class MshInternalClient @JvmOverloads constructor(
 
     private fun HeadersBuilder.set(endpoint: Endpoint, requestParams: RequestParameters?) {
         append(API_VERSION_HEADER, API_VERSION_NHN)
-        append(SOURCE_SYSTEM_HEADER, sourceSystem)
+        append(SOURCE_SYSTEM_HEADER, "${applicationMetadata.applicationName} ${applicationMetadata.applicationVersion}")
         appendHelseId(endpoint, requestParams)
     }
 

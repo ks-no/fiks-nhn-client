@@ -115,6 +115,8 @@ class ClientTest : FreeSpec() {
                 requestSlot.captured.asClue { request ->
                     request.appRecStatus shouldBe NhnAppRecStatus.OK
                     request.appRecErrorList.shouldBeEmpty()
+                    request.applicationName shouldBe testApplicationMetadata.applicationName
+                    request.applicationVersion shouldBe testApplicationMetadata.applicationVersion
                     request.transportMetadataOverrides should beNull()
                 }
             }

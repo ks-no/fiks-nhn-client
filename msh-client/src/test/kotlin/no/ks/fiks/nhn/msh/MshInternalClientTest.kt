@@ -70,7 +70,7 @@ class MshInternalClientTest : FreeSpec() {
                 val proofBuilder = mockProofBuilder()
                 val client = MshInternalClient(
                     baseUrl = wireMock.baseUrl,
-                    sourceSystem = UUID.randomUUID().toString(),
+                    applicationMetadata = ApplicationMetadata("test-application", "1.2.3"),
                     helseIdClient = helseIdClient,
                     proofBuilder = proofBuilder,
                 )
@@ -87,6 +87,11 @@ class MshInternalClientTest : FreeSpec() {
                         }
                     }
 
+                wireMockClient.verifyThat(
+                    getRequestedFor(urlPathEqualTo("/notifications/unread"))
+                        .withQueryParam("HerIds", equalTo("42"))
+                        .withHeader("nhn-source-system", equalTo("test-application 1.2.3"))
+                )
                 verifySequence {
                     helseIdClient.getAccessToken(StandardAccessTokenRequest(TokenType.DPOP))
                     proofBuilder.buildProof(Endpoint(HttpMethod.GET, "${wireMock.baseUrl}/notifications/unread"), null, accessToken)
@@ -149,11 +154,16 @@ class MshInternalClientTest : FreeSpec() {
                 val proofBuilder = mockProofBuilder()
                 MshInternalClient(
                     baseUrl = wireMock.baseUrl,
-                    sourceSystem = UUID.randomUUID().toString(),
+                    applicationMetadata = ApplicationMetadata("test-application", "1.2.3"),
                     helseIdClient = helseIdClient,
                     proofBuilder = proofBuilder,
                 ).deleteNotifications(notificationIds)
 
+                wireMockClient.verifyThat(
+                    postRequestedFor(urlPathEqualTo("/notifications/delete"))
+                        .withRequestBody(equalToJson(NhnDeleteNotificationsRequest().notificationIds(notificationIds.toSet()).toJson()))
+                        .withHeader("nhn-source-system", equalTo("test-application 1.2.3"))
+                )
                 verifySequence {
                     helseIdClient.getAccessToken(StandardAccessTokenRequest(TokenType.DPOP))
                     proofBuilder.buildProof(Endpoint(HttpMethod.POST, "${wireMock.baseUrl}/notifications/delete"), null, accessToken)
@@ -231,7 +241,7 @@ class MshInternalClientTest : FreeSpec() {
                 val proofBuilder = mockProofBuilder()
                 val client = MshInternalClient(
                     baseUrl = wireMock.baseUrl,
-                    sourceSystem = UUID.randomUUID().toString(),
+                    applicationMetadata = ApplicationMetadata("test-application", "1.2.3"),
                     helseIdClient = helseIdClient,
                     proofBuilder = proofBuilder,
                 )
@@ -309,7 +319,7 @@ class MshInternalClientTest : FreeSpec() {
                 val proofBuilder = mockProofBuilder()
                 val client = MshInternalClient(
                     baseUrl = wireMock.baseUrl,
-                    sourceSystem = UUID.randomUUID().toString(),
+                    applicationMetadata = ApplicationMetadata("test-application", "1.2.3"),
                     helseIdClient = helseIdClient,
                     proofBuilder = proofBuilder,
                 )
@@ -434,7 +444,7 @@ class MshInternalClientTest : FreeSpec() {
                 val proofBuilder = mockProofBuilder()
                 val client = MshInternalClient(
                     baseUrl = wireMock.baseUrl,
-                    sourceSystem = UUID.randomUUID().toString(),
+                    applicationMetadata = ApplicationMetadata("test-application", "1.2.3"),
                     helseIdClient = helseIdClient,
                     proofBuilder = proofBuilder,
                 )
@@ -537,7 +547,7 @@ class MshInternalClientTest : FreeSpec() {
                 val proofBuilder = mockProofBuilder()
                 val client = MshInternalClient(
                     baseUrl = wireMock.baseUrl,
-                    sourceSystem = UUID.randomUUID().toString(),
+                    applicationMetadata = ApplicationMetadata("test-application", "1.2.3"),
                     helseIdClient = helseIdClient,
                     proofBuilder = proofBuilder,
                 )
@@ -687,7 +697,7 @@ class MshInternalClientTest : FreeSpec() {
                 val proofBuilder = mockProofBuilder()
                 val client = MshInternalClient(
                     baseUrl = wireMock.baseUrl,
-                    sourceSystem = UUID.randomUUID().toString(),
+                    applicationMetadata = ApplicationMetadata("test-application", "1.2.3"),
                     helseIdClient = helseIdClient,
                     proofBuilder = proofBuilder,
                 )
@@ -780,7 +790,7 @@ class MshInternalClientTest : FreeSpec() {
                 val proofBuilder = mockProofBuilder()
                 MshInternalClient(
                     baseUrl = wireMock.baseUrl,
-                    sourceSystem = UUID.randomUUID().toString(),
+                    applicationMetadata = ApplicationMetadata("test-application", "1.2.3"),
                     helseIdClient = helseIdClient,
                     proofBuilder = proofBuilder,
                 ).markMessageDownloaded(id, receiverHerId)
@@ -874,7 +884,7 @@ class MshInternalClientTest : FreeSpec() {
                 val proofBuilder = mockProofBuilder()
                 MshInternalClient(
                     baseUrl = wireMock.baseUrl,
-                    sourceSystem = UUID.randomUUID().toString(),
+                    applicationMetadata = ApplicationMetadata("test-application", "1.2.3"),
                     helseIdClient = helseIdClient,
                     proofBuilder = proofBuilder,
                 ).setMshConfigurations(listOf(configuration))
@@ -920,7 +930,7 @@ class MshInternalClientTest : FreeSpec() {
                 val proofBuilder = mockProofBuilder()
                 MshInternalClient(
                     baseUrl = wireMock.baseUrl,
-                    sourceSystem = UUID.randomUUID().toString(),
+                    applicationMetadata = ApplicationMetadata("test-application", "1.2.3"),
                     helseIdClient = helseIdClient,
                     proofBuilder = proofBuilder,
                 ).deleteMshConfigurations(herIds)
@@ -957,7 +967,7 @@ class MshInternalClientTest : FreeSpec() {
                 val helseIdClient = mockHelseIdClient("")
                 MshInternalClient(
                     baseUrl = wireMock.baseUrl,
-                    sourceSystem = UUID.randomUUID().toString(),
+                    applicationMetadata = ApplicationMetadata("test-application", "1.2.3"),
                     helseIdClient = helseIdClient,
                     proofBuilder = mockProofBuilder(),
                 ).getMessage(id)
@@ -975,7 +985,7 @@ class MshInternalClientTest : FreeSpec() {
                 val helseIdClient = mockHelseIdClient("")
                 MshInternalClient(
                     baseUrl = wireMock.baseUrl,
-                    sourceSystem = UUID.randomUUID().toString(),
+                    applicationMetadata = ApplicationMetadata("test-application", "1.2.3"),
                     helseIdClient = helseIdClient,
                     proofBuilder = mockProofBuilder(),
                     defaultTokenParams = HelseIdTokenParameters(
@@ -999,7 +1009,7 @@ class MshInternalClientTest : FreeSpec() {
                 val helseIdClient = mockHelseIdClient("")
                 MshInternalClient(
                     baseUrl = wireMock.baseUrl,
-                    sourceSystem = UUID.randomUUID().toString(),
+                    applicationMetadata = ApplicationMetadata("test-application", "1.2.3"),
                     helseIdClient = helseIdClient,
                     proofBuilder = mockProofBuilder(),
                     defaultTokenParams = HelseIdTokenParameters(
@@ -1029,7 +1039,7 @@ class MshInternalClientTest : FreeSpec() {
                 val helseIdClient = mockHelseIdClient("")
                 MshInternalClient(
                     baseUrl = wireMock.baseUrl,
-                    sourceSystem = UUID.randomUUID().toString(),
+                    applicationMetadata = ApplicationMetadata("test-application", "1.2.3"),
                     helseIdClient = helseIdClient,
                     proofBuilder = mockProofBuilder(),
                     defaultTokenParams = HelseIdTokenParameters(
@@ -1057,7 +1067,7 @@ class MshInternalClientTest : FreeSpec() {
                 }
                 MshInternalClient(
                     baseUrl = wireMock.baseUrl,
-                    sourceSystem = UUID.randomUUID().toString(),
+                    applicationMetadata = ApplicationMetadata("test-application", "1.2.3"),
                     helseIdClient = helseIdClient,
                     proofBuilder = mockProofBuilder(),
                     defaultTokenParams = HelseIdTokenParameters(
@@ -1091,7 +1101,7 @@ class MshInternalClientTest : FreeSpec() {
                 }
                 MshInternalClient(
                     baseUrl = wireMock.baseUrl,
-                    sourceSystem = UUID.randomUUID().toString(),
+                    applicationMetadata = ApplicationMetadata("test-application", "1.2.3"),
                     helseIdClient = helseIdClient,
                     proofBuilder = mockProofBuilder(),
                     defaultTokenParams = HelseIdTokenParameters(
@@ -1131,7 +1141,7 @@ class MshInternalClientTest : FreeSpec() {
 
                 MshInternalClient(
                     baseUrl = wireMock.baseUrl,
-                    sourceSystem = UUID.randomUUID().toString(),
+                    applicationMetadata = ApplicationMetadata("test-application", "1.2.3"),
                     helseIdClient = mockHelseIdClient(accessToken),
                     proofBuilder = mockk { every { buildProof(any(), any(), any()) } returns dpopProof },
                 ).getMessage(id)
@@ -1182,7 +1192,7 @@ class MshInternalClientTest : FreeSpec() {
                 }
                 val client = MshInternalClient(
                     baseUrl = wireMock.baseUrl,
-                    sourceSystem = UUID.randomUUID().toString(),
+                    applicationMetadata = ApplicationMetadata("test-application", "1.2.3"),
                     helseIdClient = helseIdClient,
                     proofBuilder = mockProofBuilder(),
                     defaultTokenParams = HelseIdTokenParameters(
@@ -1240,7 +1250,7 @@ class MshInternalClientTest : FreeSpec() {
 
     private fun buildDefaultClient(accessToken: String = UUID.randomUUID().toString()): MshInternalClient = MshInternalClient(
         baseUrl = wireMock.baseUrl,
-        sourceSystem = UUID.randomUUID().toString(),
+        applicationMetadata = ApplicationMetadata("test-application", "1.2.3"),
         helseIdClient = mockHelseIdClient(accessToken),
         proofBuilder = mockProofBuilder(),
     )
