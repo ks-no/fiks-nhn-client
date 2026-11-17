@@ -4,6 +4,7 @@ import io.kotest.core.spec.style.StringSpec
 import io.mockk.coEvery
 import io.mockk.mockk
 import no.ks.fiks.nhn.msh.ClientWithFastlegeLookup
+import no.ks.fiks.nhn.msh.MessageWithMetadata
 import no.ks.fiks.nhn.msh.NotificationType
 import no.ks.fiks.nhn.msh.UnreadNotification
 import java.time.OffsetDateTime
@@ -11,11 +12,16 @@ import java.util.UUID
 
 class GetMessagesWithMetadataTest : StringSpec({
     "returns message metadata for unread notifications" {
+        val messageId = UUID.randomUUID().toString()
+        val messageId2 = UUID.randomUUID().toString()
+        val metadata = mockk<MessageWithMetadata>()
         val client = mockk<ClientWithFastlegeLookup> {
+            coEvery { getMessage(messageId, any()) } returns metadata
+            coEvery { getMessage(messageId2, any()) } returns metadata
             coEvery { getUnreadNotifications(any(), any(), any()) } returns listOf(
                 UnreadNotification(
-                    notificationId = UUID.randomUUID().toString(),
-                    relatedMessageId = UUID.randomUUID().toString(),
+                    notificationId = messageId,
+                    relatedMessageId = null,
                     type = NotificationType.NEW_MESSAGE,
                     notificationReceiverHerId = 321,
                     notificationTriggeredByHerId = 123,
@@ -23,7 +29,7 @@ class GetMessagesWithMetadataTest : StringSpec({
                     createdAt = OffsetDateTime.now(),
                 ),
                 UnreadNotification(
-                    notificationId = UUID.randomUUID().toString(),
+                    notificationId = messageId2,
                     relatedMessageId = null,
                     type = NotificationType.NEW_MESSAGE,
                     notificationReceiverHerId = 321,
@@ -35,6 +41,6 @@ class GetMessagesWithMetadataTest : StringSpec({
         }
 
         client.getUnreadNotifications(herIds = listOf(321))
-            .forEach { client.getMessage(it.notificationId) }
+            .forEach { client.getMessage(it.notificationId ) }
     }
 })
