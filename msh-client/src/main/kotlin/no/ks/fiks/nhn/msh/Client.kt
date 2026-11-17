@@ -116,8 +116,8 @@ open class Client @JvmOverloads constructor(
         receipt: OutgoingApplicationReceipt,
         requestParameters: RequestParameters? = null,
     ): String? {
-        if (receipt.status == StatusForMottakAvMelding.AVVIST && receipt.errors.isNullOrEmpty()) {
-            throw IllegalArgumentException("Must provide at least one error message when status is AVVIST")
+        if (receipt.status != StatusForMottakAvMelding.OK && receipt.errors.isNullOrEmpty()) {
+            throw IllegalArgumentException("Must provide at least one error message when status is AVVIST or OK_FEIL_I_DELMELDING")
         }
         if (receipt.status == StatusForMottakAvMelding.OK && !receipt.errors.isNullOrEmpty()) {
             throw IllegalArgumentException("Error messages are not allowed when status is OK")

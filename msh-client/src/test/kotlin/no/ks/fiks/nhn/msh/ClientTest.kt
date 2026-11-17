@@ -284,11 +284,8 @@ class ClientTest : FreeSpec() {
                 coVerify(exactly = 0) { internalClient.postAppRec(any(), any(), any()) }
             }
 
-            "An OK_FEIL_I_DELMELDING receipt may omit errors" {
-                val requestSlot = slot<NhnPostAppRecRequest>()
-                val internalClient = mockk<MshInternalClient> {
-                    coEvery { postAppRec(any(), capture(requestSlot), any()) } returns UUID.randomUUID().toString()
-                }
+            "An OK_FEIL_I_DELMELDING receipt must include errors" {
+                val internalClient = mockk<MshInternalClient>()
                 val client = Client(internalClient, testApplicationMetadata)
                 val receipt = OutgoingApplicationReceipt(
                     acknowledgedId = UUID.randomUUID().toString(),
@@ -296,27 +293,28 @@ class ClientTest : FreeSpec() {
                     status = StatusForMottakAvMelding.OK_FEIL_I_DELMELDING,
                 )
 
-                client.sendApplicationReceipt(receipt)
-
-                requestSlot.captured.asClue { request ->
-                    request.appRecStatus shouldBe NhnAppRecStatus.OK_ERROR_IN_MESSAGE_PART
-                    request.appRecErrorList should beNull()
+                shouldThrow<IllegalArgumentException> { client.sendApplicationReceipt(receipt) }.asClue {
+                    it.message shouldBe "Must provide at least one error message when status is AVVIST or OK_FEIL_I_DELMELDING"
                 }
+
+                coVerify(exactly = 0) { internalClient.postAppRec(any(), any(), any()) }
             }
 
-            "Trying to send an AVVIST receipt without errors should cause an exception to be thrown" {
-                val client = Client(mockk<MshInternalClient> { coEvery { postAppRec(any(), any(), any()) } returns UUID.randomUUID().toString() }, testApplicationMetadata)
-
+            "A non-OK receipt without errors should be rejected" {
                 val receipt = OutgoingApplicationReceipt(
                     acknowledgedId = UUID.randomUUID().toString(),
                     senderHerId = randomHerId(),
                     status = StatusForMottakAvMelding.AVVIST,
                     errors = emptyList(),
                 )
+                val internalClient = mockk<MshInternalClient>()
+                val client = Client(internalClient, testApplicationMetadata)
 
                 shouldThrow<IllegalArgumentException> { client.sendApplicationReceipt(receipt) }.asClue {
-                    it.message shouldBe "Must provide at least one error message when status is AVVIST"
+                    it.message shouldBe "Must provide at least one error message when status is AVVIST or OK_FEIL_I_DELMELDING"
                 }
+
+                coVerify(exactly = 0) { internalClient.postAppRec(any(), any(), any()) }
             }
 
             "Should use child HER-id precedence and include v3 metadata for each dialog version" {
