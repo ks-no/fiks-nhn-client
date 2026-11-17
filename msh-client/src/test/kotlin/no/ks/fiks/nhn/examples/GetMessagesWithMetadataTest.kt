@@ -20,8 +20,8 @@ class GetMessagesWithMetadataTest : StringSpec({
             coEvery { getMessage(messageId2, any()) } returns metadata
             coEvery { getUnreadNotifications(any(), any(), any()) } returns listOf(
                 UnreadNotification(
-                    notificationId = messageId,
-                    relatedMessageId = null,
+                    notificationId = UUID.randomUUID().toString(),
+                    relatedMessageId = messageId,
                     type = NotificationType.NEW_MESSAGE,
                     notificationReceiverHerId = 321,
                     notificationTriggeredByHerId = 123,
@@ -29,18 +29,20 @@ class GetMessagesWithMetadataTest : StringSpec({
                     createdAt = OffsetDateTime.now(),
                 ),
                 UnreadNotification(
-                    notificationId = messageId2,
-                    relatedMessageId = null,
+                    notificationId = UUID.randomUUID().toString(),
+                    relatedMessageId = messageId2,
                     type = NotificationType.NEW_MESSAGE,
                     notificationReceiverHerId = 321,
                     notificationTriggeredByHerId = 123,
-                    description = "missing message id",
+                    description = "another new message",
                     createdAt = OffsetDateTime.now(),
                 )
             )
         }
 
         client.getUnreadNotifications(herIds = listOf(321))
-            .forEach { client.getMessage(it.notificationId ) }
+            .filter { it.type == NotificationType.NEW_MESSAGE }
+            .mapNotNull { it.relatedMessageId }
+            .forEach { client.getMessage(it) }
     }
 })
