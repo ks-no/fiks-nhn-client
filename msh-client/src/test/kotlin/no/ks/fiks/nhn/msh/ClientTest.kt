@@ -3,14 +3,13 @@ package no.ks.fiks.nhn.msh
 import io.kotest.assertions.asClue
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FreeSpec
-import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.nulls.beNull
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.shouldNot
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.coVerifySequence
 import io.mockk.just
 import io.mockk.mockk
@@ -38,7 +37,6 @@ import no.nhn.msh.v3.model.MessageTransportMetadataOverrides as NhnMessageTransp
 import no.nhn.msh.v3.model.PostAppRecRequest as NhnPostAppRecRequest
 import no.nhn.msh.v3.model.PostMessageRequest as NhnPostMessageRequest
 import no.nhn.msh.v3.model.StatusInfo as NhnStatusInfo
-import no.nhn.msh.v3.model.UnreadNotification as NhnUnreadNotification
 import java.io.ByteArrayInputStream
 import java.time.OffsetDateTime
 import java.time.temporal.ChronoUnit
@@ -131,7 +129,7 @@ class ClientTest : FreeSpec() {
                     .compressPayload(true)
             }
 
-            "Should be able to send OK receipt without errors" {
+            "Should be able to send OK receipt with errors as empty list" {
                 val returnedId = UUID.randomUUID().toString()
                 val requestSlot = slot<NhnPostAppRecRequest>()
                 val internalClient = mockk<MshInternalClient> {
@@ -150,7 +148,7 @@ class ClientTest : FreeSpec() {
 
                 requestSlot.captured.asClue { request ->
                     request.appRecStatus shouldBe NhnAppRecStatus.OK
-                    request.appRecErrorList.shouldBeEmpty()
+                    request.appRecErrorList should beNull()
                     request.applicationName shouldBe testApplicationMetadata.applicationName
                     request.applicationVersion shouldBe testApplicationMetadata.applicationVersion
                     request.transportMetadataOverrides should beNull()
@@ -268,11 +266,8 @@ class ClientTest : FreeSpec() {
                 }
             }
 
-            "An OK receipt may include errors" {
-                val requestSlot = slot<NhnPostAppRecRequest>()
-                val internalClient = mockk<MshInternalClient> {
-                    coEvery { postAppRec(any(), capture(requestSlot), any()) } returns UUID.randomUUID().toString()
-                }
+            "An OK receipt should reject a non-empty error list" {
+                val internalClient = mockk<MshInternalClient>()
                 val client = Client(internalClient, testApplicationMetadata)
                 val error = randomOutgoingApplicationReceiptError()
                 val receipt = OutgoingApplicationReceipt(
@@ -282,19 +277,11 @@ class ClientTest : FreeSpec() {
                     errors = listOf(error),
                 )
 
-                client.sendApplicationReceipt(receipt)
-
-                requestSlot.captured.asClue { request ->
-                    request.appRecStatus shouldBe NhnAppRecStatus.OK
-                    request.appRecErrorList shouldBe listOf(
-                        NhnAppRecError().apply {
-                            errorCode = error.type.verdi
-                            description = error.type.navn
-                            oid = error.type.kodeverk
-                            details = error.details
-                        }
-                    )
+                shouldThrow<IllegalArgumentException> { client.sendApplicationReceipt(receipt) }.asClue {
+                    it.message shouldBe "Error messages are not allowed when status is OK"
                 }
+
+                coVerify(exactly = 0) { internalClient.postAppRec(any(), any(), any()) }
             }
 
             "An OK_FEIL_I_DELMELDING receipt may omit errors" {

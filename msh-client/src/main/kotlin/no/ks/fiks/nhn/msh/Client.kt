@@ -119,11 +119,14 @@ open class Client @JvmOverloads constructor(
         if (receipt.status == StatusForMottakAvMelding.AVVIST && receipt.errors.isNullOrEmpty()) {
             throw IllegalArgumentException("Must provide at least one error message when status is AVVIST")
         }
+        if (receipt.status == StatusForMottakAvMelding.OK && !receipt.errors.isNullOrEmpty()) {
+            throw IllegalArgumentException("Error messages are not allowed when status is OK")
+        }
 
         val request = NhnPostAppRecRequest()
             .appRecSenderHerId(receipt.senderHerId)
             .appRecStatus(receipt.status.toAppRecStatus())
-            .appRecErrorList(receipt.errors?.toAppRecErrors())
+            .appRecErrorList(receipt.errors?.takeIf { it.isNotEmpty() }?.toAppRecErrors())
             .applicationName(applicationMetadata.applicationName)
             .applicationVersion(applicationMetadata.applicationVersion)
             .transportMetadataOverrides(receipt.transportMetadataOverrides?.toApiTransportMetadataOverrides())
