@@ -35,7 +35,6 @@ class GetMessagesWithMetadataTest : StringSpec({
         }
 
         client.getUnreadNotifications(herIds = listOf(321))
-            .filter { it.type == NotificationType.NEW_MESSAGE }
             .forEach { client.getMessage(it.notificationId) }
     }
 })
