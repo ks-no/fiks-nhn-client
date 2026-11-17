@@ -1,7 +1,7 @@
 # NHN Client
 
 Uses the Meldingstjener REST API provided by NHN:
-- [Documentation](https://utviklerportal.nhn.no/informasjonstjenester/meldingstjener/edi-20/edi-20-ekstern-docs/docs/meldingstjener-rest-apimd)
+- [Documentation](https://utviklerportal.nhn.no/informasjonstjenester/meldingsutveksling)
 - [API spec](https://api.tjener.test.melding.nhn.no/swagger/index.html)
 
 Test: https://api.tjener.test.melding.nhn.no  

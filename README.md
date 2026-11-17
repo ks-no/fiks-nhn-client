@@ -21,6 +21,7 @@ Validator: https://samsvar.nhn.no/validering/xml
 Hodemelding: https://sarepta.helsedir.no/standard/Hodemelding  
 Dialogmelding 1.0: https://sarepta.helsedir.no/standard/Dialogmelding/1.0  
 Dialogmelding 1.1: https://sarepta.helsedir.no/standard/Dialogmelding/1.1  
+Applikasjonskvittering: https://sarepta.helsedir.no/standard/Applikasjonskvittering
 Vedlegg til meldinger: https://sarepta.helsedir.no/standard/Vedlegg%20til%20meldinger  
 
 Kodeverk: https://finnkode.helsedirektoratet.no/adm/collections
