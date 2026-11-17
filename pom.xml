@@ -27,7 +27,7 @@
     <modules>
         <module>fastlegeregisteret-client</module>
         <module>adresseregisteret-rest-client</module>
-        <module>msh-api-v2</module>
+        <module>msh-api-v3</module>
         <module>msh-client</module>
     </modules>
 
@@ -70,7 +70,7 @@
             </dependency>
             <dependency>
                 <groupId>no.ks.fiks</groupId>
-                <artifactId>msh-api-v2</artifactId>
+                <artifactId>msh-api-v3</artifactId>
                 <version>${project.version}</version>
             </dependency>
 

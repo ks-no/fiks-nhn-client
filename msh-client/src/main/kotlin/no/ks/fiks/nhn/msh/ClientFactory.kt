@@ -13,26 +13,28 @@ object ClientFactory {
     @JvmOverloads
     fun createClient(configuration: Configuration, messageHandlers: List<MessageHandler> = emptyList()): Client =
         Client(
-            internalClient = createMshInternalClient(configuration.helseId, configuration.mshBaseUrl, configuration.sourceSystem),
+            internalClient = createMshInternalClient(configuration.helseId, configuration.mshBaseUrl, configuration.applicationMetadata),
+            applicationMetadata = configuration.applicationMetadata,
             messageHandlers = messageHandlers,
         )
 
     @JvmOverloads
     fun createClientWithFastlegeLookup(configuration: ConfigurationWithFastlegeLookup, messageHandlers: List<MessageHandler> = emptyList()): ClientWithFastlegeLookup =
         ClientWithFastlegeLookup(
-            internalClient = createMshInternalClient(configuration.helseId, configuration.mshBaseUrl, configuration.sourceSystem),
+            internalClient = createMshInternalClient(configuration.helseId, configuration.mshBaseUrl, configuration.applicationMetadata),
             flrClient = createFlrClient(configuration.fastlegeregister),
             arClient = createArClient(configuration.adresseregister, configuration.helseId),
+            applicationMetadata = configuration.applicationMetadata,
             messageHandlers = messageHandlers,
         )
 
     private fun createMshInternalClient(
         helseIdConfiguration: HelseIdConfiguration,
         mshBaseUrl: String,
-        sourceSystem: String,
+        applicationMetadata: ApplicationMetadata,
     ) = MshInternalClient(
         baseUrl = mshBaseUrl,
-        sourceSystem = sourceSystem,
+        applicationMetadata = applicationMetadata,
         defaultTokenParams = helseIdConfiguration.tokenParams,
         helseIdClient = HelseIdClient(
             no.ks.fiks.helseid.Configuration(

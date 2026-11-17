@@ -18,8 +18,10 @@ import no.ks.fiks.nhn.randomAddress
 import no.ks.fiks.nhn.randomHerId
 import no.ks.fiks.nhn.randomOrganizationHerId
 import no.ks.fiks.nhn.randomString
+import no.ks.fiks.nhn.testApplicationMetadata
 import no.ks.fiks.nhn.validateXmlAgainst
-import no.nhn.msh.v2.model.PostMessageRequest
+import no.nhn.msh.v3.model.MessageTransportMetadataOverrides as NhnMessageTransportMetadataOverrides
+import no.nhn.msh.v3.model.PostMessageRequest
 import java.io.ByteArrayInputStream
 import java.time.OffsetDateTime
 import java.time.temporal.ChronoUnit
@@ -40,16 +42,22 @@ class ClientWithFastlegeLookupTest : FreeSpec() {
                         OutgoingVedlegg(OffsetDateTime.now(), randomString(), ByteArrayInputStream(vedleggBytes)),
                         OutgoingVedlegg(OffsetDateTime.now().plusDays(1), randomString(), ByteArrayInputStream(secondVedleggBytes)),
                     )
+                ).copy(
+                    transportMetadataOverrides = MessageTransportMetadataOverrides(
+                        cpaId = "cpa-id",
+                        conversationId = "conversation-id",
+                        compressPayload = true,
+                    ),
                 )
                 val patientGP = randomPatientGP()
                 val gpCommunicationParty = randomCommunicationPartyPerson()
                 val (gpFirstName, gpLastName) = gpCommunicationParty.name?.split(" ")!!
 
                 val requestSlot = slot<PostMessageRequest>()
-                val apiService = mockk<MshInternalClient> { coEvery { postMessage(capture(requestSlot), any()) } returns UUID.randomUUID() }
+                val apiService = mockk<MshInternalClient> { coEvery { postMessage(capture(requestSlot), any()) } returns UUID.randomUUID().toString() }
                 val flrClient = mockk<FastlegeregisteretClient> { every { getPatientGP(any()) } returns patientGP }
                 val arClient = mockk<AdresseregisteretClient> { every { lookupHerId(any()) } returns gpCommunicationParty }
-                val client = ClientWithFastlegeLookup(apiService, flrClient, arClient)
+                val client = ClientWithFastlegeLookup(apiService, flrClient, arClient, testApplicationMetadata)
 
                 client.sendMessageToGPForPerson(businessDocument)
 
@@ -62,6 +70,10 @@ class ClientWithFastlegeLookupTest : FreeSpec() {
                 requestSlot.captured.asClue { request ->
                     request.contentType shouldBe "application/xml"
                     request.contentTransferEncoding shouldBe "base64"
+                    request.transportMetadataOverrides shouldBe NhnMessageTransportMetadataOverrides()
+                        .cpaId("cpa-id")
+                        .conversationId("conversation-id")
+                        .compressPayload(true)
                     val xml = String(Base64.getDecoder().decode(request.businessDocument))
                     val parentOrganization = gpCommunicationParty.personDetails!!.parentOrganization
                     val postalAddress = gpCommunicationParty.postalAddress
@@ -120,10 +132,10 @@ class ClientWithFastlegeLookupTest : FreeSpec() {
                 val gpCommunicationParty = randomCommunicationPartyPerson().name("Ola Kari Nordmann")
 
                 val requestSlot = slot<PostMessageRequest>()
-                val apiService = mockk<MshInternalClient> { coEvery { postMessage(capture(requestSlot), any()) } returns UUID.randomUUID() }
+                val apiService = mockk<MshInternalClient> { coEvery { postMessage(capture(requestSlot), any()) } returns UUID.randomUUID().toString() }
                 val flrClient = mockk<FastlegeregisteretClient> { every { getPatientGP(any()) } returns patientGP }
                 val arClient = mockk<AdresseregisteretClient> { every { lookupHerId(any()) } returns gpCommunicationParty }
-                val client = ClientWithFastlegeLookup(apiService, flrClient, arClient)
+                val client = ClientWithFastlegeLookup(apiService, flrClient, arClient, testApplicationMetadata)
 
                 client.sendMessageToGPForPerson(businessDocument)
 
@@ -184,10 +196,10 @@ class ClientWithFastlegeLookupTest : FreeSpec() {
             val patientGP = randomPatientGP()
             val gpCommunicationParty = randomCommunicationPartyPerson().name(randomString())
 
-            val apiService = mockk<MshInternalClient> { coEvery { postMessage(any(), any()) } returns UUID.randomUUID() }
+            val apiService = mockk<MshInternalClient> { coEvery { postMessage(any(), any()) } returns UUID.randomUUID().toString() }
             val flrClient = mockk<FastlegeregisteretClient> { every { getPatientGP(any()) } returns patientGP }
             val arClient = mockk<AdresseregisteretClient> { every { lookupHerId(any()) } returns gpCommunicationParty }
-            val client = ClientWithFastlegeLookup(apiService, flrClient, arClient)
+            val client = ClientWithFastlegeLookup(apiService, flrClient, arClient, testApplicationMetadata)
 
             shouldThrow<GpNotFoundException> {
                 client.sendMessageToGPForPerson(businessDocument)
@@ -208,10 +220,10 @@ class ClientWithFastlegeLookupTest : FreeSpec() {
                     )
             )
 
-            val apiService = mockk<MshInternalClient> { coEvery { postMessage(any(), any()) } returns UUID.randomUUID() }
+            val apiService = mockk<MshInternalClient> { coEvery { postMessage(any(), any()) } returns UUID.randomUUID().toString() }
             val flrClient = mockk<FastlegeregisteretClient> { every { getPatientGP(any()) } returns patientGP }
             val arClient = mockk<AdresseregisteretClient> { every { lookupHerId(any()) } returns gpCommunicationParty }
-            val client = ClientWithFastlegeLookup(apiService, flrClient, arClient)
+            val client = ClientWithFastlegeLookup(apiService, flrClient, arClient, testApplicationMetadata)
 
             shouldThrow<GpNotFoundException> {
                 client.sendMessageToGPForPerson(businessDocument)
@@ -222,11 +234,11 @@ class ClientWithFastlegeLookupTest : FreeSpec() {
             val params = RequestParameters(HelseIdTokenParameters(SingleTenantHelseIdTokenParameters(randomHerId().toString())))
 
             val internalClient = mockk<MshInternalClient> {
-                coEvery { postMessage(any(), any()) } returns UUID.randomUUID()
+                coEvery { postMessage(any(), any()) } returns UUID.randomUUID().toString()
             }
             val flrClient = mockk<FastlegeregisteretClient> { every { getPatientGP(any()) } returns randomPatientGP() }
             val arClient = mockk<AdresseregisteretClient>(relaxed = true) { every { lookupHerId(any()) } returns randomCommunicationPartyPerson() }
-            val client = ClientWithFastlegeLookup(internalClient, flrClient, arClient)
+            val client = ClientWithFastlegeLookup(internalClient, flrClient, arClient, testApplicationMetadata)
 
             client.sendMessageToGPForPerson(randomGPForPersonOutgoingBusinessDocument(), params)
             coVerifySequence {
@@ -306,4 +318,3 @@ private fun randomCommunicationPartyPerson(): CommunicationParty = Communication
     )
 
 private fun randomPatientGP(): PatientGP = PatientGP(randomString(), randomHerId())
-

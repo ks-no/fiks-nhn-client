@@ -2,7 +2,6 @@ package no.ks.fiks.nhn.msh
 
 import no.ks.fiks.hdir.FeilmeldingForApplikasjonskvittering
 import no.ks.fiks.hdir.StatusForMottakAvMelding
-import java.util.*
 
 data class IncomingApplicationReceipt(
     val id: String,
@@ -28,10 +27,26 @@ data class IncomingApplicationReceiptError(
 )
 
 data class OutgoingApplicationReceipt(
-    val acknowledgedId: UUID,
+    val acknowledgedId: String,
     val senderHerId: Int,
     val status: StatusForMottakAvMelding,
     val errors: List<OutgoingApplicationReceiptError>? = null,
+    val transportMetadataOverrides: AppRecTransportMetadataOverrides? = null,
+)
+
+data class AppRecTransportMetadataOverrides(
+    val transportSenderHerId: Int? = null,
+    val transportReceiverHerId: Int? = null,
+    val cpaId: String? = null,
+    val conversationId: String? = null,
+    val service: String? = null,
+    val serviceType: String? = null,
+    val action: String? = null,
+    val senderRole: String? = null,
+    val receiverRole: String? = null,
+    val middlewareName: String? = null,
+    val middlewareVersion: String? = null,
+    val compressPayload: Boolean? = null,
 )
 
 data class OutgoingApplicationReceiptError(

@@ -14,7 +14,7 @@ class GetBusinessDocumentTest : StringSpec({
 
         // Gets a business document that is not an application receipt, using the business document id returned when getting messages with metadata
         client.getBusinessDocument(
-            id = UUID.randomUUID(),
+            id = UUID.randomUUID().toString(),
         )
     }
 })

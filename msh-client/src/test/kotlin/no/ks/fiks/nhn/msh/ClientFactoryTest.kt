@@ -25,7 +25,10 @@ class ClientFactoryTest : StringSpec() {
                         jwk = RSAKeyGenerator(2048).generate().toRSAKey().toString(),
                     ),
                     mshBaseUrl = "http://msh:8080",
-                    sourceSystem = UUID.randomUUID().toString(),
+                    applicationMetadata = ApplicationMetadata(
+                        applicationName = "app-name",
+                        applicationVersion = "1.0.0",
+                    ),
                 ),
             )
         }
@@ -43,7 +46,10 @@ class ClientFactoryTest : StringSpec() {
                             jwk = UUID.randomUUID().toString(),
                         ),
                         mshBaseUrl = "http://msh:8080",
-                        sourceSystem = UUID.randomUUID().toString(),
+                        applicationMetadata = ApplicationMetadata(
+                            applicationName = "app-name",
+                            applicationVersion = "1.0.0",
+                        ),
                     ),
                 )
             } shouldHaveMessage "Invalid JSON object"
@@ -75,7 +81,10 @@ class ClientFactoryTest : StringSpec() {
                         ),
                     ),
                     mshBaseUrl = "http://msh:8080",
-                    sourceSystem = UUID.randomUUID().toString(),
+                    applicationMetadata = ApplicationMetadata(
+                        applicationName = "app-name",
+                        applicationVersion = "1.0.0",
+                    ),
                 ),
             )
 

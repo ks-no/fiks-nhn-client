@@ -1,0 +1,22 @@
+{
+  "statusList": [
+    {
+      "receiverHerId": 123456,
+      "transportDeliveryState": "Acknowledged",
+      "sent": true,
+      "apprecInfo": {
+        "appRecStatus": "Rejected",
+        "appRecErrorList": [
+          {
+            "errorCode": "E10",
+            "description": "Ugyldig meldingsidentifikator",
+            "oid": "2.16.578.1.12.4.1.1.8221",
+            "details": "Extra details about error"
+          }
+        ],
+        "appRecId": "0d5fa870-b089-4a26-b844-d3868b5f376c"
+      }
+    }
+  ]
+}
+

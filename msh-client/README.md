@@ -1,7 +1,7 @@
 # NHN Client
 
 Uses the Meldingstjener REST API provided by NHN:
-- [Documentation](https://utviklerportal.nhn.no/informasjonstjenester/meldingstjener/edi-20/edi-20-ekstern-docs/docs/meldingstjener-rest-apimd)
+- [Documentation](https://utviklerportal.nhn.no/informasjonstjenester/meldingsutveksling)
 - [API spec](https://api.tjener.test.melding.nhn.no/swagger/index.html)
 
 Test: https://api.tjener.test.melding.nhn.no  
@@ -10,6 +10,12 @@ Prod: TODO: Missing
 Usage examples can be found in tests defined [here](src/test/kotlin/no/ks/fiks/nhn/examples).
 
 The easiest way to create a client is using the `ClientFactory`, see examples.  
+Configure `ApplicationMetadata` with the application name and version. These values are used
+in message and application receipt requests and in the `nhn-source-system` header, formatted
+as `applicationName applicationVersion` with a space between them. When migrating existing
+configurations, remove the separate `sourceSystem` field; direct `MshInternalClient` callers
+must pass `ApplicationMetadata` instead.
+
 Four different clients are provided:
 - `Client` - Standard client. Receiver HER-id has to be provided when sending messages. All functions are suspendable.
 - `ClientWithFastlegeLookup` - In addition to everything `Client` can do, this can also send messages to the GP of a person identified by fødselsnummer, using Adresseregisteret and Fastlegeregisteret for lookup.
@@ -18,7 +24,7 @@ Four different clients are provided:
 
 ## Notes
 
-- The generated `msh-api-v2` client models are sourced from `../fiks-nhn-specs/specs/msh-api-v2.json`.
+- The generated `msh-api-v3` client models are sourced from `../fiks-nhn-specs/specs/msh-api-v3.json`.
 - Initialize/update git submodules before regenerating sources or building from a fresh clone.
 
 The clients support using access tokens with organization numbers for use with single-/multi-tenancy as discussed [here](https://utviklerportal.nhn.no/informasjonstjenester/helseid/bruksmoenstre-og-eksempelkode/bruk-av-helseid/docs/tekniske-mekanismer/organisasjonsnumre_enmd).

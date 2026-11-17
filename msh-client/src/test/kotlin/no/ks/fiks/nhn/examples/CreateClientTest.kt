@@ -6,6 +6,7 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
 import no.ks.fiks.helseid.Environment
+import no.ks.fiks.nhn.msh.ApplicationMetadata
 import no.ks.fiks.nhn.msh.ClientFactory
 import no.ks.fiks.nhn.msh.ClientWithFastlegeLookup
 import no.ks.fiks.nhn.msh.Configuration
@@ -29,7 +30,10 @@ class CreateClientTest : StringSpec({
                     jwk = "<HelseID JWK string>",
                 ),
                 mshBaseUrl = "<MSH base URL>",
-                sourceSystem = "<Name describing the system using the client>",
+                applicationMetadata = ApplicationMetadata(
+                    applicationName = "<Application name>",
+                    applicationVersion = "<Application version>",
+                ),
             )
         )
     }
@@ -52,7 +56,10 @@ class CreateClientTest : StringSpec({
                     ),
                 ),
                 mshBaseUrl = "<MSH base URL>",
-                sourceSystem = "<Name describing the system using the client>",
+                applicationMetadata = ApplicationMetadata(
+                    applicationName = "<Application name>",
+                    applicationVersion = "<Application version>",
+                ),
             )
         )
     }

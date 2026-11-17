@@ -6,7 +6,7 @@ import no.ks.fiks.helseid.Environment as HelseIdEnvironment
 data class Configuration(
     val helseId: HelseIdConfiguration,
     val mshBaseUrl: String,
-    val sourceSystem: String,
+    val applicationMetadata: ApplicationMetadata,
 )
 
 data class ConfigurationWithFastlegeLookup(
@@ -14,8 +14,18 @@ data class ConfigurationWithFastlegeLookup(
     val adresseregister: AdresseregisterConfiguration,
     val fastlegeregister: FastlegeregisterConfiguration,
     val mshBaseUrl: String,
-    val sourceSystem: String,
+    val applicationMetadata: ApplicationMetadata,
 )
+
+data class ApplicationMetadata(
+    val applicationName: String,
+    val applicationVersion: String,
+) {
+    init {
+        require(applicationName.isNotBlank()) { "Application name must not be blank" }
+        require(applicationVersion.isNotBlank()) { "Application version must not be blank" }
+    }
+}
 
 data class HelseIdConfiguration(
     val environment: HelseIdEnvironment,

@@ -1,1 +1,14 @@
-[{"receiverHerId":8094866,"transportDeliveryState":"Acknowledged","appRecStatus":"Ok"}]
+{
+  "statusList": [
+    {
+      "receiverHerId": 8094866,
+      "transportDeliveryState": "Acknowledged",
+      "sent": true,
+      "apprecInfo": {
+        "appRecStatus": "Ok",
+        "appRecErrorList": null,
+        "appRecId": "0d5fa870-b089-4a26-b844-d3868b5f376c"
+      }
+    }
+  ]
+}

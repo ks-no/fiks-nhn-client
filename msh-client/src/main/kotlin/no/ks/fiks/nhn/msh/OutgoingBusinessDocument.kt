@@ -13,6 +13,7 @@ data class OutgoingBusinessDocument(
     val vedlegg: List<OutgoingVedlegg>,
     val version: DialogmeldingVersion,
     val conversationRef: ConversationRef?,
+    val transportMetadataOverrides: MessageTransportMetadataOverrides? = null,
 )
 
 data class GPForPersonOutgoingBusinessDocument(
@@ -23,6 +24,20 @@ data class GPForPersonOutgoingBusinessDocument(
     val vedlegg: List<OutgoingVedlegg>,
     val version: DialogmeldingVersion,
     val conversationRef: ConversationRef?,
+    val transportMetadataOverrides: MessageTransportMetadataOverrides? = null,
+)
+
+data class MessageTransportMetadataOverrides(
+    val cpaId: String? = null,
+    val conversationId: String? = null,
+    val service: String? = null,
+    val serviceType: String? = null,
+    val action: String? = null,
+    val senderRole: String? = null,
+    val receiverRole: String? = null,
+    val middlewareName: String? = null,
+    val middlewareVersion: String? = null,
+    val compressPayload: Boolean? = null,
 )
 
 data class OutgoingVedlegg(

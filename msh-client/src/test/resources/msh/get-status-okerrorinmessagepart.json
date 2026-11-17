@@ -1,0 +1,28 @@
+{
+  "statusList": [
+    {
+      "receiverHerId": 123456,
+      "transportDeliveryState": "Acknowledged",
+      "sent": true,
+      "apprecInfo": {
+        "appRecStatus": "OkErrorInMessagePart",
+        "appRecErrorList": [
+          {
+            "errorCode": "E31",
+            "description": "Pasientens fødselsnummer er feil",
+            "oid": "2.16.578.1.12.4.1.8221",
+            "details": "Pasientens fødselsnummer er feil"
+          },
+          {
+            "errorCode": "E20",
+            "description": "Noe gikk galt",
+            "oid": "2.16.578.1.12.4.1.8221",
+            "details": "Noe gikk galt"
+          }
+        ],
+        "appRecId": "0d5fa870-b089-4a26-b844-d3868b5f376c"
+      }
+    }
+  ]
+}
+
